@@ -42,61 +42,39 @@
         }
         .azbt-title i { color: var(--azbt-gold); margin-right: 12px; font-size: 0.9em; }
 
-        /* SCROLL AREA */
+        /* SCROLL AREA - FIXED FOR MOBILE VISIBILITY */
         .azbt-container { 
             height: clamp(250px, 60vh, 350px); 
             overflow-y: auto; 
             overflow-x: hidden; 
             position: relative; 
-            display: flex;
-            flex-direction: column;
+            display: block; /* Using block to prevent flex-collapse on mobile */
         }
 
-        /* azbt SCROLLBAR */
+        /* ZEN SCROLLBAR */
         .azbt-container::-webkit-scrollbar { width: 4px; }
         .azbt-container::-webkit-scrollbar-thumb { background: var(--azbt-blue); border-radius: 10px; }
 
-        /* NO ANNOUNCEMENTS STYLING */
+        /* NO DATA / EMPTY STATE */
         .no-data-container {
             width: 100%;
-            padding: 40px 20px;
+            height: 100%;
+            min-height: 200px;
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
             text-align: center;
-            margin: auto;
+            padding: 20px;
+            box-sizing: border-box;
         }
-        .no-data-icon {
-            font-size: 3rem;
-            color: var(--azbt-gold);
-            margin-bottom: 15px;
-            opacity: 0.8;
-        }
-        .no-data-title {
-            font-family: 'Playfair Display', serif;
-            font-size: 1.2rem;
-            color: var(--azbt-blue);
-            margin-bottom: 8px;
-            font-weight: 700;
-        }
-        .no-data-msg {
-            font-size: 13px;
-            color: #666;
-            line-height: 1.5;
-            max-width: 280px;
-        }
-        .portal-hint {
-            margin-top: 12px;
-            font-weight: 600;
-            color: var(--azbt-maroon);
-            font-size: 11px;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-        }
+        .no-data-icon { font-size: 3rem; color: var(--azbt-gold); margin-bottom: 15px; opacity: 0.8; }
+        .no-data-title { font-family: 'Playfair Display', serif; font-size: 1.2rem; color: var(--azbt-blue); margin-bottom: 8px; font-weight: 700; }
+        .no-data-msg { font-size: 13px; color: #666; line-height: 1.5; max-width: 280px; }
+        .portal-hint { margin-top: 12px; font-weight: 600; color: var(--azbt-maroon); font-size: 11px; text-transform: uppercase; letter-spacing: 1px; }
 
-        /* ITEMS STYLING */
-        .news-item { padding: 12px 4px; border-bottom: 1px solid #F0F0F0; width: 100%; box-sizing: border-box;}
+        /* ANNOUNCEMENT ITEMS */
+        .news-item { padding: 12px 4px; border-bottom: 1px solid #F0F0F0; width: 100%; box-sizing: border-box; }
         .info-row { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 8px; }
         .news-date, .news-label { 
             font-size: clamp(9px, 2vw, 10px); font-weight: 700; color: #fff; padding: 4px 10px; 
@@ -107,18 +85,21 @@
         .news-heading { font-size: clamp(14px, 3.8vw, 17px); color: var(--azbt-blue); font-weight: 600; display: block; line-height: 1.4; margin-bottom: 5px; }
         .news-desc { font-size: clamp(11.5px, 3.2vw, 13.5px); color: #555; line-height: 1.6; margin-bottom: 10px; }
 
+        /* BUTTON STYLE (MATCHES ACHIEVEMENTS) */
         .attach-link { 
             display: inline-flex; align-items: center; gap: 6px; background: var(--azbt-blue); color: #fff; 
             text-decoration: none; padding: 6px 12px; border-radius: 5px; font-size: 11px; font-weight: 500; transition: 0.3s; 
         }
         .attach-link:hover { background: var(--azbt-maroon); transform: translateY(-1px); }
 
+        /* STICKY HIGHLIGHT DESIGN */
         .important-wrapper { 
             background: linear-gradient(to right, #FFF9F0, #FFFFFF); border-radius: 10px; border: 1px solid #FFE6B3; 
             border-left: 4px solid var(--azbt-gold); padding: 8px 12px; margin-bottom: 15px; position: sticky; top: 0; z-index: 5; 
             box-shadow: 0 4px 12px rgba(212, 166, 74, 0.15);
         }
 
+        /* BOTTOM PORTAL BUTTON */
         .azbt-btn-wrap { margin-top: 20px; text-align: center; }
         .azbt-btn { 
             background: var(--azbt-blue); color: #fff; text-decoration: none; padding: clamp(8px, 2vw, 12px) clamp(15px, 4vw, 25px); 
@@ -126,6 +107,7 @@
         }
         .azbt-btn:hover { background: var(--azbt-maroon); transform: translateY(-2px); }
 
+        /* AUTO SCROLL */
         @keyframes scrollazbt { 0% { transform: translateY(0); } 100% { transform: translateY(-50%); } }
         .scroll-active { animation: scrollazbt 50s linear infinite; }
         .azbt-container:hover .scroll-active { animation-play-state: paused; }
@@ -163,6 +145,7 @@ function formatDate(d) {
 
 function processText(text) {
     if (!text) return "";
+    // Replaces both \n sequence and actual line breaks with <br>
     return text.replace(/\\n/g, "<br>").replace(/\n/g, "<br>");
 }
 
@@ -193,7 +176,7 @@ fetch(CSV_URL).then(res => res.text()).then(data => {
             <div class="no-data-container">
                 <div class="no-data-icon"><i class="fa-solid fa-bell-slash"></i></div>
                 <div class="no-data-title">No New Announcements</div>
-                <div class="no-data-msg">Kindly check back later for fresh updates and notifications.</div>
+                <div class="no-data-msg">Check back later for fresh updates and notifications.</div>
                 <div class="portal-hint">Visit portal for older announcements</div>
             </div>`;
     } else {
