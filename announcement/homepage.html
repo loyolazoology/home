@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>AZ-BT| Announcements</title>
+    <title>AZ-BT | Announcements</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
@@ -48,89 +48,84 @@
             overflow-y: auto; 
             overflow-x: hidden; 
             position: relative; 
+            display: flex;
+            flex-direction: column;
         }
 
         /* azbt SCROLLBAR */
         .azbt-container::-webkit-scrollbar { width: 4px; }
         .azbt-container::-webkit-scrollbar-thumb { background: var(--azbt-blue); border-radius: 10px; }
 
-        .news-item { padding: 12px 4px; border-bottom: 1px solid #F0F0F0; }
-        
-        .info-row { 
-            display: flex; 
-            flex-wrap: wrap; 
-            gap: 8px; 
-            margin-bottom: 8px; 
+        /* NO ANNOUNCEMENTS STYLING */
+        .no-data-container {
+            width: 100%;
+            padding: 40px 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            margin: auto;
+        }
+        .no-data-icon {
+            font-size: 3rem;
+            color: var(--azbt-gold);
+            margin-bottom: 15px;
+            opacity: 0.8;
+        }
+        .no-data-title {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.2rem;
+            color: var(--azbt-blue);
+            margin-bottom: 8px;
+            font-weight: 700;
+        }
+        .no-data-msg {
+            font-size: 13px;
+            color: #666;
+            line-height: 1.5;
+            max-width: 280px;
+        }
+        .portal-hint {
+            margin-top: 12px;
+            font-weight: 600;
+            color: var(--azbt-maroon);
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
         }
 
+        /* ITEMS STYLING */
+        .news-item { padding: 12px 4px; border-bottom: 1px solid #F0F0F0; width: 100%; box-sizing: border-box;}
+        .info-row { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 8px; }
         .news-date, .news-label { 
-            font-size: clamp(9px, 2vw, 10px); 
-            font-weight: 700; 
-            color: #fff; 
-            padding: 4px 10px; 
-            border-radius: 4px; 
-            text-transform: uppercase; 
-            display: inline-flex; 
-            align-items: center; 
-            gap: 5px; 
+            font-size: clamp(9px, 2vw, 10px); font-weight: 700; color: #fff; padding: 4px 10px; 
+            border-radius: 4px; text-transform: uppercase; display: inline-flex; align-items: center; gap: 5px; 
         }
         .news-date { background: var(--azbt-blue); }
         .news-label { background: #E9ECEF; color: var(--azbt-blue); }
+        .news-heading { font-size: clamp(14px, 3.8vw, 17px); color: var(--azbt-blue); font-weight: 600; display: block; line-height: 1.4; margin-bottom: 5px; }
+        .news-desc { font-size: clamp(11.5px, 3.2vw, 13.5px); color: #555; line-height: 1.6; margin-bottom: 10px; }
 
-        .news-heading { 
-            font-size: clamp(14px, 3.8vw, 17px); 
-            color: var(--azbt-blue); 
-            font-weight: 600; 
-            display: block; 
-            line-height: 1.4; 
-            margin-bottom: 5px; 
-        }
-        
-        .news-desc { 
-            font-size: clamp(11.5px, 3.2vw, 13.5px); 
-            color: #555; 
-            line-height: 1.6; 
-            margin-bottom: 10px;
-        }
-
-        /* ATTACHMENT BUTTON (LIKE ACHIEVEMENTS) */
         .attach-link { 
-            display: inline-flex; 
-            align-items: center; 
-            gap: 6px; 
-            background: var(--azbt-blue); 
-            color: #fff; 
-            text-decoration: none; 
-            padding: 6px 12px; 
-            border-radius: 5px; 
-            font-size: 11px; 
-            font-weight: 500; 
-            transition: 0.3s; 
+            display: inline-flex; align-items: center; gap: 6px; background: var(--azbt-blue); color: #fff; 
+            text-decoration: none; padding: 6px 12px; border-radius: 5px; font-size: 11px; font-weight: 500; transition: 0.3s; 
         }
         .attach-link:hover { background: var(--azbt-maroon); transform: translateY(-1px); }
 
-        /* STICKY HIGHLIGHT DESIGN */
-        .important-wrapper { background: #F4F6F9; border-radius: 10px; padding: 5px 12px; margin-bottom: 15px; border-left: 4px solid var(--azbt-maroon); position: sticky; top: 0; z-index: 5; }
+        .important-wrapper { 
+            background: linear-gradient(to right, #FFF9F0, #FFFFFF); border-radius: 10px; border: 1px solid #FFE6B3; 
+            border-left: 4px solid var(--azbt-gold); padding: 8px 12px; margin-bottom: 15px; position: sticky; top: 0; z-index: 5; 
+            box-shadow: 0 4px 12px rgba(212, 166, 74, 0.15);
+        }
 
-
-        /* PORTAL BUTTON */
         .azbt-btn-wrap { margin-top: 20px; text-align: center; }
         .azbt-btn { 
-            background: var(--azbt-blue); 
-            color: #fff; 
-            text-decoration: none; 
-            padding: clamp(8px, 2vw, 12px) clamp(15px, 4vw, 25px); 
-            border-radius: 8px; 
-            font-size: clamp(11px, 2.5vw, 13px); 
-            font-weight: 600; 
-            display: inline-flex; 
-            align-items: center; 
-            gap: 8px; 
-            transition: all 0.3s ease; 
+            background: var(--azbt-blue); color: #fff; text-decoration: none; padding: clamp(8px, 2vw, 12px) clamp(15px, 4vw, 25px); 
+            border-radius: 8px; font-size: clamp(11px, 2.5vw, 13px); font-weight: 600; display: inline-flex; align-items: center; gap: 8px; transition: all 0.3s ease; 
         }
         .azbt-btn:hover { background: var(--azbt-maroon); transform: translateY(-2px); }
 
-        /* AUTO SCROLL ANIMATION */
         @keyframes scrollazbt { 0% { transform: translateY(0); } 100% { transform: translateY(-50%); } }
         .scroll-active { animation: scrollazbt 50s linear infinite; }
         .azbt-container:hover .scroll-active { animation-play-state: paused; }
@@ -175,10 +170,7 @@ fetch(CSV_URL).then(res => res.text()).then(data => {
     const rows = data.split(/\r?\n/).slice(1).filter(row => row.trim() !== "");
     const now = new Date();
     const viewport = document.getElementById("newsViewport");
-    viewport.innerHTML = '<div id="impNews"></div><div id="normNews" class="news-scroll-inner"></div>';
     
-    const impArea = document.getElementById("impNews");
-    const normArea = document.getElementById("normNews");
     let newsList = [];
 
     rows.forEach(row => {
@@ -196,38 +188,52 @@ fetch(CSV_URL).then(res => res.text()).then(data => {
         }
     });
 
-    newsList.sort((a, b) => b.fDate - a.fDate).forEach(info => {
-        const item = document.createElement("div");
-        item.className = "news-item";
-        
-        let html = `
-            <div class="info-row">
-                <span class="news-date"><i class="fa-solid fa-calendar-day"></i> ${formatDate(info.from)}</span>
-                ${info.lab ? `<span class="news-label"><i class="fa-solid fa-tag"></i> ${info.lab}</span>` : ""}
-            </div>
-            <div class="news-heading">${processText(info.title)}</div>
-            <div class="news-desc">${processText(info.desc)}</div>
-            ${(info.attach && info.attach.startsWith('http')) ? `<a class="attach-link" href="${info.attach}" target="_blank"><i class="fa-solid fa-paperclip"></i> View Attachment</a>` : ""}`;
-        
-        item.innerHTML = html;
+    if (newsList.length === 0) {
+        viewport.innerHTML = `
+            <div class="no-data-container">
+                <div class="no-data-icon"><i class="fa-solid fa-bell-slash"></i></div>
+                <div class="no-data-title">No New Announcements</div>
+                <div class="no-data-msg">Kindly check back later for fresh updates and notifications.</div>
+                <div class="portal-hint">Visit portal for older announcements</div>
+            </div>`;
+    } else {
+        viewport.innerHTML = '<div id="impNews"></div><div id="normNews" class="news-scroll-inner"></div>';
+        const impArea = document.getElementById("impNews");
+        const normArea = document.getElementById("normNews");
 
-        if (info.isImp) {
-            const wrap = document.createElement("div"); 
-            wrap.className = "important-wrapper";
-            wrap.appendChild(item); 
-            impArea.appendChild(wrap);
-        } else { 
-            normArea.appendChild(item); 
-        }
-    });
+        newsList.sort((a, b) => b.fDate - a.fDate).forEach(info => {
+            const item = document.createElement("div");
+            item.className = "news-item";
+            
+            let html = `
+                <div class="info-row">
+                    <span class="news-date"><i class="fa-solid fa-calendar-day"></i> ${formatDate(info.from)}</span>
+                    ${info.lab ? `<span class="news-label"><i class="fa-solid fa-tag"></i> ${info.lab}</span>` : ""}
+                </div>
+                <div class="news-heading">${processText(info.title)}</div>
+                <div class="news-desc">${processText(info.desc)}</div>
+                ${(info.attach && info.attach.startsWith('http')) ? `<a class="attach-link" href="${info.attach}" target="_blank"><i class="fa-solid fa-paperclip"></i> View Attachment</a>` : ""}`;
+            
+            item.innerHTML = html;
 
-    setTimeout(() => {
-        const area = document.getElementById("normNews");
-        if (area.scrollHeight > viewport.offsetHeight) {
-            area.innerHTML += area.innerHTML;
-            area.classList.add("scroll-active");
-        }
-    }, 600);
+            if (info.isImp) {
+                const wrap = document.createElement("div"); 
+                wrap.className = "important-wrapper";
+                wrap.appendChild(item); 
+                impArea.appendChild(wrap);
+            } else { 
+                normArea.appendChild(item); 
+            }
+        });
+
+        setTimeout(() => {
+            const area = document.getElementById("normNews");
+            if (area.scrollHeight > viewport.offsetHeight) {
+                area.innerHTML += area.innerHTML;
+                area.classList.add("scroll-active");
+            }
+        }, 600);
+    }
 });
 </script>
 </body>
