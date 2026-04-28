@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AZ-BT | Events</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+    <style>
+        :root { --azbt-blue: #23365D; --azbt-maroon: #6C232E; --azbt-gold: #D4A64A; --azbt-light: #F4F6F9; }
+        
+        body { 
+            margin: 0; 
+            background: transparent; 
+            font-family: 'Poppins', sans-serif; 
+            display: flex; 
+            justify-content: center; 
+            align-items: center; 
+            min-height: 100vh;
+        }
+
+        /* FULLY RESPONSIVE CONTAINER */
+        .container { 
+            width: 95%; 
+            max-width: 800px; 
+            margin: auto; 
+            text-align: center; 
+            display: flex;
+            flex-direction: column;
+            /* Adaptive Height based on screen */
+            height: clamp(400px, 95vh, 650px);
+            padding: 10px 0;
+            box-sizing: border-box;
+        }
+        
+        .title-wrap { flex-shrink: 0; margin-bottom: 15px; position: relative; }
+        h2 { 
+            font-family: 'Playfair Display', serif; 
+            color: var(--azbt-blue); 
+            margin: 0; 
+            font-size: clamp(1.2rem, 5vw, 1.6rem); 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            gap: 10px; 
+        }
+        .title-wrap::after { 
+            content: ''; 
+            display: block; 
+            width: 40px; 
+            height: 3px; 
+            background: var(--azbt-maroon); 
+            margin: 8px auto 0; 
+        }
+
+        /* SLIDER FRAME - FILLS REMAINING SPACE */
+        .slider-frame { 
+            overflow: hidden; 
+            position: relative; 
+            border-radius: 20px; 
+            background: #fff; 
+            box-shadow: 0 10px 25px rgba(35, 54, 93, 0.12); 
+            cursor: grab; 
+            flex-grow: 1;
+            display: block; /* block avoids flex collapse */
+            min-height: 0; /* allows flex children to shrink/scroll */
+        }
+
+        .slider-track { display: flex; transition: transform 0.6s cubic-bezier(0.23, 1, 0.32, 1); width: 100%; height: 100%; }
+        
+        .slide { 
+            min-width: 100%; 
+            box-sizing: border-box; 
+            height: 100%;
+        }
+
+        @media (min-width: 768px) {
+            .slide { min-width: 50%; } 
+        }
+
+        .card { 
+            text-align: left; 
+            background: #fff; 
+            position: relative; 
+            height: 100%; 
+            display: flex; 
+            flex-direction: column; 
+        }
+
+        /* NO EVENTS STYLING - CENTERED AND FIXED */
+        .no-events-container {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            background: #fff;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+
+        .no-events-icon { font-size: 3rem; color: var(--azbt-gold); margin-bottom: 15px; opacity: 0.8; }
+        .no-events-title { font-family: 'Playfair Display', serif; font-size: 1.2rem; color: var(--azbt-blue); margin-bottom: 8px; font-weight: 700; }
+        .no-events-msg { font-size: 13px; color: #666; line-height: 1.5; max-width: 250px; }
+        .portal-hint { margin-top: 12px; font-weight: 600; color: var(--azbt-maroon); font-size: 11px; text-transform: uppercase; letter-spacing: 1px; }
+
+        /* IMAGE BOX */
+        .img-box { 
+            height: clamp(150px, 35vh, 210px); 
+            position: relative; 
+            background: #1a1a1a; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            overflow: hidden; 
+            flex-shrink: 0;
+        }
+        
+        .bg-blur { position: absolute; width: 100%; height: 100%; object-fit: cover; filter: blur(12px); opacity: 0.4; z-index: 1; }
+        .main-img { max-width: 100%; max-height: 100%; object-fit: contain; position: relative; z-index: 2; display: none; }
+        .main-img.active { display: block; }
+
+        .maroon-line { height: 4px; background: var(--azbt-maroon); width: 100%; flex-shrink: 0; }
+        .nav-arrow { position: absolute; top: 50%; transform: translateY(-50%); background: rgba(255,255,255,0.25); color: white; border: none; width: 32px; height: 32px; border-radius: 50%; cursor: pointer; z-index: 10; display: flex; align-items: center; justify-content: center; backdrop-filter: blur(5px); font-weight: bold; }
+
+        .type-badge { position: absolute; top: 12px; left: 12px; background: rgba(255, 255, 255, 0.9); color: var(--azbt-blue); padding: 4px 10px; font-size: 9px; font-weight: 700; border-radius: 50px; text-transform: uppercase; z-index: 5; }
+        .timer-badge { position: absolute; top: 12px; right: 12px; background: var(--azbt-blue); color: #fff; padding: 4px 10px; font-size: 9px; font-weight: 600; border-radius: 6px; z-index: 5; display: flex; align-items: center; gap: 5px; }
+
+        /* CONTENT WITH AUTO SCROLL SUPPORT */
+        .content { 
+            padding: 15px; 
+            overflow-y: auto; 
+            flex-grow: 1; 
+        }
+        .content::-webkit-scrollbar { width: 3px; }
+        .content::-webkit-scrollbar-thumb { background: var(--azbt-gold); border-radius: 10px; }
+
+        .title { font-family: 'Playfair Display', serif; font-size: clamp(1rem, 4vw, 1.1rem); font-weight: bold; color: var(--azbt-blue); margin-bottom: 8px; line-height: 1.2; }
+        .desc { font-size: clamp(10px, 3vw, 11px); color: #444; margin-bottom: 12px; line-height: 1.4; }
+        .details { font-size: 10px; color: #555; margin-bottom: 5px; display: flex; align-items: center; gap: 8px; font-weight: 500; }
+        .details i { color: var(--azbt-gold); width: 14px; text-align: center; }
+
+        /* FIXED BOTTOM BUTTON */
+        .btn-wrap { 
+            margin-top: auto; 
+            padding-top: 15px; 
+            flex-shrink: 0;
+        }
+        .btn-wrap a { background: var(--azbt-blue); color: #fff; padding: 10px 25px; border-radius: 8px; text-decoration: none; font-size: 12px; font-weight: 600; transition: 0.3s; display: inline-block; }
+        .btn-wrap a:hover { background: var(--azbt-maroon); transform: translateY(-2px); }
+        
+        .skeleton { flex-grow: 1; background: #eee; border-radius: 20px; animation: pulse 1.5s infinite; }
+        @keyframes pulse { 50% { opacity: 0.5; } }
+        .live-text { color: #ff3b30; font-weight: 800; animation: blink 1s infinite; display: flex; align-items: center; gap: 4px; }
+        @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="title-wrap">
+        <h2><i class="fa-solid fa-calendar-check"></i> Upcoming Events</h2>
+    </div>
+    
+    <div id="loader" class="skeleton"></div>
+    <div class="slider-frame" id="slider-frame" style="display:none;">
+        <div class="slider-track" id="track"></div>
+    </div>
+
+    <div class="btn-wrap">
+        <a href="https://loyolazoology.wixsite.com/az-bt/events" target="_blank">Events Portal <i class="fa-solid fa-arrow-right"></i></a>
+    </div>
+</div>
+
+<script>
+const SHEET_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vR2sifWviROUpjQfbjn_ZI04ZQANvYwcPSBSJTuYFSSzdtUL20La-d5UvJV85CE-_0PXdqKCGFxF0Yv/pub?gid=0&single=true&output=csv";
+
+let slideWidth = 0;
+
+function parseCSV(text) {
+    const lines = text.split(/\r?\n/).filter(line => line.trim() !== "");
+    const headers = lines[0].split(',').map(h => h.trim());
+    return lines.slice(1).map(line => {
+        const values = line.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/);
+        let obj = {};
+        headers.forEach((h, i) => {
+            let val = values[i] ? values[i].replace(/"/g,"").trim() : "";
+            obj[h] = (val === "" || val.toLowerCase() === "null") ? null : val;
+        });
+        return obj;
+    });
+}
+
+function parseDateTime(d, t, isEnd = false) {
+    if(!d) return null;
+    let timeStr = t ? t.trim() : (isEnd ? "23:59" : "00:00");
+    if (timeStr.length <= 2) timeStr = timeStr.padStart(2, '0') + ":00";
+    const p = d.split("-");
+    const dateObj = new Date(`${p[2]}-${p[1]}-${p[0]}T${timeStr}:00`);
+    return isNaN(dateObj.getTime()) ? null : dateObj;
+}
+
+function getDriveImg(url) {
+    if(!url) return ""; 
+    const match = url.match(/[-\w]{25,}/);
+    return match ? `https://drive.google.com/thumbnail?id=${match[0]}&sz=w800` : url;
+}
+
+function updateTimerHtml(start, end) {
+    if(!start) return "<i class='fa-solid fa-clock'></i> Upcoming";
+    const now = new Date();
+    if(start <= now && (!end || now <= end)) return "<span class='live-text'><i class='fa-solid fa-circle'></i> LIVE</span>";
+    const diff = start - now;
+    if(diff < 0) return "Started";
+    const diffInDays = diff / (1000 * 60 * 60 * 24);
+    if (diffInDays >= 2) return `<i class="fa-solid fa-calendar"></i> In ${Math.floor(diffInDays)} days`;
+    const h = Math.floor(diff/3600000);
+    const m = Math.floor((diff%3600000)/60000);
+    const s = Math.floor((diff%60000)/1000);
+    return `<i class="fa-solid fa-hourglass-half"></i> ${String(h).padStart(2,'0')}h ${String(m).padStart(2,'0')}m ${String(s).padStart(2,'0')}s`;
+}
+
+async function init() {
+    try {
+        const res = await fetch(SHEET_URL);
+        const text = await res.text();
+        const data = parseCSV(text);
+        const track = document.getElementById("track");
+        const frame = document.getElementById("slider-frame");
+        const now = new Date();
+
+        let events = data.map(e => {
+            const start = parseDateTime(e.Date, e.Start_Time, false);
+            const endDateString = e.End_date || e.Date;
+            const end = parseDateTime(endDateString, e.End_Time, true);
+            return { ...e, start, end };
+        })
+        .filter(e => e.start && (e.end ? e.end >= now : e.start >= (now - 3600000)))
+        .sort((a,b) => a.start - b.start);
+
+        document.getElementById("loader").style.display = "none";
+        frame.style.display = "block";
+
+        if (events.length === 0) {
+            frame.innerHTML = `
+                <div class="no-events-container">
+                    <div class="no-events-icon"><i class="fa-regular fa-calendar-xmark"></i></div>
+                    <div class="no-events-title">No Upcoming Events</div>
+                    <div class="no-events-msg">We don't have any events scheduled right now.</div>
+                    <div class="portal-hint">Refer to portal for past events</div>
+                </div>`;
+            return;
+        }
+
+        events.forEach((e, cardIdx) => {
+            const imgLinks = (e.Invitation_Link || "").split("|").map(s => s.trim()).filter(s => s !== "");
+            const images = imgLinks.map(link => getDriveImg(link));
+            const safeID = (e.Event_ID || "evt"+cardIdx).replace(/[^a-zA-Z0-9]/g, "-");
+
+            const slide = document.createElement("div");
+            slide.className = "slide";
+            slide.innerHTML = `
+                <div class="card">
+                    <div class="img-box">
+                        ${e.Event_Type ? `<div class="type-badge"><i class="fa-solid fa-tag"></i> ${e.Event_Type}</div>` : ''}
+                        <div class="timer-badge" id="timer-${safeID}">--</div>
+                        ${images.map((img, i) => `
+                            <img src="${img}" class="bg-blur" style="display:${i===0?'block':'none'}">
+                            <img src="${img}" class="main-img ${i===0?'active':''}" onerror="this.src='https://via.placeholder.com/400x210?text=AZ+BT'">
+                        `).join("")}
+                        ${images.length > 1 ? `
+                            <button class="nav-arrow arrow-left" onclick="event.stopPropagation(); changeInnerImg(${cardIdx}, -1)"><i class="fa-solid fa-chevron-left"></i></button>
+                            <button class="nav-arrow arrow-right" onclick="event.stopPropagation(); changeInnerImg(${cardIdx}, 1)"><i class="fa-solid fa-chevron-right"></i></button>
+                        ` : ''}
+                    </div>
+                    <div class="maroon-line"></div>
+                    <div class="content">
+                        <div class="title">${e.Event_Name || 'Event Update'}</div>
+                        <div class="desc">${(e.Description || '').replace(/\\n/g, '<br>')}</div>
+                        <div class="details"><i class="fa-solid fa-calendar-day"></i><span>${e.Date}</span></div>
+                        <div class="details"><i class="fa-solid fa-clock"></i><span>${e.Start_Time || '--'}</span></div>
+                        <div class="details"><i class="fa-solid fa-location-dot"></i><span>${e.Venue || 'TBA'}</span></div>
+                    </div>
+                </div>`;
+            track.appendChild(slide);
+        });
+
+        initSliderLogic(events.length);
+
+        setInterval(() => {
+            events.forEach((e, idx) => {
+                const sID = (e.Event_ID || "evt"+idx).replace(/[^a-zA-Z0-9]/g, "-");
+                const badge = document.getElementById("timer-" + sID);
+                if(badge) badge.innerHTML = updateTimerHtml(e.start, e.end);
+            });
+        }, 1000);
+
+    } catch (err) { console.error(err); }
+}
+
+function initSliderLogic(count) {
+    if(count === 0) return;
+    const frame = document.getElementById("slider-frame");
+    const track = document.getElementById("track");
+    let currentIndex = 0;
+
+    function updateWidth() { slideWidth = frame.offsetWidth; moveToIndex(currentIndex); }
+    window.addEventListener('resize', updateWidth);
+    updateWidth();
+
+    function moveToIndex(idx) {
+        currentIndex = idx;
+        track.style.transform = `translateX(${-currentIndex * slideWidth}px)`;
+    }
+
+    setInterval(() => { currentIndex = (currentIndex + 1) % count; moveToIndex(currentIndex); }, 8000);
+}
+
+window.changeInnerImg = function(cardIdx, dir) {
+    const slides = document.querySelectorAll('.slide');
+    const imgs = slides[cardIdx].querySelectorAll('.main-img');
+    const blurs = slides[cardIdx].querySelectorAll('.bg-blur');
+    let current = Array.from(imgs).findIndex(img => img.classList.contains('active'));
+    imgs[current].classList.remove('active');
+    blurs[current].style.display = 'none';
+    let next = (current + dir + imgs.length) % imgs.length;
+    imgs[next].classList.add('active');
+    blurs[next].style.display = 'block';
+};
+
+init();
+</script>
+</body>
+</html>
