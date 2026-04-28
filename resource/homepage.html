@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AZ-BT | Resource of the Week</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <style>
+        :root { --azbt-blue: #23365D; --azbt-maroon: #6C232E; --azbt-gold: #D4A64A; --azbt-light: #F4F6F9; }
+        
+        body { 
+            margin: 0; 
+            background: transparent; 
+            font-family: 'Poppins', sans-serif; 
+            display: flex; 
+            justify-content: center; 
+            align-items: center; 
+            min-height: 100vh;
+        }
+
+        .container { 
+            width: 95%; 
+            max-width: 500px; 
+            margin: auto; 
+            text-align: center; 
+            display: flex;
+            flex-direction: column;
+            height: clamp(450px, 95vh, 850px); /* Height scales with screen */
+            padding: 10px 0;
+            box-sizing: border-box;
+        }
+        
+        h2 { 
+            font-family: 'Playfair Display', serif; 
+            color: var(--azbt-blue); 
+            margin: 0; 
+            font-size: clamp(1.2rem, 4vw, 1.6rem); 
+            display: flex; align-items: center; justify-content: center; gap: 12px;
+            flex-shrink: 0;
+        }
+        h2 i { color: var(--azbt-blue); font-size: 0.9em; }
+
+        .heading-line { 
+            width: 45px; height: 3px; background: var(--azbt-maroon); 
+            margin: 10px auto 15px auto; border-radius: 2px;
+            flex-shrink: 0;
+        }
+
+        .card { 
+            background: #fff; border-radius: 20px; overflow: hidden; 
+            box-shadow: 0 12px 30px rgba(35, 54, 93, 0.15); 
+            position: relative;
+            display: flex; 
+            flex-direction: column; 
+            text-align: left;
+            flex-grow: 1; /* Card expands to fill container */
+            min-height: 0; /* Important for nested scroll */
+        }
+
+        .img-box { 
+            height: clamp(180px, 35vh, 280px); 
+            position: relative; background: #1a1a1a; 
+            display: flex; align-items: center; justify-content: center; overflow: hidden; 
+            flex-shrink: 0;
+        }
+        .bg-blur { position: absolute; width: 100%; height: 100%; object-fit: cover; filter: blur(12px); opacity: 0.4; z-index: 1; }
+        .main-img { max-width: 100%; max-height: 100%; object-fit: contain; position: relative; z-index: 2; display: none; }
+        .main-img.active { display: block; }
+
+        .maroon-line { height: 4px; background: var(--azbt-maroon); width: 100%; flex-shrink: 0; }
+
+        .week-badge { 
+            position: absolute; top: 12px; left: 12px; 
+            background: var(--azbt-gold); color: var(--azbt-blue); 
+            padding: 5px 12px; font-size: 10px; font-weight: 700; 
+            border-radius: 50px; z-index: 5; box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+        }
+        .week-date { font-size: 8px; display: block; opacity: 0.85; font-weight: 500; }
+        .watermark { position: absolute; bottom: 10px; right: 15px; font-size: 10px; color: rgb(0, 0, 0); z-index: 5; letter-spacing: 1px; font-weight: 600; }
+
+        .nav-arrow { position: absolute; top: 50%; transform: translateY(-50%); background: rgba(255,255,255,0.25); color: white; border: none; width: 35px; height: 35px; border-radius: 50%; cursor: pointer; z-index: 10; display: flex; align-items: center; justify-content: center; backdrop-filter: blur(5px); transition: 0.3s; }
+        .arrow-left { left: 10px; } .arrow-right { right: 10px; }
+
+        .content { 
+            padding: 15px 20px; 
+            display: flex; 
+            flex-direction: column; 
+            flex-grow: 1; 
+            min-height: 0; 
+        }
+        .scroll-area {
+            overflow-y: auto;
+            flex-grow: 1;
+            padding-right: 5px;
+            margin-bottom: 15px;
+        }
+        .scroll-area::-webkit-scrollbar { width: 3px; }
+        .scroll-area::-webkit-scrollbar-thumb { background: var(--azbt-gold); border-radius: 10px; }
+
+        .category-tag { font-size: 9px; font-weight: 700; color: var(--azbt-maroon); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 5px; display: flex; align-items: center; gap: 5px; }
+        .res-title { font-family: 'Playfair Display', serif; font-size: clamp(1.1rem, 3.5vw, 1.3rem); font-weight: bold; color: var(--azbt-blue); margin-bottom: 8px; line-height: 1.2; }
+        .res-description { font-size: clamp(11px, 2.8vw, 12.5px); color: #444; line-height: 1.6; }
+
+        .btn-link { 
+            display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+            text-decoration: none; background: var(--azbt-blue); color: #fff; 
+            padding: 12px; border-radius: 10px; font-size: 11px; font-weight: 600; 
+            transition: 0.3s; flex-shrink: 0; margin-top: auto;
+        }
+        .btn-link:hover { background: var(--azbt-maroon); transform: translateY(-2px); }
+
+        .no-resource {
+            width: 100%; height: 100%; background: #fff; border-radius: 20px;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.05); padding: 30px; box-sizing: border-box;
+        }
+        .no-resource i { font-size: 3rem; color: var(--azbt-gold); margin-bottom: 15px; opacity: 0.8; }
+        .no-resource h3 { font-family: 'Playfair Display', serif; color: var(--azbt-blue); margin: 0 0 8px 0; }
+        .no-resource p { font-size: 12px; color: #666; margin: 0; }
+
+        .portal-wrap { 
+            margin-top: 15px; 
+            flex-shrink: 0;
+            padding-bottom: 5px;
+        }
+        .portal-btn { 
+            display: inline-block; text-decoration: none; color: var(--azbt-blue); font-size: 12px; font-weight: 600; 
+            padding: 8px 20px; border: 1.5px solid var(--azbt-blue); border-radius: 8px; transition: 0.3s; 
+        }
+        .portal-btn:hover { background: var(--azbt-blue); color: #fff; }
+
+        .skeleton { flex-grow: 1; background: #eee; border-radius: 20px; animation: pulse 1.5s infinite; }
+        @keyframes pulse { 50% { opacity: 0.5; } }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2><i class="fa-solid fa-book-open"></i> Resource of the Week</h2>
+    <div class="heading-line"></div>
+
+    <div id="azbt-display" style="display: contents;">
+        <div class="skeleton"></div>
+    </div>
+
+    <div class="portal-wrap">
+        <a href="https://loyolazoology.wixsite.com/az-bt/resources" target="_blank" class="portal-btn">
+            Resource Portal <i class="fa-solid fa-arrow-right" style="font-size: 10px; margin-left: 5px;"></i>
+        </a>
+    </div>
+</div>
+
+<script>
+const resourceSheetURL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTMKUBCvnZTKTi549o0fcPzbVBSE3oDLEyaIgf7e6U9D1YKB_kWo8D5o-i1Ea2pfBhZC2zj11iebvpZ/pub?gid=0&single=true&output=csv";
+const calendarSheetURL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTMKUBCvnZTKTi549o0fcPzbVBSE3oDLEyaIgf7e6U9D1YKB_kWo8D5o-i1Ea2pfBhZC2zj11iebvpZ/pub?gid=257728120&single=true&output=csv";
+
+function parseCSVData(text) {
+    const rows = text.trim().split("\n");
+    const headers = rows[0].split(",").map(h => h.trim());
+    return rows.slice(1).map(row => {
+        const values = row.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/);
+        let obj = {};
+        headers.forEach((h, i) => {
+            obj[h] = values[i] ? values[i].replace(/^"|"$/g, "").trim() : "";
+        });
+        return obj;
+    });
+}
+
+function getDriveImg(url) {
+    if(!url) return "";
+    const match = url.match(/[-\w]{25,}/);
+    return match ? `https://drive.google.com/thumbnail?id=${match[0]}&sz=w800` : url;
+}
+
+async function loadazbtResource() {
+    const display = document.getElementById("azbt-display");
+    try {
+        const [resResource, resCalendar] = await Promise.all([fetch(resourceSheetURL), fetch(calendarSheetURL)]);
+        const resources = parseCSVData(await resResource.text());
+        const calendars = parseCSVData(await resCalendar.text());
+
+        const today = new Date();
+        const dateString = today.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+
+        const activeYearConfig = calendars
+            .map(c => {
+                const [d, m, y] = c["Start Date"].split("-");
+                return { ...c, startDateObj: new Date(`${y}-${m}-${d}`) };
+            })
+            .filter(c => c.startDateObj <= today)
+            .sort((a, b) => b.startDateObj - a.startDateObj)[0];
+
+        if (!activeYearConfig) throw "Academic year not started.";
+
+        const currentYearCode = activeYearConfig["Year Code"];
+        const startDate = activeYearConfig.startDateObj;
+        const diffDays = Math.ceil(Math.abs(today - startDate) / (1000 * 60 * 60 * 24));
+        const currentWeekNum = Math.ceil(diffDays / 7);
+        const targetWeekID = "R" + currentYearCode + "/" + String(currentWeekNum).padStart(3, '0');
+
+        const currentYearResources = resources.filter(r => r["Resource ID"].includes("R" + currentYearCode));
+        if (currentYearResources.length === 0) throw "Coming soon...";
+
+        let activeResource = currentYearResources.find(r => r["Resource ID"] === targetWeekID);
+        if (!activeResource) activeResource = currentYearResources[currentYearResources.length - 1];
+
+        const imgLinks = (activeResource["Image URL"] || "").split("|").map(s => s.trim()).filter(s => s !== "");
+        const images = imgLinks.map(link => getDriveImg(link));
+        const hasMultiple = images.length > 1;
+
+        display.innerHTML = `
+            <div class="card">
+                <div class="img-box">
+                    <div class="week-badge">
+                        <i class="fa-solid fa-calendar-week"></i> WEEK ${currentWeekNum}
+                        <span class="week-date">${dateString}</span>
+                    </div>
+                    ${images.map((img, i) => `
+                        <img src="${img}" class="bg-blur" style="display:${i===0?'block':'none'}">
+                        <img src="${img}" class="main-img ${i===0?'active':''}" onerror="this.src='https://via.placeholder.com/600x400?text=azbt+Resource'">
+                    `).join("")}
+                    ${hasMultiple ? `
+                        <button class="nav-arrow arrow-left" onclick="event.stopPropagation(); changeInnerImg(-1)"><i class="fa-solid fa-chevron-left"></i></button>
+                        <button class="nav-arrow arrow-right" onclick="event.stopPropagation(); changeInnerImg(1)"><i class="fa-solid fa-chevron-right"></i></button>
+                    ` : ''}
+                    <div class="watermark">AZ - BT</div>
+                </div>
+                <div class="maroon-line"></div>
+                <div class="content">
+                    <div class="scroll-area">
+                        <div class="category-tag"><i class="fa-solid fa-tags"></i> ${activeResource["Category"]}</div>
+                        <div class="res-title">${activeResource["Title"]}</div>
+                        <div class="res-description">${activeResource["Description"].replace(/\\n/g, "<br>")}</div>
+                    </div>
+                    <a href="${activeResource["Link"]}" target="_blank" class="btn-link">
+                        <i class="fa-solid fa-rocket"></i> Access Weekly Resource
+                    </a>
+                </div>
+            </div>
+        `;
+    } catch (err) {
+        display.innerHTML = `
+            <div class="no-resource">
+                <i class="fa-solid fa-hourglass-start"></i>
+                <h3>Resource Update</h3>
+                <p>${err || "Processing next update..."}</p>
+            </div>
+        `;
+    }
+}
+
+window.changeInnerImg = function(dir) {
+    const container = document.querySelector('.img-box');
+    const imgs = container.querySelectorAll('.main-img');
+    const blurs = container.querySelectorAll('.bg-blur');
+    let current = Array.from(imgs).findIndex(img => img.classList.contains('active'));
+    imgs[current].classList.remove('active');
+    blurs[current].style.display = 'none';
+    let next = (current + dir + imgs.length) % imgs.length;
+    imgs[next].classList.add('active');
+    blurs[next].style.display = 'block';
+};
+
+loadazbtResource();
+</script>
+</body>
+</html>
