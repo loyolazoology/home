@@ -2,22 +2,22 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>ZEN-DNA | Responsive Announcements</title>
+    <title>AZ-BT| Announcements</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
     <style>
         :root {
-            --zen-blue: #23365D; --zen-maroon: #6C232E; --zen-gold: #D4A64A;
-            --zen-white: #FFFFFF; --zen-text: #2D2D2D;
+            --azbt-blue: #23365D; --azbt-maroon: #6C232E; --azbt-gold: #D4A64A;
+            --azbt-white: #FFFFFF; --azbt-text: #2D2D2D;
         }
 
         body { margin: 0; background: transparent; font-family: 'Poppins', sans-serif; }
 
         /* FULLY RESPONSIVE CONTAINER */
-        .zen-section {
-            background: var(--zen-white); 
-            border-top: 4px solid var(--zen-maroon);
+        .azbt-section {
+            background: var(--azbt-white); 
+            border-top: 4px solid var(--azbt-maroon);
             padding: clamp(10px, 3vw, 20px); 
             width: 100%; 
             max-width: 800px; 
@@ -30,29 +30,29 @@
             flex-direction: column;
         }
 
-        .zen-title {
+        .azbt-title {
             font-family: 'Playfair Display', serif; 
             font-size: clamp(18px, 4.5vw, 24px);
-            color: var(--zen-blue); 
+            color: var(--azbt-blue); 
             margin-bottom: 15px; 
             display: flex; 
             align-items: center; 
             border-bottom: 1.5px solid #F0F0F0; 
             padding-bottom: 10px;
         }
-        .zen-title i { color: var(--zen-gold); margin-right: 12px; font-size: 0.9em; }
+        .azbt-title i { color: var(--azbt-gold); margin-right: 12px; font-size: 0.9em; }
 
         /* SCROLL AREA */
-        .zen-container { 
+        .azbt-container { 
             height: clamp(250px, 60vh, 350px); 
             overflow-y: auto; 
             overflow-x: hidden; 
             position: relative; 
         }
 
-        /* ZEN SCROLLBAR */
-        .zen-container::-webkit-scrollbar { width: 4px; }
-        .zen-container::-webkit-scrollbar-thumb { background: var(--zen-blue); border-radius: 10px; }
+        /* azbt SCROLLBAR */
+        .azbt-container::-webkit-scrollbar { width: 4px; }
+        .azbt-container::-webkit-scrollbar-thumb { background: var(--azbt-blue); border-radius: 10px; }
 
         .news-item { padding: 12px 4px; border-bottom: 1px solid #F0F0F0; }
         
@@ -74,12 +74,12 @@
             align-items: center; 
             gap: 5px; 
         }
-        .news-date { background: var(--zen-blue); }
-        .news-label { background: #E9ECEF; color: var(--zen-blue); }
+        .news-date { background: var(--azbt-blue); }
+        .news-label { background: #E9ECEF; color: var(--azbt-blue); }
 
         .news-heading { 
             font-size: clamp(14px, 3.8vw, 17px); 
-            color: var(--zen-blue); 
+            color: var(--azbt-blue); 
             font-weight: 600; 
             display: block; 
             line-height: 1.4; 
@@ -98,7 +98,7 @@
             display: inline-flex; 
             align-items: center; 
             gap: 6px; 
-            background: var(--zen-blue); 
+            background: var(--azbt-blue); 
             color: #fff; 
             text-decoration: none; 
             padding: 6px 12px; 
@@ -107,16 +107,16 @@
             font-weight: 500; 
             transition: 0.3s; 
         }
-        .attach-link:hover { background: var(--zen-maroon); transform: translateY(-1px); }
+        .attach-link:hover { background: var(--azbt-maroon); transform: translateY(-1px); }
 
         /* STICKY HIGHLIGHT DESIGN */
-        .important-wrapper { background: #F4F6F9; border-radius: 10px; padding: 5px 12px; margin-bottom: 15px; border-left: 4px solid var(--zen-maroon); position: sticky; top: 0; z-index: 5; }
+        .important-wrapper { background: #F4F6F9; border-radius: 10px; padding: 5px 12px; margin-bottom: 15px; border-left: 4px solid var(--azbt-maroon); position: sticky; top: 0; z-index: 5; }
 
 
         /* PORTAL BUTTON */
-        .zen-btn-wrap { margin-top: 20px; text-align: center; }
-        .zen-btn { 
-            background: var(--zen-blue); 
+        .azbt-btn-wrap { margin-top: 20px; text-align: center; }
+        .azbt-btn { 
+            background: var(--azbt-blue); 
             color: #fff; 
             text-decoration: none; 
             padding: clamp(8px, 2vw, 12px) clamp(15px, 4vw, 25px); 
@@ -128,12 +128,12 @@
             gap: 8px; 
             transition: all 0.3s ease; 
         }
-        .zen-btn:hover { background: var(--zen-maroon); transform: translateY(-2px); }
+        .azbt-btn:hover { background: var(--azbt-maroon); transform: translateY(-2px); }
 
         /* AUTO SCROLL ANIMATION */
-        @keyframes scrollZen { 0% { transform: translateY(0); } 100% { transform: translateY(-50%); } }
-        .scroll-active { animation: scrollZen 50s linear infinite; }
-        .zen-container:hover .scroll-active { animation-play-state: paused; }
+        @keyframes scrollazbt { 0% { transform: translateY(0); } 100% { transform: translateY(-50%); } }
+        .scroll-active { animation: scrollazbt 50s linear infinite; }
+        .azbt-container:hover .scroll-active { animation-play-state: paused; }
 
         .skeleton { height: 80px; background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%); background-size: 200% 100%; animation: shimmer 1.5s infinite; border-radius: 10px; margin-bottom: 10px; }
         @keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
@@ -141,13 +141,13 @@
 </head>
 <body>
 
-<div class="zen-section">
-    <div class="zen-title"><i class="fa-solid fa-bullhorn"></i> Announcements</div>
-    <div class="zen-container" id="newsViewport">
+<div class="azbt-section">
+    <div class="azbt-title"><i class="fa-solid fa-bullhorn"></i> Announcements</div>
+    <div class="azbt-container" id="newsViewport">
         <div class="skeleton"></div><div class="skeleton"></div><div class="skeleton"></div>
     </div>
-    <div class="zen-btn-wrap">
-        <a href="https://azbtweb.wixsite.com/zen-dna/announcement-portal" target="_blank" class="zen-btn">
+    <div class="azbt-btn-wrap">
+        <a href="https://loyolazoology.wixsite.com/az-bt/announcement-portal" target="_blank" class="azbt-btn">
             Announcement Portal <i class="fa-solid fa-arrow-right"></i>
         </a>
     </div>
