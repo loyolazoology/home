@@ -12,14 +12,22 @@
             --azbt-white: #FFFFFF; --azbt-text: #2D2D2D;
         }
 
-        body { margin: 0; background: transparent; font-family: 'Poppins', sans-serif; }
+        body { 
+            margin: 0; 
+            background: transparent; 
+            font-family: 'Poppins', sans-serif; 
+            display: flex; 
+            justify-content: center; 
+            align-items: center; 
+            min-height: 100vh;
+        }
 
         /* FULLY RESPONSIVE CONTAINER */
         .azbt-section {
             background: var(--azbt-white); 
             border-top: 4px solid var(--azbt-maroon);
-            padding: clamp(10px, 3vw, 20px); 
-            width: 100%; 
+            padding: 15px; 
+            width: 95%; 
             max-width: 800px; 
             margin: auto;
             box-sizing: border-box;
@@ -28,6 +36,8 @@
             overflow: hidden;
             display: flex; 
             flex-direction: column;
+            /* Adaptive Height based on screen */
+            height: clamp(350px, 95vh, 650px);
         }
 
         .azbt-title {
@@ -39,19 +49,20 @@
             align-items: center; 
             border-bottom: 1.5px solid #F0F0F0; 
             padding-bottom: 10px;
+            flex-shrink: 0;
         }
         .azbt-title i { color: var(--azbt-gold); margin-right: 12px; font-size: 0.9em; }
 
-        /* SCROLL AREA - FIXED FOR MOBILE VISIBILITY */
+        /* SCROLL AREA - FILLS REMAINING SPACE */
         .azbt-container { 
-            height: clamp(250px, 60vh, 350px); 
+            flex-grow: 1;
             overflow-y: auto; 
             overflow-x: hidden; 
             position: relative; 
-            display: block; /* Using block to prevent flex-collapse on mobile */
+            display: block; 
         }
 
-        /* ZEN SCROLLBAR */
+        /* azbt SCROLLBAR */
         .azbt-container::-webkit-scrollbar { width: 4px; }
         .azbt-container::-webkit-scrollbar-thumb { background: var(--azbt-blue); border-radius: 10px; }
 
@@ -59,7 +70,6 @@
         .no-data-container {
             width: 100%;
             height: 100%;
-            min-height: 200px;
             display: flex;
             flex-direction: column;
             align-items: center;
@@ -73,41 +83,47 @@
         .no-data-msg { font-size: 13px; color: #666; line-height: 1.5; max-width: 280px; }
         .portal-hint { margin-top: 12px; font-weight: 600; color: var(--azbt-maroon); font-size: 11px; text-transform: uppercase; letter-spacing: 1px; }
 
-        /* ANNOUNCEMENT ITEMS */
+        /* ITEMS STYLING */
         .news-item { padding: 12px 4px; border-bottom: 1px solid #F0F0F0; width: 100%; box-sizing: border-box; }
         .info-row { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 8px; }
+        
         .news-date, .news-label { 
             font-size: clamp(9px, 2vw, 10px); font-weight: 700; color: #fff; padding: 4px 10px; 
             border-radius: 4px; text-transform: uppercase; display: inline-flex; align-items: center; gap: 5px; 
         }
         .news-date { background: var(--azbt-blue); }
         .news-label { background: #E9ECEF; color: var(--azbt-blue); }
+        
         .news-heading { font-size: clamp(14px, 3.8vw, 17px); color: var(--azbt-blue); font-weight: 600; display: block; line-height: 1.4; margin-bottom: 5px; }
         .news-desc { font-size: clamp(11.5px, 3.2vw, 13.5px); color: #555; line-height: 1.6; margin-bottom: 10px; }
 
-        /* BUTTON STYLE (MATCHES ACHIEVEMENTS) */
         .attach-link { 
             display: inline-flex; align-items: center; gap: 6px; background: var(--azbt-blue); color: #fff; 
             text-decoration: none; padding: 6px 12px; border-radius: 5px; font-size: 11px; font-weight: 500; transition: 0.3s; 
         }
         .attach-link:hover { background: var(--azbt-maroon); transform: translateY(-1px); }
 
-        /* STICKY HIGHLIGHT DESIGN */
         .important-wrapper { 
             background: linear-gradient(to right, #FFF9F0, #FFFFFF); border-radius: 10px; border: 1px solid #FFE6B3; 
             border-left: 4px solid var(--azbt-gold); padding: 8px 12px; margin-bottom: 15px; position: sticky; top: 0; z-index: 5; 
             box-shadow: 0 4px 12px rgba(212, 166, 74, 0.15);
         }
 
-        /* BOTTOM PORTAL BUTTON */
-        .azbt-btn-wrap { margin-top: 20px; text-align: center; }
+        /* PINNED BOTTOM BUTTON */
+        .azbt-btn-wrap { 
+            margin-top: auto; 
+            text-align: center; 
+            padding: 10px 0 5px 0; 
+            flex-shrink: 0;
+            border-top: 1px solid #F0F0F0;
+        }
         .azbt-btn { 
-            background: var(--azbt-blue); color: #fff; text-decoration: none; padding: clamp(8px, 2vw, 12px) clamp(15px, 4vw, 25px); 
-            border-radius: 8px; font-size: clamp(11px, 2.5vw, 13px); font-weight: 600; display: inline-flex; align-items: center; gap: 8px; transition: all 0.3s ease; 
+            background: var(--azbt-blue); color: #fff; text-decoration: none; padding: 10px 20px; 
+            border-radius: 8px; font-size: 12px; font-weight: 600; display: inline-flex; 
+            align-items: center; gap: 8px; transition: all 0.3s ease; 
         }
         .azbt-btn:hover { background: var(--azbt-maroon); transform: translateY(-2px); }
 
-        /* AUTO SCROLL */
         @keyframes scrollazbt { 0% { transform: translateY(0); } 100% { transform: translateY(-50%); } }
         .scroll-active { animation: scrollazbt 50s linear infinite; }
         .azbt-container:hover .scroll-active { animation-play-state: paused; }
@@ -120,9 +136,11 @@
 
 <div class="azbt-section">
     <div class="azbt-title"><i class="fa-solid fa-bullhorn"></i> Announcements</div>
+    
     <div class="azbt-container" id="newsViewport">
         <div class="skeleton"></div><div class="skeleton"></div><div class="skeleton"></div>
     </div>
+
     <div class="azbt-btn-wrap">
         <a href="https://loyolazoology.wixsite.com/az-bt/announcement-portal" target="_blank" class="azbt-btn">
             Announcement Portal <i class="fa-solid fa-arrow-right"></i>
@@ -145,7 +163,6 @@ function formatDate(d) {
 
 function processText(text) {
     if (!text) return "";
-    // Replaces both \n sequence and actual line breaks with <br>
     return text.replace(/\\n/g, "<br>").replace(/\n/g, "<br>");
 }
 
