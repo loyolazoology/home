@@ -76,6 +76,7 @@
 
     .title { font-family: 'Playfair Display', serif; font-size: clamp(1.1rem, 3.5vw, 1.25rem); font-weight: bold; color: var(--azbt-blue); margin-bottom: 4px; line-height: 1.2; }
     .career { font-size: 12px; font-weight: 600; color: var(--azbt-maroon); margin-bottom: 10px; letter-spacing: 0.5px; line-height: 1.4; }
+    .org { font-size: 11px; font-weight: 600; color: #000; margin-bottom: 10px; letter-spacing: 0.5px; line-height: 1.4; }
     .meta { font-size: 11px; color: #555; margin-bottom: 10px; display: flex; flex-wrap: wrap; gap: 12px; font-weight: 500; }
     .meta i { color: var(--azbt-gold); margin-right: 4px; }
     .desc { font-size: 12.5px; color: #000; line-height: 1.6; margin-bottom: 15px; }
@@ -188,7 +189,8 @@ fetch(CSV_URL).then(res => res.text()).then(csv => {
             <div class="maroon-line"></div>
             <div class="content">
                 <div class="title">${item.Name}</div>
-                <div class="career">${item.Current_Position} @ ${item.Organization}</div>
+                <div class="career">${item.Current_Position}</div>
+                <div class="org"> @ ${item.Organization}</div>
                 <div class="meta">
                     <span><i class="fa-solid fa-graduation-cap"></i> ${item.Degree}</span>
                     <span><i class="fa-solid fa-id-card"></i> ${item.Register_No}</span>
