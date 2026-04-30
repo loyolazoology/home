@@ -1,1 +1,266 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>AZ-BT | Student Spotlight</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+    :root { --azbt-blue: #23365D; --azbt-maroon: #6C232E; --azbt-gold: #D4A64A; --azbt-light: #F4F6F9; }
+    
+    body { 
+        margin: 0; background: transparent; font-family: 'Poppins', sans-serif; 
+        display: flex; justify-content: center; align-items: center; min-height: 100vh;
+    }
 
+    /* FULLY RESPONSIVE CONTAINER */
+    .container { 
+        width: 95%; 
+        max-width: 450px; 
+        margin: auto; 
+        text-align: center; 
+        display: flex;
+        flex-direction: column;
+        height: clamp(400px, 95vh, 750px);
+        padding: 10px 0;
+        box-sizing: border-box;
+    }
+
+    /* CENTERED TITLE WITH LINE BELOW - MATCHING MODEL */
+    .title-wrap { flex-shrink: 0; margin-bottom: 15px; position: relative; }
+    h2 { 
+        font-family: 'Playfair Display', serif; 
+        color: var(--azbt-blue); 
+        margin: 0; 
+        font-size: clamp(1.2rem, 5vw, 1.6rem); 
+        display: flex; align-items: center; justify-content: center; gap: 10px;
+    }
+    .title-wrap::after { 
+        content: ''; 
+        display: block; 
+        width: 40px; 
+        height: 3px; 
+        background: var(--azbt-maroon); 
+        margin: 8px auto 0; 
+    }
+
+    /* SLIDER FRAME - FILLS MIDDLE SPACE */
+    .slider-frame { 
+        overflow: hidden; position: relative; border-radius: 20px; 
+        background: #fff; box-shadow: 0 10px 25px rgba(35,54,93,0.12); 
+        cursor: grab; flex-grow: 1; display: block; min-height: 0;
+    }
+    .track { display: flex; transition: transform 0.6s cubic-bezier(0.23, 1, 0.32, 1); height: 100%; }
+    .card { min-width: 100%; height: 100%; display: flex; flex-direction: column; text-align: left; position: relative; }
+
+    /* ADAPTIVE IMAGE BOX */
+    .img-box { 
+        height: clamp(180px, 35vh, 260px); 
+        position: relative; background: #1a1a1a; 
+        overflow: hidden; display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+    }
+    .img-box .bg-blur { position: absolute; width: 100%; height: 100%; object-fit: cover; filter: blur(12px); opacity: 0.4; z-index: 1; }
+    .img-box img.main-img { max-width: 100%; max-height: 100%; object-fit: contain; position: relative; z-index: 2; display: none; }
+    .img-box img.main-img.active { display: block; }
+
+    /* BADGES */
+    .type-badge { position: absolute; top: 12px; left: 12px; background: rgba(255, 255, 255, 0.9); color: var(--azbt-blue); padding: 4px 10px; font-size: 9px; font-weight: 700; border-radius: 50px; text-transform: uppercase; z-index: 5; }
+    .new-badge { position: absolute; top: 12px; right: 12px; background: var(--azbt-gold); color: #fff; padding: 4px 10px; font-size: 9px; font-weight: 800; border-radius: 6px; z-index: 5; }
+
+    /* INNER NAVIGATION */
+    .nav-arrow {
+        position: absolute; top: 50%; transform: translateY(-50%);
+        background: rgba(255,255,255,0.25); color: white; border: none;
+        width: 32px; height: 32px; border-radius: 50%; cursor: pointer;
+        z-index: 10; display: flex; align-items: center; justify-content: center;
+        backdrop-filter: blur(5px); transition: 0.3s;
+    }
+    .nav-arrow:hover { background: var(--azbt-gold); color: #fff; }
+    .arrow-left { left: 10px; } .arrow-right { right: 10px; }
+
+    .maroon-line { height: 4px; background: var(--azbt-maroon); width: 100%; flex-shrink: 0; }
+
+    /* CONTENT SCROLLABLE */
+    .content { padding: 15px; flex-grow: 1; overflow-y: auto; display: flex; flex-direction: column; }
+    .content::-webkit-scrollbar { width: 3px; }
+    .content::-webkit-scrollbar-thumb { background: var(--azbt-gold); border-radius: 10px; }
+
+    .title { font-family: 'Playfair Display', serif; font-size: clamp(1.1rem, 3.5vw, 1.25rem); font-weight: bold; color: var(--azbt-blue); margin-bottom: 6px; line-height: 1.2; }
+    .students { font-size: 13px; font-weight: 600; color: var(--azbt-maroon); margin-bottom: 3px; display: flex; align-items: center; gap: 6px; }
+    .dept { font-size: 11px; color: #777; margin-bottom: 10px; font-weight: 500; }
+    .desc { font-size: 12.5px; color: #000; line-height: 1.6; margin-bottom: 15px; }
+    .date { font-size: 11px; color: #888; margin-top: auto; display: flex; align-items: center; gap: 5px; font-weight: 500; }
+
+    /* NO DATA EMPTY STATE */
+    .no-data-container {
+        width: 100%; height: 100%; display: flex; flex-direction: column;
+        align-items: center; justify-content: center; text-align: center;
+        padding: 30px; box-sizing: border-box; background: #fff; border-radius: 20px;
+    }
+    .no-data-icon { font-size: 3rem; color: var(--azbt-gold); margin-bottom: 15px; opacity: 0.8; }
+    .no-data-title { font-family: 'Playfair Display', serif; font-size: 1.2rem; color: var(--azbt-blue); margin-bottom: 8px; font-weight: 700; }
+    .no-data-msg { font-size: 13px; color: #666; line-height: 1.5; max-width: 250px; }
+    .portal-hint { margin-top: 12px; font-weight: 600; color: var(--azbt-maroon); font-size: 11px; text-transform: uppercase; letter-spacing: 1px; }
+
+    /* STICKY BOTTOM BUTTON */
+    .btn-wrap { margin-top: auto; padding-top: 15px; flex-shrink: 0; }
+    .btn-wrap a { 
+        background: var(--azbt-blue); color: #fff; padding: 10px 25px; 
+        border-radius: 8px; text-decoration: none; font-size: 13px; 
+        font-weight: 600; transition: 0.3s; display: inline-block;
+        box-shadow: 0 4px 15px rgba(35, 54, 93, 0.2);
+    }
+    .btn-wrap a:hover { background: var(--azbt-maroon); transform: translateY(-2px); }
+
+    .skeleton { flex-grow: 1; background: #eee; border-radius: 20px; animation: pulse 1.5s infinite; }
+    @keyframes pulse { 50% { opacity: 0.5; } }
+</style>
+</head>
+<body>
+
+<div class="container">
+    <div class="title-wrap">
+        <h2><i class="fa-solid fa-users-viewfinder"></i> Student Spotlight</h2>
+    </div>
+    
+    <div id="loader" class="skeleton"></div>
+
+    <div class="slider-frame" id="slider-frame" style="display:none;">
+        <div class="track" id="track"></div>
+    </div>
+
+    <div class="btn-wrap">
+        <a href="https://loyolazoology.wixsite.com/az-bt/student-spotlight" target="_blank">
+            Spotlights Portal <i class="fa-solid fa-arrow-right" style="margin-left:5px; font-size:10px;"></i>
+        </a>
+    </div>
+</div>
+
+<script>
+const CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vT43pqyX0cBpyQl27_XxHXsN--IQ5iwoDLR7sobc2nWGuUwdS_HHVRjlA0xh2YTUP4F8GIk8QGGyEzX/pub?output=csv";
+
+function parseCSV(text) {
+    const lines = text.split(/\r?\n/).filter(line => line.trim() !== "");
+    const headers = lines[0].split(',').map(h => h.trim().toLowerCase());
+    return lines.slice(1).map(line => {
+        const values = line.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/);
+        let obj = {};
+        headers.forEach((h, i) => obj[h] = values[i] ? values[i].replace(/^"|"$/g, '').trim() : "");
+        return obj;
+    });
+}
+
+function parseDate(d) {
+    if(!d) return null;
+    const p = d.split("-");
+    return new Date(p[2], p[1]-1, p[0]);
+}
+
+function getImageUrl(input) {
+    if(!input) return "";
+    const match = input.match(/[-\w]{25,}/);
+    return match ? `https://drive.google.com/thumbnail?id=${match[0]}&sz=w1000` : input;
+}
+
+fetch(CSV_URL).then(res => res.text()).then(csvText => {
+    let data = parseCSV(csvText);
+    const track = document.getElementById("track");
+    const frame = document.getElementById("slider-frame");
+    const today = new Date();
+    today.setHours(0,0,0,0);
+
+    let activeItems = data.filter(row => {
+        const from = parseDate(row.from_date);
+        const to = parseDate(row.to_date);
+        return from && to && today >= from && today <= to;
+    }).sort((a, b) => parseDate(b.from_date) - parseDate(a.from_date));
+
+    document.getElementById("loader").style.display = "none";
+    frame.style.display = "block";
+
+    if (activeItems.length === 0) {
+        frame.innerHTML = `
+            <div class="no-data-container">
+                <div class="no-data-icon"><i class="fa-solid fa-trophy"></i></div>
+                <div class="no-data-title">No Active Spotlights</div>
+                <div class="no-data-msg">No active student achievements to display.</div>
+                <div class="portal-hint">Refer to portal for Student Spotlights</div>
+            </div>`;
+        return;
+    }
+
+    activeItems.forEach((item, cardIdx) => {
+        const imgList = (item.images_links || item.image_links || "").split("|");
+        const images = imgList.map(url => getImageUrl(url.trim()));
+        const isNew = (today - parseDate(item.from_date)) / 86400000 <= 3;
+
+        const card = document.createElement("div");
+        card.className = "card";
+        card.innerHTML = `
+            <div class="img-box">
+                ${images.map((img, i) => `
+                    <img src="${img}" class="bg-blur" style="display:${i===0?'block':'none'}">
+                    <img src="${img}" class="main-img ${i===0?'active':''}" onerror="this.src='https://via.placeholder.com/600x400?text=AZ+BT'">
+                `).join("")}
+                ${images.length > 1 ? `
+                    <button class="nav-arrow arrow-left" onclick="event.stopPropagation(); changeInnerImg(${cardIdx}, -1)"><i class="fa-solid fa-chevron-left"></i></button>
+                    <button class="nav-arrow arrow-right" onclick="event.stopPropagation(); changeInnerImg(${cardIdx}, 1)"><i class="fa-solid fa-chevron-right"></i></button>
+                ` : ''}
+                <div class="type-badge"><i class="fa-solid fa-user-tag"></i> ${item.type || 'Award'}</div>
+                ${isNew ? `<div class="new-badge"><i class="fa-solid fa-bolt"></i> NEW</div>` : ""}
+            </div>
+            <div class="maroon-line"></div>
+            <div class="content">
+                <div class="title">${item.title}</div>
+                <div class="students"><i class="fa-solid fa-user-graduate"></i> ${item.students_names || item.student_names || ''}</div>
+                <div class="dept"><i class="fa-solid fa-id-card"></i> ${item.dept_numbers || ''}</div>
+                <div class="desc">${(item.description || '').replace(/\\n/g, '<br>')}</div>
+                <div class="date"><i class="fa-solid fa-calendar-day"></i> Published: ${item.from_date}</div>
+            </div>
+        `;
+        track.appendChild(card);
+    });
+
+    initMainSlider(activeItems.length);
+});
+
+window.changeInnerImg = function(cardIdx, dir) {
+    const card = document.querySelectorAll('.card')[cardIdx];
+    const imgs = card.querySelectorAll('.main-img');
+    const blurs = card.querySelectorAll('.bg-blur');
+    let current = Array.from(imgs).findIndex(img => img.classList.contains('active'));
+    imgs[current].classList.remove('active');
+    blurs[current].style.display = 'none';
+    let next = (current + dir + imgs.length) % imgs.length;
+    imgs[next].classList.add('active');
+    blurs[next].style.display = 'block';
+};
+
+function initMainSlider(count) {
+    const track = document.getElementById("track");
+    const frame = document.getElementById("slider-frame");
+    let curIdx = 0;
+
+    const move = (idx) => { 
+        curIdx = (idx + count) % count;
+        track.style.transform = `translateX(-${curIdx * 100}%)`;
+    };
+
+    let auto = setInterval(() => move(curIdx + 1), 10000);
+
+    frame.addEventListener('touchstart', (e) => {
+        clearInterval(auto);
+        startX = e.touches[0].clientX;
+    }, {passive: true});
+
+    frame.addEventListener('touchend', (e) => {
+        let endX = e.changedTouches[0].clientX;
+        if(startX - endX > 50) move(curIdx + 1);
+        else if(startX - endX < -50) move(curIdx - 1);
+        auto = setInterval(() => move(curIdx + 1), 10000);
+    }, {passive: true});
+}
+</script>
+</body>
+</html>
