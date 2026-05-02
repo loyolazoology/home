@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ZEN-DNA | Home Slider Pro</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --zen-maroon: #6C232E;
+            --zen-gold: #D4A64A;
+            --zen-white: #FFFFFF;
+        }
+
+        body, html { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background: transparent; }
+
+        .slider-container {
+            position: relative;
+            width: 100%;
+            height: 100vh;
+            overflow: hidden;
+            background: #000;
+            touch-action: pan-y; /* Allows vertical scrolling of page while keeping horizontal swipe for slider */
+        }
+
+        .slide {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 1s ease-in-out, transform 1.2s ease-in-out;
+            transform: scale(1.08);
+            z-index: 1;
+        }
+
+        .slide.active {
+            opacity: 1;
+            visibility: visible;
+            transform: scale(1);
+            z-index: 2;
+        }
+
+        .slide-link { display: block; width: 100%; height: 100%; cursor: pointer; }
+        .slide-img { width: 100%; height: 100%; object-fit: cover; display: block; }
+
+        /* DESKTOP NAVIGATION BUTTONS */
+        .nav-btn {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            background: rgba(0, 0, 0, 0.3);
+            color: white;
+            border: none;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            cursor: pointer;
+            z-index: 10;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(5px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .nav-btn:hover { background: var(--zen-maroon); color: #fff; transform: translateY(-50%) scale(1.1); }
+        .prev-btn { left: 20px; }
+        .next-btn { right: 20px; }
+
+        /* Hide buttons on small mobile screens where swipe is primary */
+        @media (max-width: 768px) {
+            .nav-btn { display: none; }
+        }
+
+        /* NAVIGATION DOTS */
+        .dots-container {
+            position: absolute;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 12px;
+            z-index: 10;
+        }
+
+        .dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.4);
+            cursor: pointer;
+            transition: 0.3s;
+        }
+
+        .dot.active {
+            background: var(--zen-gold);
+            transform: scale(1.4);
+            box-shadow: 0 0 10px rgba(212, 166, 74, 0.8);
+        }
+
+        .skeleton { width: 100%; height: 100%; background: #222; position: relative; overflow: hidden; }
+        .skeleton::after {
+            content: ""; position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.05), transparent);
+            animation: shimmer 1.5s infinite;
+        }
+        @keyframes shimmer { 0% { transform: translateX(-100%); } 100% { transform: translateX(100%); } }
+    </style>
+</head>
+<body>
+
+<div class="slider-container" id="slider">
+    <div class="skeleton"></div>
+</div>
+
+<script>
+const CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRd4R0hagO_0a5YVu8g7-NiyRSpx4Eyut9TZ9jrEmZJImKE7-IjH1CN945zYLDkKqovrjx7ivNIxRfZ/pub?gid=0&single=true&output=csv";
+
+function getDriveImg(url) {
+    if (!url) return "";
+    const match = url.match(/[-\w]{25,}/);
+    return match ? `https://drive.google.com/thumbnail?id=${match[0]}&sz=w1920` : url;
+}
+
+function parseDate(dStr) {
+    if (!dStr || dStr.trim() === "") return null;
+    const parts = dStr.split("-");
+    return parts.length === 3 ? new Date(parts[2], parts[1] - 1, parts[0]) : null;
+}
+
+let currentIndex = 0;
+let slideInterval;
+let totalSlides = 0;
+let startX = 0;
+
+async function initSlider() {
+    try {
+        const response = await fetch(CSV_URL);
+        const csvText = await response.text();
+        const rows = csvText.split(/\r?\n/).slice(1);
+        const now = new Date();
+        const activeData = [];
+
+        rows.forEach(row => {
+            const cols = row.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/).map(v => v.replace(/"/g,"").trim());
+            const [id, title, driveUrl, targetLink, fromStr, toStr] = cols;
+
+            if (!driveUrl) return;
+
+            const fromDate = parseDate(fromStr);
+            const toDate = parseDate(toStr);
+
+            // Lifetime logic: keep if date is empty or current date is in range
+            let isValid = true;
+            if (fromDate && now < fromDate) isValid = false;
+            if (toDate && now > toDate) isValid = false;
+
+            if (isValid) {
+                activeData.push({ img: getDriveImg(driveUrl), link: targetLink || "#" });
+            }
+        });
+
+        totalSlides = activeData.length;
+        const container = document.getElementById('slider');
+
+        if (totalSlides === 0) {
+            container.innerHTML = `<div style="display:flex;align-items:center;justify-content:center;height:100%;color:#555;">No Active Slides</div>`;
+            return;
+        }
+
+        // Build Elements
+        let html = "";
+        activeData.forEach((slide, idx) => {
+            html += `
+                <div class="slide ${idx === 0 ? 'active' : ''}">
+                    <a href="${slide.link}" target="_top" class="slide-link">
+                        <img src="${slide.img}" class="slide-img">
+                    </a>
+                </div>`;
+        });
+
+        // Add Desktop Navigation
+        html += `
+            <button class="nav-btn prev-btn" onclick="moveSlide(-1)"><i class="fa-solid fa-chevron-left"></i></button>
+            <button class="nav-btn next-btn" onclick="moveSlide(1)"><i class="fa-solid fa-chevron-right"></i></button>
+            <div class="dots-container">`;
+        
+        activeData.forEach((_, idx) => {
+            html += `<div class="dot ${idx === 0 ? 'active' : ''}" onclick="goToSlide(${idx})"></div>`;
+        });
+        html += `</div>`;
+
+        container.innerHTML = html;
+
+        // Start Features
+        startAutoPlay();
+        setupTouch();
+
+    } catch (e) { console.error(e); }
+}
+
+function updateDisplay() {
+    const slides = document.querySelectorAll('.slide');
+    const dots = document.querySelectorAll('.dot');
+    slides.forEach((s, i) => s.classList.toggle('active', i === currentIndex));
+    dots.forEach((d, i) => d.classList.toggle('active', i === currentIndex));
+}
+
+function moveSlide(dir) {
+    currentIndex = (currentIndex + dir + totalSlides) % totalSlides;
+    updateDisplay();
+    resetTimer();
+}
+
+function goToSlide(idx) {
+    currentIndex = idx;
+    updateDisplay();
+    resetTimer();
+}
+
+function startAutoPlay() {
+    if (totalSlides > 1) {
+        slideInterval = setInterval(() => moveSlide(1), 6000);
+    }
+}
+
+function resetTimer() {
+    clearInterval(slideInterval);
+    startAutoPlay();
+}
+
+// MOBILE SWIPE LOGIC
+function setupTouch() {
+    const container = document.getElementById('slider');
+    container.addEventListener('touchstart', e => {
+        startX = e.touches[0].clientX;
+        clearInterval(slideInterval);
+    }, {passive: true});
+
+    container.addEventListener('touchend', e => {
+        const endX = e.changedTouches[0].clientX;
+        const diff = startX - endX;
+
+        if (Math.abs(diff) > 50) { // Swipe threshold
+            if (diff > 0) moveSlide(1);  // Swipe left -> Next
+            else moveSlide(-1);          // Swipe right -> Prev
+        } else {
+            startAutoPlay();
+        }
+    }, {passive: true});
+}
+
+initSlider();
+</script>
+</body>
+</html>
