@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AZ-BT | Strength Dashboard</title>
+    
+    <link rel="icon" type="image/png" href="https://static.wixstatic.com/media/e98a4d_b935ab57540b41bdb320efa88b5e69b1~mv2.png">
+    <!-- Font Awesome & Charts -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+    
+    <style>
+        :root { --azbt-blue: #23365D; --azbt-maroon: #6C232E; --azbt-gold: #D4A64A; --azbt-light: #F4F6F9; }
+        
+        body { 
+            margin: 0; background: transparent; font-family: 'Poppins', sans-serif; 
+            display: flex; justify-content: center; align-items: center; min-height: 100vh;
+        }
+
+        .container { 
+            width: 95%; 
+            max-width: 1000px; 
+            margin: auto; 
+            text-align: center; 
+            display: flex;
+            flex-direction: column;
+            height: clamp(500px, 95vh, 900px);
+            padding: 10px 0;
+            box-sizing: border-box;
+        }
+        
+        h2 { 
+            font-family: 'Playfair Display', serif; 
+            color: var(--azbt-blue); 
+            margin: 0 0 10px 0; 
+            font-size: clamp(1.4rem, 4vw, 1.8rem);
+            flex-shrink: 0;
+        }
+        h2::after { content: ''; display: block; width: 50px; height: 3px; background: var(--azbt-maroon); margin: 8px auto; }
+
+        .dashboard-frame { 
+            background: #fff; border-radius: 24px; 
+            box-shadow: 0 15px 35px rgba(35, 54, 93, 0.1); 
+            overflow: hidden; border-top: 5px solid var(--azbt-maroon);
+            display: flex; flex-direction: column; flex-grow: 1; min-height: 0;
+        }
+
+        .select-box { padding: 15px; background: var(--azbt-light); flex-shrink: 0; }
+        select { 
+            width: 100%; max-width: 250px; padding: 8px 12px; border-radius: 12px; border: 1px solid #ddd;
+            font-family: 'Poppins'; font-size: 13px; font-weight: 600; color: var(--azbt-blue);
+            outline: none; cursor: pointer; background: white;
+        }
+
+        .grid { 
+            padding: 15px; 
+            display: grid; 
+            grid-template-columns: repeat(2, 1fr); 
+            gap: 12px; 
+            flex-shrink: 0;
+        }
+
+        @media (min-width: 768px) {
+            .grid { grid-template-columns: repeat(4, 1fr); }
+        }
+
+        .stat-card { 
+            background: var(--azbt-light); padding: 15px; border-radius: 18px; 
+            border-bottom: 4px solid var(--azbt-gold);
+            transition: all 0.3s ease; text-align: center;
+        }
+
+        @media (max-width: 767px) {
+            .stat-card:nth-child(1), .stat-card:nth-child(2) { grid-column: span 2; }
+            .stat-card:nth-child(3), .stat-card:nth-child(4) { grid-column: span 1; padding: 12px 8px; }
+            .stat-card:nth-child(3) .val, .stat-card:nth-child(4) .val { font-size: 1.2rem; }
+        }
+        
+        .card-title { 
+            font-size: 9px; font-weight: 700; color: var(--azbt-blue); 
+            text-transform: uppercase; margin-bottom: 12px; 
+            display: flex; align-items: center; justify-content: center; gap: 6px; letter-spacing: 0.5px; 
+        }
+        .card-title i { color: var(--azbt-gold); font-size: 1.1em; }
+        
+        .row { display: flex; justify-content: space-around; align-items: center; }
+        .val { 
+            font-size: clamp(1.2rem, 3vw, 1.5rem); font-weight: 700; color: var(--azbt-maroon); 
+            display: block; line-height: 1; transition: all 0.2s ease;
+        }
+        .pulse-active { color: var(--azbt-gold) !important; text-shadow: 0 0 15px rgba(212, 166, 74, 0.4); transform: scale(1.1); }
+        .lbl { font-size: 9px; color: #888; font-weight: 600; margin-top: 4px; display: block; }
+
+        .summary-bar { 
+            display: flex; justify-content: space-around; 
+            padding: 12px; background: var(--azbt-blue); color: white; margin: 0 15px; border-radius: 15px;
+            flex-shrink: 0;
+        }
+        .sum-item { display: flex; flex-direction: column; align-items: center; }
+        .sum-item .s-val { font-size: 1.3rem; font-weight: 700; color: var(--azbt-gold); display: flex; align-items: center; gap: 8px; }
+        .sum-item .s-val i { font-size: 0.7em; opacity: 0.8; }
+        .sum-item .s-lbl { font-size: 8px; text-transform: uppercase; opacity: 0.9; font-weight: 600; letter-spacing: 1px; }
+
+        .chart-box { 
+            margin: 15px; padding: 10px; flex-grow: 1; 
+            background: #fff; border-radius: 18px; border: 1px solid #f0f0f0;
+            min-height: 200px;
+        }
+
+        .skeleton { height: 100%; width: 100%; background: #eee; border-radius: 24px; animation: skel-pulse 1.5s infinite; }
+        @keyframes skel-pulse { 0%, 100% { opacity: 0.6; } 50% { opacity: 1; } }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2><i class="fa-solid fa-paw"></i> Animals of Zoo</h2>
+    
+    <div id="loader" class="skeleton"></div>
+
+    <div class="dashboard-frame" id="main-ui" style="display:none;">
+        <div class="select-box">
+            <select id="yearSelect"></select>
+        </div>
+
+        <div class="grid">
+            <div class="stat-card">
+                <span class="card-title"><i class="fa-solid fa-user-graduate"></i> Undergraduate (UG)</span>
+                <div class="row">
+                    <div class="stat-group"><span class="val" id="ug1">0</span><span class="lbl">1st UG</span></div>
+                    <div class="stat-group"><span class="val" id="ug2">0</span><span class="lbl">2nd UG</span></div>
+                    <div class="stat-group"><span class="val" id="ug3">0</span><span class="lbl">3rd UG</span></div>
+                </div>
+            </div>
+
+            <div class="stat-card">
+                <span class="card-title"><i class="fa-solid fa-graduation-cap"></i> Postgraduate (PG)</span>
+                <div class="row">
+                    <div class="stat-group"><span class="val" id="pg1">0</span><span class="lbl">1st PG</span></div>
+                    <div class="stat-group"><span class="val" id="pg2">0</span><span class="lbl">2nd PG</span></div>
+                </div>
+            </div>
+
+            <div class="stat-card" style="border-bottom-color: var(--azbt-maroon);">
+                <span class="card-title"><i class="fa-solid fa-microscope"></i> PhD Scholars</span>
+                <div class="row">
+                    <div class="stat-group"><span class="val" id="phd">0</span><span class="lbl">Total Research</span></div>
+                </div>
+            </div>
+
+            <div class="stat-card" style="border-bottom-color: var(--azbt-blue);">
+                <span class="card-title"><i class="fa-solid fa-chalkboard-user"></i> Faculty </span>
+                <div class="row">
+                    <div class="stat-group"><span class="val" id="staff">0</span><span class="lbl">Active Staff</span></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="summary-bar">
+            <div class="sum-item">
+                <span class="s-val" id="total-stud"><i class="fa-solid fa-users"></i> 0</span>
+                <span class="s-lbl">Total Students</span>
+            </div>
+            <div class="sum-item">
+                <span class="s-val" id="total-staff"><i class="fa-solid fa-id-badge"></i> 0</span>
+                <span class="s-lbl">Faculty Strength</span>
+            </div>
+        </div>
+
+        <div class="chart-box">
+            <canvas id="growthChart"></canvas>
+        </div>
+    </div>
+</div>
+
+<script>
+const SHEET_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTb9NDvzv-CIVupIU-T4hxFOVCRW1e0NVI6fMaRXre2noPZWtgfSTwkraDXkE8chrrh-wGAOl26TJZe/pub?gid=0&single=true&output=csv";
+
+let dataset = [];
+let chart = null;
+
+async function init() {
+    try {
+        const res = await fetch(SHEET_URL);
+        const text = await res.text();
+        const rows = text.trim().split("\n").slice(1);
+        
+        dataset = rows.map(r => {
+            const c = r.split(",");
+            return {
+                year: c[0],
+                ug1: +c[1] || 0, ug2: +c[2] || 0, ug3: +c[3] || 0,
+                pg1: +c[4] || 0, pg2: +c[5] || 0,
+                phd: +c[6] || 0, staff: +c[7] || 0
+            };
+        });
+
+        const select = document.getElementById("yearSelect");
+        dataset.forEach((d, i) => {
+            let opt = document.createElement("option");
+            opt.value = i; opt.text = d.year;
+            select.appendChild(opt);
+        });
+
+        document.getElementById("loader").style.display = "none";
+        document.getElementById("main-ui").style.display = "flex";
+
+        select.selectedIndex = dataset.length - 1;
+        updateUI(dataset[dataset.length - 1]);
+        createUnifiedChart();
+
+        select.onchange = () => updateUI(dataset[select.value]);
+
+    } catch (e) { console.error(e); }
+}
+
+function animateCounter(id, target) {
+    let current = 0;
+    const duration = 1500;
+    const el = document.getElementById(id);
+    const start = performance.now();
+
+    el.classList.add('pulse-active');
+
+    function step(timestamp) {
+        const progress = Math.min((timestamp - start) / duration, 1);
+        const currentVal = Math.floor(progress * target);
+        
+        // Preserve icon if it exists in the summary bar
+        if (id.includes('total')) {
+            const icon = id === 'total-stud' ? '<i class="fa-solid fa-users"></i> ' : '<i class="fa-solid fa-id-badge"></i> ';
+            el.innerHTML = icon + currentVal;
+        } else {
+            el.innerText = currentVal;
+        }
+        
+        if (progress < 1) {
+            requestAnimationFrame(step);
+        } else {
+            if (id.includes('total')) {
+                const icon = id === 'total-stud' ? '<i class="fa-solid fa-users"></i> ' : '<i class="fa-solid fa-id-badge"></i> ';
+                el.innerHTML = icon + target;
+            } else {
+                el.innerText = target;
+            }
+            el.classList.remove('pulse-active');
+        }
+    }
+    requestAnimationFrame(step);
+}
+
+function updateUI(d) {
+    animateCounter("ug1", d.ug1); animateCounter("ug2", d.ug2); animateCounter("ug3", d.ug3);
+    animateCounter("pg1", d.pg1); animateCounter("pg2", d.pg2);
+    animateCounter("phd", d.phd); animateCounter("staff", d.staff);
+    animateCounter("total-stud", (d.ug1+d.ug2+d.ug3+d.pg1+d.pg2+d.phd));
+    animateCounter("total-staff", d.staff);
+}
+
+function createUnifiedChart() {
+    const ctx = document.getElementById('growthChart').getContext('2d');
+    chart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: dataset.map(d => d.year),
+            datasets: [
+                { label: 'UG', data: dataset.map(d => d.ug1+d.ug2+d.ug3), backgroundColor: '#23365D', borderRadius: 5 },
+                { label: 'PG', data: dataset.map(d => d.pg1+d.pg2), backgroundColor: '#6C232E', borderRadius: 5 },
+                { label: 'PhD', data: dataset.map(d => d.phd), backgroundColor: '#D4A64A', borderRadius: 5 }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: { x: { stacked: true }, y: { stacked: true, beginAtZero: true } },
+            plugins: {
+                legend: { position: 'bottom', labels: { font: { family: 'Poppins', size: 10 } } },
+                tooltip: {
+                    enabled: true,
+                    mode: 'index',
+                    intersect: false,
+                    backgroundColor: 'rgba(35, 54, 93, 0.95)',
+                    titleFont: { family: 'Poppins', size: 12, weight: 'bold' },
+                    bodyFont: { family: 'Poppins', size: 11 },
+                    padding: 12,
+                    displayColors: false,
+                    callbacks: {
+                        title: (items) => `Academic Year: ${items[0].label}`,
+                        label: (item) => {
+                            const d = dataset[item.dataIndex];
+                            if (item.datasetIndex === 0) {
+                                return [
+                                    `UG Strength: ${d.ug1 + d.ug2 + d.ug3}`,
+                                    `PG Strength: ${d.pg1 + d.pg2}`,
+                                    `PhD Scholars: ${d.phd}`,
+                                    `------------------`,
+                                    `Student Total: ${d.ug1 + d.ug2 + d.ug3 + d.pg1 + d.pg2 + d.phd}`
+                                ];
+                            }
+                            return null;
+                        }
+                    },
+                    filter: (item) => item.datasetIndex === 0
+                }
+            }
+        }
+    });
+}
+
+init();
+</script>
+</body>
+</html>
