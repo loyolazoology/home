@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AZ-BT | Institutional Address</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<style>
+:root {
+    --azbt-blue: #23365D;
+    --azbt-maroon: #6C232E;
+    --azbt-gold: #D4A64A;
+    --azbt-white: #FFFFFF;
+    --azbt-bg: #F8FAFC;
+}
+
+body {
+    margin: 0;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start; /* Aligns to top of container */
+    min-height: 100vh;
+    background: transparent;
+    font-family: 'Poppins', sans-serif;
+    padding: 0;
+}
+
+.pro-card {
+    background: var(--azbt-white);
+    width: 100%;
+    /* Flexible width: fills screen on mobile, stays professional on desktop */
+    max-width: clamp(280px, 95vw, 380px);
+    padding: clamp(20px, 5vw, 30px);
+    border-radius: 16px;
+    box-shadow: 0 10px 35px rgba(35, 54, 93, 0.1);
+    border-left: 6px solid var(--azbt-maroon);
+    position: relative;
+    overflow: hidden;
+    box-sizing: border-box;
+}
+
+/* Background icon watermark */
+.pro-card::before {
+    content: '\f19c';
+    font-family: 'Font Awesome 6 Free';
+    font-weight: 900;
+    position: absolute;
+    top: -5px;
+    right: -5px;
+    font-size: clamp(60px, 15vw, 85px);
+    color: rgba(242, 242, 242, 1);
+    z-index: 0;
+    transform: rotate(15deg);
+    pointer-events: none;
+}
+
+.section {
+    position: relative;
+    z-index: 1;
+}
+
+.label {
+    font-size: clamp(8px, 2vw, 10px);
+    font-weight: 700;
+    color: var(--azbt-gold);
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.label::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: #f0f0f0;
+}
+
+.content-title {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(15px, 4.5vw, 17px);
+    color: var(--azbt-blue);
+    line-height: 1.4;
+    margin: 0 0 12px 0;
+    font-weight: bold;
+}
+
+.meta-info {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.meta-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    font-size: clamp(11px, 3vw, 12px);
+    color: #475569;
+    font-weight: 500;
+    line-height: 1.5;
+}
+
+.meta-item i {
+    color: var(--azbt-maroon);
+    font-size: 1.1em;
+    margin-top: 2px;
+    width: 16px;
+    text-align: center;
+}
+
+.highlight {
+    color: var(--azbt-blue);
+    font-weight: 700;
+}
+
+@media (max-width: 320px) {
+    .pro-card { padding: 15px; }
+}
+</style>
+</head>
+<body>
+
+<div class="pro-card">
+  <div class="section">
+    <div class="label">Official Address</div>
+    <div class="content-title">PG & Research Department of Advanced Zoology & Biotechnology</div>
+    <div class="meta-info">
+      <div class="meta-item">
+        <i class="fa-solid fa-building-columns"></i>
+        <span>Loyola College (Autonomous),<br>Nungambakkam, Chennai - 600 034,<br>Tamil Nadu, India.</span>
+      </div>
+      <div class="meta-item">
+        <i class="fa-solid fa-door-open"></i>
+        <span>Office Hours: <span class="highlight">08:15 AM – 01:15 PM</span></span>
+      </div>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>
