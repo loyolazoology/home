@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AZ-BT | Legal Compliance</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<style>
+:root { 
+    --azbt-blue: #23365D; 
+    --azbt-maroon: #6C232E; 
+    --azbt-gold: #D4A64A; 
+    --azbt-white: #FFFFFF; 
+    --azbt-bg: #FDF2F2; 
+}
+
+body { 
+    margin: 0; 
+    display: flex; 
+    justify-content: center; 
+    align-items: flex-start; 
+    min-height: 100vh; 
+    background: transparent; 
+    font-family: 'Poppins', sans-serif; 
+    padding: 0;
+}
+
+.pro-card { 
+    background: var(--azbt-white); 
+    width: 100%; 
+    max-width: clamp(280px, 95vw, 380px); 
+    padding: clamp(20px, 5vw, 25px); 
+    border-radius: 16px; 
+    box-shadow: 0 10px 35px rgba(108, 35, 46, 0.08); 
+    border-left: 6px solid var(--azbt-maroon); 
+    position: relative; 
+    overflow: hidden; 
+    box-sizing: border-box;
+}
+
+/* Regulatory watermark watermark */
+.pro-card::before { 
+    content: '\f3ed'; 
+    font-family: 'Font Awesome 6 Free'; 
+    font-weight: 900; 
+    position: absolute; 
+    top: -5px; 
+    right: -5px; 
+    font-size: clamp(60px, 15vw, 80px); 
+    color: rgba(108, 35, 46, 0.8); 
+    z-index: 0; 
+    transform: rotate(15deg); 
+    pointer-events: none;
+}
+
+.section { 
+    position: relative; 
+    z-index: 1; 
+}
+
+.label { 
+    font-size: clamp(8px, 2vw, 10px); 
+    font-weight: 700; 
+    color: var(--azbt-gold); 
+    text-transform: uppercase; 
+    letter-spacing: 1.5px; 
+    margin-bottom: 10px; 
+    display: flex; 
+    align-items: center; 
+    gap: 8px; 
+}
+
+.label::after { 
+    content: ''; 
+    flex: 1; 
+    height: 1px; 
+    background: #f0f0f0; 
+}
+
+.content-title { 
+    font-family: 'Playfair Display', serif; 
+    font-size: clamp(15px, 4.5vw, 17px); 
+    color: var(--azbt-maroon); 
+    line-height: 1.3; 
+    margin: 0 0 12px 0; 
+    font-weight: bold; 
+}
+
+.meta-info { 
+    display: flex; 
+    flex-direction: column; 
+    gap: 8px; 
+}
+
+.meta-item { 
+    display: flex; 
+    align-items: center; 
+    gap: 10px; 
+    font-size: clamp(11px, 3vw, 12px); 
+    color: var(--azbt-blue); 
+    font-weight: 700; 
+}
+
+.meta-item i { 
+    font-size: 1.1em; 
+}
+
+.disclaimer { 
+    font-size: clamp(10px, 2.8vw, 11px); 
+    color: #475569; 
+    line-height: 1.5; 
+    font-style: italic; 
+    background: var(--azbt-bg); 
+    padding: 10px 15px; 
+    border-radius: 8px; 
+    margin-top: 5px; 
+}
+
+@media (max-width: 320px) {
+    .pro-card { padding: 15px; }
+}
+</style>
+</head>
+<body>
+
+<div class="pro-card">
+  <div class="section">
+    <div class="label">Legal & Compliance</div>
+    <div class="content-title">Regulatory Standards</div>
+    <div class="meta-info">
+      <div class="meta-item">
+        <i class="fa-solid fa-shield-halved"></i>
+        <span>© 2026 AZ-BT | Academic Rights</span>
+      </div>
+      <div class="disclaimer">
+        This portal is a departmental academic initiative. All data, including student and staff records, are protected under institutional policies. Unauthorized access or misuse may result in disciplinary action.
+      </div>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>
