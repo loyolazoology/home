@@ -13,43 +13,43 @@
   --azbt-gold: #D4A64A;
   --azbt-white: #FFFFFF;
   --azbt-bg: #F8FAFC;
-  --space-compact: clamp(0.75rem, 2vw, 1.5rem);
+  --space-unit: clamp(0.8rem, 2vw, 1.5rem);
 }
 
 body { 
   margin: 0; 
-  padding: 10px; 
+  padding: 0; 
   background: transparent; 
   font-family: 'Poppins', sans-serif; 
   display: flex; 
   justify-content: center; 
-  align-items: flex-start; /* Aligns to top to minimize white space */
+  align-items: flex-start; /* Aligns to top to prevent extra top space */
   min-height: 100vh;
 }
 
 .master-card {
   background: var(--azbt-white);
   width: 100%;
-  max-width: 1000px;
-  padding: var(--space-compact);
-  padding-top: 10px; /* Specific tight top padding */
-  border-radius: 16px;
-  box-shadow: 0 15px 40px rgba(35, 54, 93, 0.1);
+  max-width: 1100px;
+  padding: var(--space-unit);
+  /* Removed top-level margins to eliminate space above/below */
+  border-radius: clamp(12px, 2vw, 24px);
+  box-shadow: 0 10px 30px rgba(35, 54, 93, 0.08);
   border-left: 6px solid var(--azbt-maroon);
   position: relative;
   overflow: hidden;
   box-sizing: border-box;
 }
 
-/* Fixed Link Icon logic for all screens */
+/* Fixed Background Link Icon - visible and properly positioned on all screens */
 .master-card::before {
   content: '\f0c1';
   font-family: 'Font Awesome 6 Free';
   font-weight: 900;
   position: absolute;
-  top: 5px;
-  right: 5px;
-  font-size: clamp(60px, 12vw, 120px); /* Responsive but contained size */
+  top: 10px;
+  right: 10px;
+  font-size: clamp(60px, 12vw, 120px);
   color: rgba(0,0,0,0.03); /* Subtle watermark effect */
   z-index: 0;
   transform: rotate(15deg);
@@ -58,35 +58,35 @@ body {
 
 .header-title {
   font-family: 'Playfair Display', serif;
-  font-size: clamp(1.2rem, 3.5vw, 1.6rem);
+  font-size: clamp(1.2rem, 3.5vw, 1.8rem);
   color: var(--azbt-blue);
-  margin: 0 0 15px 0; /* Zero top margin */
+  margin: 0 0 var(--space-unit) 0; /* Zero top margin */
   position: relative;
   z-index: 1;
+  line-height: 1.2;
 }
 
-/* Fluid Grid Layout */
+/* Compact Responsive Grid */
 .nav-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(min(100%, 200px), 1fr));
-  gap: 15px var(--space-compact);
+  gap: var(--space-unit);
   position: relative;
   z-index: 1;
 }
 
 .portals-container {
   grid-column: 1 / -1; 
-  margin-top: 5px;
 }
 
-.nav-section { display: flex; flex-direction: column; gap: 6px; }
+.nav-section { display: flex; flex-direction: column; gap: 8px; }
 
 .section-label {
-  font-size: 9px;
+  font-size: clamp(8px, 1.2vw, 10px);
   font-weight: 700;
   color: var(--azbt-gold);
   text-transform: uppercase;
-  letter-spacing: 1px;
+  letter-spacing: 1.2px;
   display: flex;
   align-items: center;
   gap: 8px;
@@ -98,7 +98,7 @@ body {
 .portal-links-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(min(100%, 160px), 1fr));
-  gap: 6px 15px;
+  gap: 8px clamp(12px, 1.5vw, 24px);
 }
 
 .link-item {
@@ -106,7 +106,7 @@ body {
   font-size: clamp(11px, 1.1vw, 13px);
   color: #475569;
   font-weight: 500;
-  transition: 0.2s ease;
+  transition: all 0.2s ease;
   display: flex;
   align-items: center;
   gap: 8px;
@@ -121,17 +121,17 @@ body {
 }
 
 .link-item:hover { 
-  color: var(--azbt-blue); 
+  color: var(--azbt-maroon); 
   transform: translateX(4px); 
 }
 
 .link-item:hover i { color: var(--azbt-gold); }
 
-/* Responsive adjustments for mobile */
+/* Absolute compact mode for mobile */
 @media (max-width: 480px) {
-  .nav-grid { gap: 12px; }
-  .master-card { border-left-width: 4px; }
-  .portal-links-grid { grid-template-columns: 1fr 1fr; } /* Show 2 columns even on mobile for compactness */
+  .nav-grid { gap: 15px; }
+  .portal-links-grid { grid-template-columns: 1fr 1fr; } /* Two columns even on small mobile for compactness */
+  .link-item { font-size: 11px; }
 }
 </style>
 </head>
@@ -141,46 +141,51 @@ body {
   <div class="header-title">Quick Navigation Portal</div>
 
   <div class="nav-grid">
+    <!-- Official -->
     <div class="nav-section">
       <div class="section-label">Official</div>
       <a href="https://www.loyolacollege.edu/" target="_blank" class="link-item"><i class="fa-solid fa-building-columns"></i> Loyola College</a>
-      <a href="https://www.loyolacollege.edu/zoology/home" target="_blank" class="link-item"><i class="fa-solid fa-paw"></i> Dept. Website</a>
+      <a href="https://www.loyolacollege.edu/zoology/home" target="_blank" class="link-item"><i class="fa-solid fa-paw"></i> Dept. Web</a>
     </div>
 
+    <!-- About -->
     <div class="nav-section">
       <div class="section-label">About</div>
-      <a href="https://loyolazoology.wixsite.com/az-bt/about-college" target="_blank" class="link-item"><i class="fa-solid fa-building"></i> Loyola College</a>
+      <a href="https://loyolazoology.wixsite.com/az-bt/about-college" target="_blank" class="link-item"><i class="fa-solid fa-building"></i> College</a>
       <a href="https://loyolazoology.wixsite.com/az-bt/about-department" target="_blank" class="link-item"><i class="fa-solid fa-building-user"></i> Department</a>
       <a href="https://loyolazoology.wixsite.com/az-bt/about-zalc" target="_blank" class="link-item"><i class="fa-solid fa-users"></i> ZALC</a>
       <a href="https://loyolazoology.wixsite.com/az-bt/about-zen-dna" target="_blank" class="link-item"><i class="fa-solid fa-book-open-reader"></i> ZEN - DNA</a>
     </div>
 
+    <!-- Student -->
     <div class="nav-section">
       <div class="section-label">Student</div>
-      <a href="https://erp.loyolacollege.edu/loyolaonline/students/loginManager/youLogin.jsp" target="_blank" class="link-item"><i class="fa-solid fa-user-graduate"></i> Student ERP</a>
-      <a href="https://loyolazoology.wixsite.com/az-bt/student-timetable" target="_blank" class="link-item"><i class="fa-solid fa-calendar-alt"></i> Class Timetable</a>
-      <a href="https://loyolazoology.wixsite.com/az-bt/exam-timetable" target="_blank" class="link-item"><i class="fa-solid fa-edit"></i> Exam Timetable</a>
-      <a href="https://loyolazoology.wixsite.com/az-bt/student-lms" target="_blank" class="link-item"><i class="fa-solid fa-graduation-cap"></i> Dept. LMS</a>
+      <a href="https://erp.loyolacollege.edu/loyolaonline/students/loginManager/youLogin.jsp" target="_blank" class="link-item"><i class="fa-solid fa-user-graduate"></i> ERP Login</a>
+      <a href="https://loyolazoology.wixsite.com/az-bt/student-timetable" target="_blank" class="link-item"><i class="fa-solid fa-calendar-alt"></i> Timetable</a>
+      <a href="https://loyolazoology.wixsite.com/az-bt/exam-timetable" target="_blank" class="link-item"><i class="fa-solid fa-edit"></i> Exams</a>
+      <a href="https://loyolazoology.wixsite.com/az-bt/student-lms" target="_blank" class="link-item"><i class="fa-solid fa-graduation-cap"></i> LMS</a>
     </div>
 
+    <!-- Staff -->
     <div class="nav-section">
       <div class="section-label">Staff</div>
       <a href="https://erp.loyolacollege.edu/evarsitypack/usermanager/loginManager/youLogin.jsp" target="_blank" class="link-item"><i class="fa-solid fa-user-tie"></i> Faculty ERP</a>
-      <a href="https://loyolazoology.wixsite.com/az-bt/staff-timetable" target="_blank" class="link-item"><i class="fa-solid fa-clock"></i> Staff Timetable</a>
-      <a href="https://loyolazoology.wixsite.com/az-bt/staff-tms" target="_blank" class="link-item"><i class="fa-solid fa-briefcase"></i> Dept. TMS</a>
-      <a href="https://vidwan.inflibnet.ac.in/" target="_blank" class="link-item"><i class="fa-solid fa-book"></i> Vidwan Profile</a>
+      <a href="https://loyolazoology.wixsite.com/az-bt/staff-timetable" target="_blank" class="link-item"><i class="fa-solid fa-clock"></i> Timetable</a>
+      <a href="https://loyolazoology.wixsite.com/az-bt/staff-tms" target="_blank" class="link-item"><i class="fa-solid fa-briefcase"></i> TMS</a>
+      <a href="https://vidwan.inflibnet.ac.in/" target="_blank" class="link-item"><i class="fa-solid fa-book"></i> Vidwan</a>
     </div>
 
+    <!-- Portals -->
     <div class="nav-section portals-container">
-      <div class="section-label">Portals</div>
+      <div class="section-label">DPS (Portals)</div>
       <div class="portal-links-grid">
         <a href="https://loyolazoology.wixsite.com/az-bt/achievements-portal" target="_blank" class="link-item"><i class="fa-solid fa-trophy"></i> Achievements</a>
         <a href="https://loyolazoology.wixsite.com/az-bt/events" target="_blank" class="link-item"><i class="fa-solid fa-calendar-check"></i> Events</a>
         <a href="https://loyolazoology.wixsite.com/az-bt/alumni" target="_blank" class="link-item"><i class="fa-solid fa-user-group"></i> Alumni</a>
-        <a href="https://loyolazoology.wixsite.com/az-bt/student-spotlight" target="_blank" class="link-item"><i class="fa-solid fa-star"></i> Student Spotlight</a>
-        <a href="https://loyolazoology.wixsite.com/az-bt/announcement-portal" target="_blank" class="link-item"><i class="fa-solid fa-bullhorn"></i> Announcement</a>
+        <a href="https://loyolazoology.wixsite.com/az-bt/student-spotlight" target="_blank" class="link-item"><i class="fa-solid fa-star"></i> Spotlight</a>
+        <a href="https://loyolazoology.wixsite.com/az-bt/announcement-portal" target="_blank" class="link-item"><i class="fa-solid fa-bullhorn"></i> News</a>
         <a href="https://loyolazoology.wixsite.com/az-bt/resources" target="_blank" class="link-item"><i class="fa-solid fa-download"></i> Resources</a>
-        <a href="https://loyolazoology.wixsite.com/az-bt/zalc-members" target="_blank" class="link-item"><i class="fa-solid fa-vcard"></i> ZALC-Members</a>
+        <a href="https://loyolazoology.wixsite.com/az-bt/zalc-members" target="_blank" class="link-item"><i class="fa-solid fa-vcard"></i> Members</a>
       </div>
     </div>
   </div>
