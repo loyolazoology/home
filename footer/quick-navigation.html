@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AZ-BT | Responsive Navigation</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<style>
+:root {
+  --azbt-blue: #23365D;
+  --azbt-maroon: #6C232E;
+  --azbt-gold: #D4A64A;
+  --azbt-white: #FFFFFF;
+  --azbt-bg: #F8FAFC;
+  /* Fluid Spacing Logic */
+  --space-unit: clamp(1rem, 2.5vw, 2rem);
+}
+
+body { 
+  margin: 0; 
+  padding: clamp(10px, 3vw, 40px); 
+  background: transparent; 
+  font-family: 'Poppins', sans-serif; 
+  display: flex; 
+  justify-content: center; 
+  align-items: center;
+  min-height: 100vh;
+}
+
+.master-card {
+  background: var(--azbt-white);
+  width: 100%;
+  max-width: 1100px;
+  /* Reduced top padding to remove space above title */
+  padding: 1.5rem var(--space-unit) var(--space-unit) var(--space-unit);
+  border-radius: clamp(16px, 3vw, 32px);
+  box-shadow: 0 20px 50px rgba(35, 54, 93, 0.12);
+  border-left: clamp(4px, 1vw, 10px) solid var(--azbt-maroon);
+  position: relative;
+  overflow: hidden;
+  box-sizing: border-box;
+}
+
+/* Background Icon - Adjusted for visibility across all screens */
+.master-card::before {
+  content: '\f0c1';
+  font-family: 'Font Awesome 6 Free';
+  font-weight: 900;
+  position: absolute;
+  /* Fixed positioning to keep it visible on mobile and desktop */
+  top: -10px;
+  right: -10px;
+  font-size: clamp(80px, 12vw, 150px);
+  color: #f8f8f8; /* Slightly darker for better visibility on white */
+  z-index: 0;
+  transform: rotate(15deg);
+  pointer-events: none;
+}
+
+.header-title {
+  font-family: 'Playfair Display', serif;
+  font-size: clamp(1.4rem, 4vw, 1.8rem);
+  color: var(--azbt-blue);
+  /* Removed top margin, kept bottom margin for grid separation */
+  margin: 0 0 1.5rem 0;
+  position: relative;
+  z-index: 1;
+}
+
+/* Flexible Grid Layout */
+.nav-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 200px), 1fr));
+  gap: var(--space-unit);
+  position: relative;
+  z-index: 1;
+}
+
+/* Portals section logic */
+.portals-container {
+  grid-column: 1 / -1; 
+}
+
+.nav-section { display: flex; flex-direction: column; gap: 10px; }
+
+.section-label {
+  font-size: clamp(9px, 1.5vw, 11px);
+  font-weight: 700;
+  color: var(--azbt-gold);
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 5px;
+}
+
+.section-label::after { content: ''; flex: 1; height: 1px; background: #eee; }
+
+/* Internal grid for portals */
+.portal-links-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 180px), 1fr));
+  gap: 10px clamp(15px, 2vw, 30px);
+}
+
+.link-item {
+  text-decoration: none;
+  font-size: clamp(12px, 1.2vw, 13px);
+  color: #475569;
+  font-weight: 500;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.link-item i { 
+  font-size: 13px; 
+  color: var(--azbt-blue); 
+  width: 18px; 
+  text-align: center; 
+}
+
+.link-item:hover { 
+  color: var(--azbt-blue); 
+  transform: translateX(5px); 
+}
+
+.link-item:hover i { 
+  color: var(--azbt-gold); 
+}
+
+@media (max-width: 480px) {
+  .master-card { padding-top: 1.2rem; }
+  .nav-grid { gap: 1.2rem; }
+  .link-item { white-space: normal; line-height: 1.3; }
+  .portal-links-grid { grid-template-columns: 1fr; }
+}
+</style>
+</head>
+<body>
+
+<div class="master-card">
+  <div class="header-title">Quick Navigation Portal</div>
+
+  <div class="nav-grid">
+    <!-- Official Section -->
+    <div class="nav-section">
+      <div class="section-label">Official</div>
+      <a href="https://www.loyolacollege.edu/" target="_blank" class="link-item"><i class="fa-solid fa-building-columns"></i> Loyola College</a>
+      <a href="https://www.loyolacollege.edu/zoology/home" target="_blank" class="link-item"><i class="fa-solid fa-paw"></i> Department Website</a>
+    </div>
+
+    <!-- About Section -->
+    <div class="nav-section">
+      <div class="section-label">About</div>
+      <a href="https://loyolazoology.wixsite.com/az-bt/about-college" target="_blank" class="link-item"><i class="fa-solid fa-building-columns"></i> Loyola College</a>
+      <a href="https://loyolazoology.wixsite.com/az-bt/about-department" target="_blank" class="link-item"><i class="fa-solid fa-building-user"></i> Department</a>
+      <a href="https://loyolazoology.wixsite.com/az-bt/about-zalc" target="_blank" class="link-item"><i class="fa-solid fa-users"></i> ZALC</a>
+      <a href="https://loyolazoology.wixsite.com/az-bt/about-zen-dna" target="_blank" class="link-item"><i class="fa-solid fa-book-open-reader"></i> ZEN - DNA</a>
+    </div>
+
+    <!-- Student Section -->
+    <div class="nav-section">
+      <div class="section-label">Student</div>
+      <a href="https://erp.loyolacollege.edu/loyolaonline/students/loginManager/youLogin.jsp" target="_blank" class="link-item"><i class="fa-solid fa-user-graduate"></i> Student ERP</a>
+      <a href="https://loyolazoology.wixsite.com/az-bt/student-timetable" target="_blank" class="link-item"><i class="fa-solid fa-calendar-alt"></i> Class Timetable</a>
+      <a href="https://loyolazoology.wixsite.com/az-bt/exam-timetable" target="_blank" class="link-item"><i class="fa-solid fa-edit"></i> Exam Timetable</a>
+      <a href="https://loyolazoology.wixsite.com/az-bt/student-lms" target="_blank" class="link-item"><i class="fa-solid fa-graduation-cap"></i> Dept. LMS</a>
+    </div>
+
+    <!-- Staff Section -->
+    <div class="nav-section">
+      <div class="section-label">Staff</div>
+      <a href="https://erp.loyolacollege.edu/evarsitypack/usermanager/loginManager/youLogin.jsp" target="_blank" class="link-item"><i class="fa-solid fa-user-tie"></i> Faculty ERP</a>
+      <a href="https://loyolazoology.wixsite.com/az-bt/staff-timetable" target="_blank" class="link-item"><i class="fa-solid fa-clock"></i> Staff Timetable</a>
+      <a href="https://loyolazoology.wixsite.com/az-bt/staff-tms" target="_blank" class="link-item"><i class="fa-solid fa-briefcase"></i> Dept. TMS</a>
+      <a href="https://vidwan.inflibnet.ac.in/" target="_blank" class="link-item"><i class="fa-solid fa-book"></i> Vidwan Profile</a>
+    </div>
+
+    <!-- Portals Section -->
+    <div class="nav-section portals-container">
+      <div class="section-label">DPS (Portals)</div>
+      <div class="portal-links-grid">
+        <a href="https://loyolazoology.wixsite.com/az-bt/achievements-portal" target="_blank" class="link-item"><i class="fa-solid fa-trophy"></i> Achievements</a>
+        <a href="https://loyolazoology.wixsite.com/az-bt/events" target="_blank" class="link-item"><i class="fa-solid fa-calendar-check"></i> Events</a>
+        <a href="https://loyolazoology.wixsite.com/az-bt/alumni" target="_blank" class="link-item"><i class="fa-solid fa-user-group"></i> Alumni</a>
+        <a href="https://loyolazoology.wixsite.com/az-bt/student-spotlight" target="_blank" class="link-item"><i class="fa-solid fa-star"></i> Student Spotlight</a>
+        <a href="https://loyolazoology.wixsite.com/az-bt/announcement-portal" target="_blank" class="link-item"><i class="fa-solid fa-bullhorn"></i> Announcement</a>
+        <a href="https://loyolazoology.wixsite.com/az-bt/resources" target="_blank" class="link-item"><i class="fa-solid fa-download"></i> Resources</a>
+        <a href="https://loyolazoology.wixsite.com/az-bt/zalc-members" target="_blank" class="link-item"><i class="fa-solid fa-vcard"></i> ZALC-Members</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>
