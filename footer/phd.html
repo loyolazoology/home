@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AZ-BT | Research Stats</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;800&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+<style>
+:root {
+  --azbt-blue: #23365D;
+  --azbt-maroon: #6C232E;
+  --azbt-gold: #D4A64A;
+  --azbt-white: #FFFFFF;
+  --azbt-bg: #F8FAFC;
+  --grad: linear-gradient(135deg, var(--azbt-maroon), #4a141c);
+}
+
+body {
+  margin: 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  background: transparent;
+  font-family: 'Poppins', sans-serif;
+}
+
+.stats-vertical-bar {
+  background: var(--azbt-white);
+  width: 150px; /* Slightly wider for better breathing room */
+  padding: 25px 15px;
+  border-radius: 24px;
+  box-shadow: 0 20px 50px rgba(35, 54, 93, 0.12);
+  border-left: 6px solid var(--azbt-maroon);
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  position: relative;
+  overflow: hidden;
+  transition: transform 0.3s ease;
+}
+
+.stats-vertical-bar:hover {
+  transform: translateY(-5px);
+}
+
+/* Subtle background watermark */
+.stats-vertical-bar::before {
+  content: '\f19d';
+  font-family: 'Font Awesome 6 Free';
+  font-weight: 900;
+  position: absolute;
+  bottom: -15px;
+  right: -10px;
+  font-size: 80px;
+  color: rgba(35, 54, 93, 0.03);
+  z-index: 0;
+  transform: rotate(-15deg);
+}
+
+.title {
+  position: relative;
+  z-index: 1;
+  font-family: 'Playfair Display', serif;
+  font-size: 15px;
+  font-weight: 800;
+  color: var(--azbt-blue);
+  margin-bottom: 20px;
+  line-height: 1.1;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.title span {
+  color: var(--azbt-maroon);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.title::after {
+  content: '';
+  display: block;
+  width: 40px;
+  height: 3px;
+  background: linear-gradient(90deg, var(--azbt-gold), transparent);
+  margin: 10px auto 0;
+  border-radius: 2px;
+}
+
+.stat-content {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.icon-box {
+  width: 50px;
+  height: 50px;
+  background: var(--azbt-bg);
+  border-radius: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 22px;
+  color: var(--azbt-blue);
+  margin-bottom: 12px;
+  box-shadow: inset 0 0 0 1px rgba(35, 54, 93, 0.05);
+  animation: float 3s ease-in-out infinite;
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-5px); }
+}
+
+.number-reveal {
+  font-family: 'Playfair Display', serif;
+  font-size: 32px;
+  font-weight: 800;
+  color: var(--azbt-maroon);
+  line-height: 1;
+  margin-bottom: 5px;
+}
+
+.number-reveal span {
+  color: var(--azbt-gold);
+  font-size: 22px;
+  margin-left: 2px;
+}
+
+.label {
+  font-size: 10px;
+  font-weight: 700;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 1.2px;
+}
+
+.footer-tag {
+  margin-top: 25px;
+  font-size: 9px;
+  font-weight: 700;
+  color: var(--azbt-white);
+  background: var(--grad);
+  padding: 5px 12px;
+  border-radius: 50px;
+  letter-spacing: 1px;
+  box-shadow: 0 4px 10px rgba(108, 35, 46, 0.2);
+}
+
+</style>
+</head>
+<body>
+
+<div class="stats-vertical-bar">
+  <div class="title">Research<br><span>Milestones</span></div>
+  
+  <div class="stat-content">
+    <div class="icon-box">
+      <i class="fa-solid fa-user-graduate"></i>
+    </div>
+    
+    <div class="number-reveal">255<span>+</span></div>
+    <div class="label">PhD Scholars</div>
+  </div>
+
+</body>
+</html>
