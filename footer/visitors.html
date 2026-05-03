@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+<style>
+:root { --blue:#23365D; --maroon:#6C232E; --gold:#D4A64A; --white:#FFF; --bg:#F4F6F9; --gray:#718096; }
+body { margin:0; background:transparent; font-family:'Poppins', sans-serif; display:flex; justify-content:center; align-items:center; height:100vh; overflow:hidden; }
+.card { background: var(--white); padding: 20px 15px; border-radius: 20px; text-align: center; box-shadow: 0 12px 30px rgba(35,54,93,0.12); border-top: 5px solid var(--maroon); width: 190px; }
+.icon-box { background: var(--bg); width: 40px; height: 40px; border-radius: 12px; display: flex; align-items: center; justify-content: center; margin: 0 auto 12px; color: var(--blue); font-size: 16px; }
+.label { font-size: 10px; font-weight: 700; color: var(--blue); letter-spacing: 1.2px; text-transform: uppercase; margin-bottom: 5px; }
+.count { font-family: 'Playfair Display', serif; font-size: 34px; color: var(--maroon); font-weight: 700; line-height: 1; min-height: 34px; margin-bottom: 8px; }
+.today-stats { border-top: 1px solid #edf2f7; margin-top: 12px; padding-top: 10px; display: flex; justify-content: center; align-items: center; gap: 5px; font-size: 11px; color: var(--gray); font-weight: 600; }
+.today-stats span { color: var(--gold); font-weight: 800; }
+.shimmer { color: transparent!important; background: linear-gradient(90deg,#eee 25%,#f5f5f5 50%,#eee 75%); background-size: 200% 100%; animation: shimmer 1.5s infinite; border-radius: 5px; }
+@keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+</style>
+</head>
+<body>
+
+<div class="card">
+    <div class="icon-box"><i class="fas fa-users"></i></div>
+    <div class="label">Total Visitors</div>
+    <div class="count shimmer" id="totalCount">000</div>
+    <div class="today-stats">
+        <i class="far fa-calendar-check"></i>
+        Today: <span id="todayCount">--</span>
+    </div>
+</div>
+
+<script>
+async function getVisitorStats() {
+    const totalEl = document.getElementById("totalCount");
+    const todayEl = document.getElementById("todayCount");
+    // Ensure this URL is updated to your NEW deployment URL
+    const scriptUrl = "https://script.google.com/macros/s/AKfycbz69S3MGDIYNPr8MLjQGQX841h4kpSNLFv_5WCvNPb7GOcMa_gZm_kVQxgcAd1uweuMpA/exec";
+
+    try {
+        const ipRes = await fetch('https://api.ipify.org?format=json');
+        const ipData = await ipRes.json();
+        
+        // Fetch as text first to avoid CORS pre-flight blocks
+        const response = await fetch(`${scriptUrl}?ip=${ipData.ip}`);
+        const textData = await response.text();
+        const data = JSON.parse(textData);
+
+        totalEl.classList.remove("shimmer");
+        totalEl.innerText = data.total.toLocaleString();
+        todayEl.innerText = data.today;
+    } catch (err) {
+        totalEl.classList.remove("shimmer");
+        totalEl.innerText = "Error";
+        console.error("Visitor Counter Error:", err);
+    }
+}
+getVisitorStats();
+</script>
+</body>
+</html>
