@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>AZ-BT | Responsive Navigation</title>
+<title>AZ-BT | Compact Navigation</title>
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 <style>
@@ -13,46 +13,44 @@
   --azbt-gold: #D4A64A;
   --azbt-white: #FFFFFF;
   --azbt-bg: #F8FAFC;
-  /* Fluid Spacing Logic */
-  --space-unit: clamp(1rem, 2.5vw, 2rem);
+  --space-compact: clamp(0.75rem, 2vw, 1.5rem);
 }
 
 body { 
   margin: 0; 
-  padding: clamp(10px, 3vw, 40px); 
+  padding: 10px; 
   background: transparent; 
   font-family: 'Poppins', sans-serif; 
   display: flex; 
   justify-content: center; 
-  align-items: center;
+  align-items: flex-start; /* Aligns to top to minimize white space */
   min-height: 100vh;
 }
 
 .master-card {
   background: var(--azbt-white);
   width: 100%;
-  max-width: 1100px;
-  /* Reduced top padding to remove space above title */
-  padding: 1.5rem var(--space-unit) var(--space-unit) var(--space-unit);
-  border-radius: clamp(16px, 3vw, 32px);
-  box-shadow: 0 20px 50px rgba(35, 54, 93, 0.12);
-  border-left: clamp(4px, 1vw, 10px) solid var(--azbt-maroon);
+  max-width: 1000px;
+  padding: var(--space-compact);
+  padding-top: 10px; /* Specific tight top padding */
+  border-radius: 16px;
+  box-shadow: 0 15px 40px rgba(35, 54, 93, 0.1);
+  border-left: 6px solid var(--azbt-maroon);
   position: relative;
   overflow: hidden;
   box-sizing: border-box;
 }
 
-/* Background Icon - Adjusted for visibility across all screens */
+/* Fixed Link Icon logic for all screens */
 .master-card::before {
   content: '\f0c1';
   font-family: 'Font Awesome 6 Free';
   font-weight: 900;
   position: absolute;
-  /* Fixed positioning to keep it visible on mobile and desktop */
-  top: -10px;
-  right: -10px;
-  font-size: clamp(80px, 12vw, 150px);
-  color: #f8f8f8; /* Slightly darker for better visibility on white */
+  top: 5px;
+  right: 5px;
+  font-size: clamp(60px, 12vw, 120px); /* Responsive but contained size */
+  color: rgba(0,0,0,0.03); /* Subtle watermark effect */
   z-index: 0;
   transform: rotate(15deg);
   pointer-events: none;
@@ -60,83 +58,80 @@ body {
 
 .header-title {
   font-family: 'Playfair Display', serif;
-  font-size: clamp(1.4rem, 4vw, 1.8rem);
+  font-size: clamp(1.2rem, 3.5vw, 1.6rem);
   color: var(--azbt-blue);
-  /* Removed top margin, kept bottom margin for grid separation */
-  margin: 0 0 1.5rem 0;
+  margin: 0 0 15px 0; /* Zero top margin */
   position: relative;
   z-index: 1;
 }
 
-/* Flexible Grid Layout */
+/* Fluid Grid Layout */
 .nav-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(min(100%, 200px), 1fr));
-  gap: var(--space-unit);
+  gap: 15px var(--space-compact);
   position: relative;
   z-index: 1;
 }
 
-/* Portals section logic */
 .portals-container {
   grid-column: 1 / -1; 
+  margin-top: 5px;
 }
 
-.nav-section { display: flex; flex-direction: column; gap: 10px; }
+.nav-section { display: flex; flex-direction: column; gap: 6px; }
 
 .section-label {
-  font-size: clamp(9px, 1.5vw, 11px);
+  font-size: 9px;
   font-weight: 700;
   color: var(--azbt-gold);
   text-transform: uppercase;
-  letter-spacing: 1.5px;
+  letter-spacing: 1px;
   display: flex;
   align-items: center;
-  gap: 10px;
-  margin-bottom: 5px;
+  gap: 8px;
+  margin-bottom: 4px;
 }
 
-.section-label::after { content: ''; flex: 1; height: 1px; background: #eee; }
+.section-label::after { content: ''; flex: 1; height: 1px; background: #f0f0f0; }
 
-/* Internal grid for portals */
 .portal-links-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(min(100%, 180px), 1fr));
-  gap: 10px clamp(15px, 2vw, 30px);
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 160px), 1fr));
+  gap: 6px 15px;
 }
 
 .link-item {
   text-decoration: none;
-  font-size: clamp(12px, 1.2vw, 13px);
+  font-size: clamp(11px, 1.1vw, 13px);
   color: #475569;
   font-weight: 500;
-  transition: all 0.3s ease;
+  transition: 0.2s ease;
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
+  padding: 2px 0;
 }
 
 .link-item i { 
-  font-size: 13px; 
+  font-size: 11px; 
   color: var(--azbt-blue); 
-  width: 18px; 
+  width: 16px; 
   text-align: center; 
 }
 
 .link-item:hover { 
   color: var(--azbt-blue); 
-  transform: translateX(5px); 
+  transform: translateX(4px); 
 }
 
-.link-item:hover i { 
-  color: var(--azbt-gold); 
-}
+.link-item:hover i { color: var(--azbt-gold); }
 
+/* Responsive adjustments for mobile */
 @media (max-width: 480px) {
-  .master-card { padding-top: 1.2rem; }
-  .nav-grid { gap: 1.2rem; }
-  .link-item { white-space: normal; line-height: 1.3; }
-  .portal-links-grid { grid-template-columns: 1fr; }
+  .nav-grid { gap: 12px; }
+  .master-card { border-left-width: 4px; }
+  .portal-links-grid { grid-template-columns: 1fr 1fr; } /* Show 2 columns even on mobile for compactness */
 }
 </style>
 </head>
@@ -146,23 +141,20 @@ body {
   <div class="header-title">Quick Navigation Portal</div>
 
   <div class="nav-grid">
-    <!-- Official Section -->
     <div class="nav-section">
       <div class="section-label">Official</div>
       <a href="https://www.loyolacollege.edu/" target="_blank" class="link-item"><i class="fa-solid fa-building-columns"></i> Loyola College</a>
-      <a href="https://www.loyolacollege.edu/zoology/home" target="_blank" class="link-item"><i class="fa-solid fa-paw"></i> Department Website</a>
+      <a href="https://www.loyolacollege.edu/zoology/home" target="_blank" class="link-item"><i class="fa-solid fa-paw"></i> Dept. Website</a>
     </div>
 
-    <!-- About Section -->
     <div class="nav-section">
       <div class="section-label">About</div>
-      <a href="https://loyolazoology.wixsite.com/az-bt/about-college" target="_blank" class="link-item"><i class="fa-solid fa-building-columns"></i> Loyola College</a>
+      <a href="https://loyolazoology.wixsite.com/az-bt/about-college" target="_blank" class="link-item"><i class="fa-solid fa-building"></i> Loyola College</a>
       <a href="https://loyolazoology.wixsite.com/az-bt/about-department" target="_blank" class="link-item"><i class="fa-solid fa-building-user"></i> Department</a>
       <a href="https://loyolazoology.wixsite.com/az-bt/about-zalc" target="_blank" class="link-item"><i class="fa-solid fa-users"></i> ZALC</a>
       <a href="https://loyolazoology.wixsite.com/az-bt/about-zen-dna" target="_blank" class="link-item"><i class="fa-solid fa-book-open-reader"></i> ZEN - DNA</a>
     </div>
 
-    <!-- Student Section -->
     <div class="nav-section">
       <div class="section-label">Student</div>
       <a href="https://erp.loyolacollege.edu/loyolaonline/students/loginManager/youLogin.jsp" target="_blank" class="link-item"><i class="fa-solid fa-user-graduate"></i> Student ERP</a>
@@ -171,7 +163,6 @@ body {
       <a href="https://loyolazoology.wixsite.com/az-bt/student-lms" target="_blank" class="link-item"><i class="fa-solid fa-graduation-cap"></i> Dept. LMS</a>
     </div>
 
-    <!-- Staff Section -->
     <div class="nav-section">
       <div class="section-label">Staff</div>
       <a href="https://erp.loyolacollege.edu/evarsitypack/usermanager/loginManager/youLogin.jsp" target="_blank" class="link-item"><i class="fa-solid fa-user-tie"></i> Faculty ERP</a>
@@ -180,9 +171,8 @@ body {
       <a href="https://vidwan.inflibnet.ac.in/" target="_blank" class="link-item"><i class="fa-solid fa-book"></i> Vidwan Profile</a>
     </div>
 
-    <!-- Portals Section -->
     <div class="nav-section portals-container">
-      <div class="section-label">DPS (Portals)</div>
+      <div class="section-label">Portals</div>
       <div class="portal-links-grid">
         <a href="https://loyolazoology.wixsite.com/az-bt/achievements-portal" target="_blank" class="link-item"><i class="fa-solid fa-trophy"></i> Achievements</a>
         <a href="https://loyolazoology.wixsite.com/az-bt/events" target="_blank" class="link-item"><i class="fa-solid fa-calendar-check"></i> Events</a>
