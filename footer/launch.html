@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AZ-BT | Launch Commemoration</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+<style>
+:root {
+  --azbt-blue: #23365D;
+  --azbt-maroon: #6C232E;
+  --azbt-gold: #D4A64A;
+  --azbt-white: #FFFFFF;
+  --azbt-bg: #F8FAFC;
+}
+
+body {
+  margin: 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  background: transparent;
+  font-family: 'Poppins', sans-serif;
+}
+
+.launch-card {
+  background: var(--azbt-white);
+  width: 100%;
+  max-width: 380px;
+  padding: 30px 25px;
+  border-radius: 20px;
+  box-shadow: 0 15px 45px rgba(35, 54, 93, 0.12);
+  border-left: 6px solid var(--azbt-maroon);
+  position: relative;
+  overflow: hidden;
+}
+
+/* Elegant background accent */
+.launch-card::before {
+  content: '\f02b';
+  font-family: 'Font Awesome 6 Free';
+  font-weight: 900;
+  position: absolute;
+  top: -10px;
+  right: -10px;
+  font-size: 80px;
+  color: var(--azbt-bg);
+  z-index: 0;
+  transform: rotate(15deg);
+}
+
+.section {
+  position: relative;
+  z-index: 1;
+  margin-bottom: 25px;
+}
+
+.section:last-child {
+  margin-bottom: 0;
+}
+
+.label {
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--azbt-gold);
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  margin-bottom: 8px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.label::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: #eee;
+}
+
+.content-title {
+  font-family: 'Playfair Display', serif;
+  font-size: 18px;
+  color: var(--azbt-blue);
+  line-height: 1.3;
+  margin-bottom: 4px;
+}
+
+.content-sub {
+  font-size: 12px;
+  color: #64748b;
+  font-weight: 500;
+  font-style: italic;
+}
+
+.meta-info {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.meta-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 13px;
+  color: #475569;
+  font-weight: 500;
+}
+
+.meta-item i {
+  color: var(--azbt-blue);
+  width: 16px;
+  font-size: 14px;
+}
+
+.highlight-gold {
+  color: #6C232E;
+  font-weight: 700;
+}
+</style>
+</head>
+<body>
+
+<div class="launch-card">
+  <div class="section">
+    <div class="label">Launched By</div>
+    <div class="content-title">Rev. Dr. D. Thomas Alexander SJ</div>
+    <div class="content-sub">Secretary and Correspondent,<br>Loyola College (Autonomous), Chennai - 34.</div>
+  </div>
+
+  <div class="section">
+    <div class="label">Launch Event</div>
+    <div class="meta-info">
+      <div class="meta-item">
+        <i class="fa-solid fa-calendar-check"></i>
+        <span>12.12.2025</span>
+      </div>
+      <div class="meta-item">
+        <i class="fa-solid fa-location-dot"></i>
+        <span>JF02, <span class="highlight-gold">Zoology Smart Room</span></span>
+      </div>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>
