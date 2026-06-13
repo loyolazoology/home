@@ -1,836 +1,1361 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8"/>
-<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
 <title>AZ-BT | Staff Timetable Portal</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;1,400&family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 <style>
-/* ─── DESIGN TOKENS ─── */
 :root {
-  --blue:    #1C2E5A;
-  --blue2:   #2A4080;
-  --maroon:  #6B1F2A;
-  --gold:    #C89A3A;
-  --gold2:   #E8B84B;
-  --cream:   #FBF8F3;
-  --white:   #FFFFFF;
-  --light:   #F0F3F9;
-  --border:  #E0E6F0;
-  --text:    #2C3547;
-  --muted:   #7A8499;
-  --shadow:  0 8px 32px rgba(28,46,90,.10);
-  --shadow2: 0 2px 12px rgba(28,46,90,.08);
-  --r:       14px;
-  --r-sm:    8px;
+  --blue:        #1E3A5F;
+  --blue-mid:    #2D5490;
+  --blue-light:  #EBF1FA;
+  --maroon:      #7B1D2E;
+  --maroon-light:#FDF0F2;
+  --gold:        #C9963A;
+  --gold2:       #E8B84B;
+  --teal:        #0E7490;
+  --teal-light:  #EFF9FB;
+  --green:       #047857;
+  --slate:       #64748B;
+  --slate-light: #F8FAFC;
+  --ink:         #1E293B;
+  --border:      #E2E8F0;
+  --white:       #FFFFFF;
+  --orange:      #F97316;
+  --orange-light:#FFF7ED;
+  --black:       #000000;
+  --sh-sm: 0 1px 3px rgba(0,0,0,0.08),0 1px 2px rgba(0,0,0,0.05);
+  --sh-md: 0 4px 16px rgba(30,58,95,0.10),0 2px 6px rgba(0,0,0,0.06);
+  --sh-lg: 0 12px 40px rgba(30,58,95,0.14),0 4px 12px rgba(0,0,0,0.08);
+  --r-sm:6px; --r-md:10px; --r-lg:16px; --r-xl:22px;
+  --ease:0.22s cubic-bezier(0.4,0,0.2,1);
 }
-*{box-sizing:border-box;margin:0;padding:0;}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+html{-webkit-font-smoothing:antialiased;scroll-behavior:smooth;}
 body{
-  font-family:'DM Sans',sans-serif;
-  background:var(--cream);
-  color:var(--text);
-  min-height:100vh;
-  display:flex;
-  justify-content:center;
-  align-items:flex-start;
-  padding:10px;
+  font-family:'Inter',sans-serif;
+  background:linear-gradient(135deg,#EBF1FA 0%,#F4F6F9 50%,#FDF0F2 100%);
+  min-height:100vh;color:var(--ink);
+  padding:14px 10px 28px;
 }
 
-/* ─── WRAPPER ─── */
-.wrapper{
-  width:100%;max-width:920px;
-  background:var(--white);
-  border-radius:20px;
-  box-shadow:var(--shadow);
+/* WRAPPER */
+.wrap{
+  max-width:960px;margin:0 auto;
+  background:var(--white);border-radius:var(--r-xl);
+  box-shadow:var(--sh-lg);overflow:hidden;
   display:flex;flex-direction:column;
-  height:96vh;overflow:hidden;
-  position:relative;
-  border-top:5px solid var(--maroon);
+  min-height:calc(100vh - 56px);position:relative;
 }
 
-/* ─── HEADER ─── */
-.header{
-  padding:14px 20px 10px;
-  background:linear-gradient(135deg,var(--blue) 0%,var(--blue2) 100%);
-  text-align:center;flex-shrink:0;
-  position:relative;overflow:hidden;
+/* HEADER */
+.hdr{
+  background:linear-gradient(135deg,var(--blue) 0%,var(--blue-mid) 55%,#1a4a7a 100%);
+  padding:16px 20px 0;position:relative;overflow:hidden;
 }
-.header::before{
-  content:'';position:absolute;inset:0;
-  background:url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.03'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
-}
-.header-inner{position:relative;z-index:1;}
-.header h2{
-  font-family:'Playfair Display',serif;
-  color:var(--white);font-size:clamp(1.1rem,4vw,1.5rem);
-  letter-spacing:0.01em;
-}
-.header-sub{
-  color:var(--gold2);font-size:10px;font-weight:700;
-  letter-spacing:3px;text-transform:uppercase;margin-top:2px;
-}
-.clock{
-  position:center;
-  color:rgba(255,255,255,.7);font-size:10px;font-weight:600;
-  letter-spacing:1px;text-align:center;
-}
-.clock-time{display:block;color:var(--gold2);font-size:13px;font-weight:700;}
+.hdr::before{content:'';position:absolute;top:-50px;right:-50px;width:200px;height:200px;background:rgba(255,255,255,0.04);border-radius:50%;}
+.hdr::after{content:'';position:absolute;bottom:-40px;left:-30px;width:150px;height:150px;background:rgba(201,150,58,0.10);border-radius:50%;}
+.hdr-inner{display:flex;align-items:center;gap:12px;position:relative;z-index:1;flex-wrap:nowrap;min-width:0;}
+.hdr-logo{flex-shrink:0;display:flex;align-items:center;}
+.hdr-logo img{height:46px;width:auto;object-fit:contain;filter:drop-shadow(0 2px 6px rgba(0,0,0,0.3));display:block;}
+.hdr-text{flex:1;min-width:0;overflow:hidden;}
+.hdr-title{font-family:'Playfair Display',serif;font-size:clamp(0.85rem,2.6vw,1.35rem);color:var(--white);font-weight:700;line-height:1.25;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.hdr-sub{font-size:clamp(8px,1.8vw,10px);color:rgba(255,255,255,0.6);font-weight:500;margin-top:3px;letter-spacing:0.04em;text-transform:uppercase;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.hdr-clock{display:flex;flex-direction:column;align-items:flex-end;flex-shrink:0;}
+.clock-time{font-family:'JetBrains Mono',monospace;font-size:clamp(0.78rem,2.2vw,1.1rem);color:var(--gold2);font-weight:500;white-space:nowrap;}
+.clock-date{font-size:9px;color:rgba(255,255,255,0.55);margin-top:2px;white-space:nowrap;}
+.hdr-bar{height:3px;background:linear-gradient(90deg,var(--gold) 0%,rgba(201,150,58,0.2) 100%);margin-top:14px;position:relative;z-index:1;}
 
-/* ─── NAV ─── */
-.nav{
-  display:flex;gap:6px;padding:10px 12px;
-  border-bottom:1px solid var(--border);
-  flex-shrink:0;background:var(--white);
-}
-.nav-btn{
-  flex:1;padding:10px 4px;text-align:center;
-  background:var(--light);color:var(--blue);
-  border:1.5px solid var(--border);border-radius:var(--r-sm);
-  font-weight:600;font-size:clamp(9px,2.2vw,11px);
-  cursor:pointer;transition:all .22s;white-space:nowrap;
-  font-family:'DM Sans',sans-serif;
-}
-.nav-btn i{display:block;font-size:14px;margin-bottom:3px;opacity:.7;}
-.nav-btn.active{
-  background:var(--blue);color:var(--white);
-  border-color:var(--blue);
-  box-shadow:0 4px 14px rgba(28,46,90,.28);
-}
-.nav-btn.active i{opacity:1;}
+/* NAV */
+.nav{display:flex;gap:5px;background:var(--slate-light);border-bottom:1px solid var(--border);padding:8px 14px;}
+.nav-btn{flex:1;padding:9px 8px;background:transparent;border:1.5px solid transparent;border-radius:var(--r-md);font-family:'Inter',sans-serif;font-size:11.5px;font-weight:600;color:var(--slate);cursor:pointer;transition:all var(--ease);display:flex;align-items:center;justify-content:center;gap:6px;white-space:nowrap;}
+.nav-btn:hover{background:var(--white);color:var(--blue);border-color:var(--border);box-shadow:var(--sh-sm);}
+.nav-btn.active{background:var(--white);color:var(--blue);border-color:var(--blue);box-shadow:var(--sh-sm);}
 .nav-btn:disabled{opacity:.4;cursor:not-allowed;}
+.nav-btn:disabled:hover{background:transparent;color:var(--slate);border-color:transparent;box-shadow:none;}
+.nav-btn i{font-size:12px;}
 
-/* ─── CONTENT ─── */
-.pane{display:none;flex:1;overflow-y:auto;padding:14px;background:var(--white);margin-bottom:36px;}
-.pane.active{display:block;}
+/* TABS */
+.tab{display:none;flex:1;padding:18px 20px;overflow-y:auto;max-height:calc(100vh - 230px);animation:fadeUp 0.22s ease both;}
+.tab.active{display:block;}
+@keyframes fadeUp{from{opacity:0;transform:translateY(7px);}to{opacity:1;transform:translateY(0);}}
 
-/* ─── DATE PICKER ─── */
-.date-box{
-  background:linear-gradient(135deg,var(--blue) 0%,var(--blue2) 100%);
-  padding:14px 16px;border-radius:var(--r);margin-bottom:14px;
-  display:flex;align-items:center;gap:12px;position:relative;overflow:hidden;
-}
-.date-box::after{
-  content:'';position:absolute;right:-10px;top:-20px;
-  width:100px;height:100px;border-radius:50%;
-  background:rgba(255,255,255,.05);
-}
-.date-box label{
-  font-size:9px;font-weight:700;color:var(--gold2);
-  text-transform:uppercase;letter-spacing:2px;
-  white-space:nowrap;flex-shrink:0;
-}
-.date-box input[type=date]{
-  border:none;background:transparent;font-weight:700;
-  color:var(--white);font-size:15px;outline:none;
-  font-family:'DM Sans',sans-serif;flex:1;
-  cursor:pointer;
-}
-.date-box input[type=date]::-webkit-calendar-picker-indicator{
-  filter:invert(1);opacity:.7;cursor:pointer;
-}
+/* FORM */
+.flabel{display:block;font-size:10px;font-weight:700;color:var(--blue);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:6px;}
+.form-ctrl{width:100%;padding:9px 12px;border:1.5px solid var(--border);border-radius:var(--r-sm);font-family:'Inter',sans-serif;font-size:12.5px;color:var(--ink);background:var(--slate-light);outline:none;transition:all var(--ease);-webkit-appearance:none;appearance:none;}
+.form-ctrl:focus{border-color:var(--blue);background:var(--white);box-shadow:0 0 0 3px rgba(30,58,95,0.08);}
 
-/* ─── INFO CARDS ─── */
-.cards-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
-.card{
-  background:var(--white);border:1px solid var(--border);
-  padding:14px 16px;border-radius:var(--r);
-  border-left:4px solid var(--gold);
-  transition:box-shadow .2s;
-}
-.card:hover{box-shadow:var(--shadow2);}
-.card-full{grid-column:span 2;}
-.card-label{
-  font-size:8px;font-weight:700;color:var(--muted);
-  text-transform:uppercase;letter-spacing:1.5px;margin-bottom:5px;
-}
-.card-value{
-  font-size:22px;font-weight:700;color:var(--blue);
-  line-height:1.1;
-}
-.card-value.sm{font-size:14px;line-height:1.4;}
-.card-value.day-num{
-  font-family:'Playfair Display',serif;
-  font-size:34px;color:var(--blue);
-}
-.badge{
-  display:inline-flex;align-items:center;gap:5px;
-  padding:5px 11px;border-radius:20px;font-size:10px;font-weight:700;
-  text-transform:uppercase;letter-spacing:.5px;margin-top:4px;
-}
-.badge-working{background:#E8F5E9;color:#2E7D32;}
-.badge-holiday{background:#FFEBEE;color:#C62828;}
-.badge-exam{background:#E3F2FD;color:#1565C0;}
+/* DATE CARD */
+.date-card{background:var(--blue-light);border:1px solid #C8D8F0;border-radius:var(--r-lg);padding:14px 18px;margin-bottom:16px;display:flex;align-items:center;gap:12px;flex-wrap:wrap;}
+.date-card .dicon{width:38px;height:38px;background:var(--blue);border-radius:var(--r-sm);display:flex;align-items:center;justify-content:center;color:white;font-size:15px;flex-shrink:0;}
+.date-card .dfield{flex:1;min-width:130px;}
 
-/* ─── STAFF GRID ─── */
-.staff-grid{
-  display:grid;
-  grid-template-columns:repeat(auto-fill,minmax(105px,1fr));
-  gap:12px;padding:4px 0;
-}
-.staff-tile{
-  display:flex;flex-direction:column;align-items:center;
-  gap:8px;padding:16px 8px 12px;
-  border-radius:var(--r);background:var(--white);
-  border:1.5px solid var(--border);cursor:pointer;
-  transition:all .25s;text-align:center;
-  position:relative;overflow:hidden;
-}
-.staff-tile::before{
-  content:'';position:absolute;top:0;left:0;right:0;height:3px;
-  background:linear-gradient(90deg,var(--gold),var(--maroon));
-  transform:scaleX(0);transition:.25s;
-}
-.staff-tile:hover{border-color:var(--gold);transform:translateY(-2px);box-shadow:var(--shadow2);}
+/* INFO GRID — student style */
+.igrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:11px;}
+.icard{background:var(--white);border:1px solid var(--border);border-radius:var(--r-md);padding:13px 15px;border-left:4px solid var(--gold);box-shadow:var(--sh-sm);transition:transform var(--ease),box-shadow var(--ease);animation:popIn 0.28s ease both;}
+.icard:hover{transform:translateY(-2px);box-shadow:var(--sh-md);}
+@keyframes popIn{from{opacity:0;transform:scale(0.96) translateY(5px);}to{opacity:1;transform:scale(1) translateY(0);}}
+.icard.c-red{border-left-color:var(--maroon);background:var(--maroon-light);}
+.icard.c-teal{border-left-color:var(--teal);background:var(--teal-light);}
+.icard.c-blue{border-left-color:var(--blue);background:var(--blue-light);}
+.icard.c-orange{border-left-color:var(--orange);background:var(--orange-light);}
+.icard.full{grid-column:1/-1;}
+.ilabel{font-size:9.5px;font-weight:700;color:var(--slate);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:4px;}
+.ival{font-size:13px;font-weight:600;color:var(--ink);line-height:1.4;}
+.ival.red{color:var(--maroon);}
+
+/* STAFF LANDING GRID */
+.staff-landing-title{font-size:11px;font-weight:700;color:var(--blue);text-transform:uppercase;letter-spacing:.06em;margin-bottom:14px;text-align:center;display:flex;align-items:center;justify-content:center;gap:8px;}
+.staff-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:12px;padding:4px 0;}
+.staff-tile{display:flex;flex-direction:column;align-items:center;gap:8px;padding:16px 8px 12px;border-radius:var(--r-lg);background:var(--white);border:1.5px solid var(--border);cursor:pointer;transition:all .25s;text-align:center;position:relative;overflow:hidden;}
+.staff-tile::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,var(--gold),var(--maroon));transform:scaleX(0);transition:.25s;}
+.staff-tile:hover{border-color:var(--gold);transform:translateY(-2px);box-shadow:var(--sh-md);}
 .staff-tile:hover::before{transform:scaleX(1);}
-.staff-tile img{
-  width:60px;height:60px;border-radius:50%;object-fit:cover;
-  border:2.5px solid var(--gold);background:var(--light);
-}
-.staff-tile .tile-name{font-weight:700;font-size:10px;color:var(--blue);line-height:1.3;}
+.staff-tile img{width:60px;height:60px;border-radius:50%;object-fit:cover;border:2.5px solid var(--gold);background:var(--blue-light);}
+.tile-initial{font-weight:700;font-size:11px;color:var(--blue);line-height:1.3;}
+.tile-name{font-size:9px;color:var(--slate);line-height:1.3;margin-top:1px;}
 
-/* ─── PROFILE HEADER ─── */
-.profile-header{
-  background:linear-gradient(135deg,var(--blue),var(--blue2));
-  padding:16px;border-radius:var(--r);
-  display:flex;align-items:center;gap:14px;position:relative;
-  margin-bottom:16px;overflow:hidden;
-}
-.profile-header::before{
-  content:'';position:absolute;right:-20px;bottom:-30px;
-  width:120px;height:120px;border-radius:50%;
-  background:rgba(255,255,255,.05);
-}
-.profile-header img{
-  width:64px;height:64px;border-radius:50%;object-fit:cover;
-  border:3px solid var(--gold);flex-shrink:0;
-}
-.profile-info .name{
-  font-family:'Playfair Display',serif;color:var(--white);
-  font-size:1rem;line-height:1.2;
-}
-.profile-info .desig{font-size:10px;color:rgba(255,255,255,.7);margin-top:3px;}
-.logout-btn{
-  position:absolute;top:10px;right:12px;
-  background:rgba(255,255,255,.12);border:none;color:var(--white);
-  padding:6px 10px;border-radius:6px;font-size:10px;cursor:pointer;
-  font-family:'DM Sans',sans-serif;font-weight:600;
-  transition:.2s;
-}
-.logout-btn:hover{background:rgba(255,255,255,.22);}
+/* PROFILE HEADER */
+.profile-hdr{background:linear-gradient(135deg,var(--blue),var(--blue-mid));padding:16px 18px;border-radius:var(--r-lg);display:flex;align-items:center;gap:14px;position:relative;margin-bottom:16px;overflow:hidden;}
+.profile-hdr::before{content:'';position:absolute;right:-20px;bottom:-30px;width:120px;height:120px;border-radius:50%;background:rgba(255,255,255,0.05);}
+.profile-hdr img{width:64px;height:64px;border-radius:50%;object-fit:cover;border:3px solid var(--gold);flex-shrink:0;}
+.ph-avatar{width:64px;height:64px;border-radius:50%;background:rgba(255,255,255,0.15);border:3px solid var(--gold);display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:700;color:var(--gold2);flex-shrink:0;font-family:'Playfair Display',serif;}
+.ph-info .ph-name{font-family:'Playfair Display',serif;color:var(--white);font-size:1.05rem;line-height:1.2;}
+.ph-info .ph-initial{color:var(--gold2);font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;margin-top:2px;}
+.ph-info .ph-desig{font-size:10px;color:rgba(255,255,255,0.65);margin-top:3px;}
+.logout-btn{position:absolute;top:10px;right:12px;background:rgba(255,255,255,0.12);border:none;color:var(--white);padding:6px 11px;border-radius:6px;font-size:10px;cursor:pointer;font-family:'Inter',sans-serif;font-weight:600;transition:.2s;}
+.logout-btn:hover{background:rgba(255,255,255,0.22);}
 
-/* ─── TABLE ─── */
-.table-wrap{width:100%;overflow-x:auto;border-radius:var(--r);border:1px solid var(--border);}
-table{width:100%;border-collapse:collapse;min-width:440px;}
-thead th{
-  background:var(--blue);color:var(--white);
-  padding:11px 12px;text-align:left;font-size:9px;
-  text-transform:uppercase;letter-spacing:1px;font-weight:700;
-}
-tbody td{padding:11px 12px;font-size:12px;border-bottom:1px solid var(--border);}
-tbody tr:last-child td{border-bottom:none;}
-tbody tr:hover td{background:var(--light);}
-.hr-num{font-weight:700;color:var(--blue);}
-.subj-main{font-weight:600;color:var(--blue);}
-.room-tag{
-  background:var(--light);color:var(--muted);
-  padding:2px 7px;border-radius:4px;font-size:10px;font-weight:600;
-}
-.cancelled-row td{background:#FFF5F5 !important;}
-.free-td{color:#BCC5D6;font-style:italic;}
-.correction-note{
-  display:inline-block;margin-top:6px;
-  background:#FFF8E7;color:#996B00;
-  border:1px solid #F0D080;
-  padding:5px 9px;border-radius:6px;
-  font-size:10px;font-weight:600;line-height:1.4;
-}
-.suspended{color:var(--maroon);font-weight:700;}
-.tt-meta{font-size:9px;color:var(--muted);margin-top:2px;display:block;}
+/* HOD SELECTOR */
+.hod-selector{background:var(--orange-light);border:1px solid #FED7AA;border-radius:var(--r-md);padding:12px 14px;margin-bottom:16px;display:none;align-items:center;gap:10px;flex-wrap:wrap;}
+.hod-selector.show{display:flex;}
+.hod-badge{background:var(--orange);color:white;font-size:9px;font-weight:700;padding:3px 9px;border-radius:50px;text-transform:uppercase;letter-spacing:.04em;flex-shrink:0;}
+.hod-selector select{flex:1;min-width:160px;padding:8px 11px;border-radius:var(--r-sm);border:1.5px solid #FED7AA;font-family:'Inter',sans-serif;font-size:12px;color:var(--ink);background:white;outline:none;}
+.hod-selector select:focus{border-color:var(--orange);}
 
-/* ─── STATE SCREENS ─── */
-.state-screen{
-  text-align:center;padding:42px 20px;
-  display:flex;flex-direction:column;align-items:center;gap:10px;
-}
-.state-icon{font-size:38px;opacity:.6;}
-.state-title{font-weight:700;font-size:14px;color:var(--blue);}
-.state-sub{font-size:11px;color:var(--muted);max-width:280px;line-height:1.5;}
-.exam-box{
-  background:#EEF4FF;border:2px dashed var(--blue2);
-  border-radius:var(--r);padding:30px 20px;text-align:center;
-}
-.exam-box i{font-size:36px;color:var(--blue2);margin-bottom:10px;}
-.exam-box b{color:var(--blue2);font-size:15px;display:block;}
-.exam-box p{font-size:11px;color:var(--muted);margin-top:6px;}
+/* SECTION TITLE */
+.sec-title{font-size:10px;font-weight:700;color:var(--blue);text-transform:uppercase;letter-spacing:.07em;margin:14px 0 8px;display:flex;align-items:center;gap:7px;}
+.sec-title i{opacity:.7;}
 
-/* ─── SEARCH ─── */
-.search-filters{
-  display:grid;grid-template-columns:1fr 1fr;gap:10px;
-  margin-bottom:14px;
-}
-.search-filters select{
-  padding:10px 12px;border-radius:var(--r-sm);
-  border:1.5px solid var(--border);font-size:11px;
-  font-family:'DM Sans',sans-serif;color:var(--text);
-  background:var(--light);outline:none;cursor:pointer;
-  transition:border-color .2s;
-}
-.search-filters select:focus{border-color:var(--blue);}
+/* TABLE */
+.twrap{overflow-x:auto;border-radius:var(--r-md);border:1px solid var(--border);box-shadow:var(--sh-sm);margin-bottom:4px;}
+table{width:100%;min-width:520px;border-collapse:collapse;}
+thead tr{background:var(--blue);}
+th{padding:10px 11px;text-align:left;font-size:9.5px;font-weight:700;color:rgba(255,255,255,0.9);text-transform:uppercase;letter-spacing:.07em;white-space:nowrap;}
+td{padding:10px 11px;font-size:12px;border-bottom:1px solid var(--border);vertical-align:top;line-height:1.45;}
+tr:last-child td{border-bottom:none;}
+tbody tr:nth-child(even){background:#FAFBFC;}
+tbody tr:hover{background:var(--blue-light);}
+tbody tr.row-noclass td{color:#94A3B8;font-style:italic;}
+tbody tr.row-noclass td:first-child{font-style:normal;font-weight:600;color:var(--slate);}
+tbody tr.row-cancelled{background:#FFF5F5!important;}
+tbody tr.row-cancelled td{color:var(--maroon);font-style:italic;}
+tbody tr.row-sp-override{background:var(--orange-light)!important;}
+tbody tr.row-sp-override:hover{background:#FFF3E0!important;}
+tbody tr.row-sp-holiday{background:#FFF5F5!important;}
+tbody tr.row-sp-holiday td{color:#9B1C2C;}
+.hr-label{font-weight:700;color:var(--blue);white-space:nowrap;}
+.subj-name{font-weight:600;color:var(--blue);}
+.subj-batch{display:block;font-size:10px;color:var(--slate);margin-top:2px;}
 
-.search-summary{
-  display:grid;grid-template-columns:repeat(3,1fr);gap:8px;
-  margin-bottom:16px;
-}
-.sum-box{
-  background:var(--light);padding:10px;border-radius:var(--r-sm);
-  text-align:center;border:1px solid var(--border);
-}
-.sum-label{font-size:8px;font-weight:700;color:var(--muted);text-transform:uppercase;display:block;}
+/* BLACK for code and time — matching student portal */
+.code-mono{font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--black);font-weight:500;}
+.htime{font-size:9px;color:var(--black);white-space:nowrap;font-family:'IBM Plex Mono',monospace;}
+
+.room-tag{display:inline-block;background:var(--blue-light);color:var(--blue);padding:2px 8px;border-radius:4px;font-size:10px;font-weight:600;white-space:nowrap;}
+.spbadge{display:inline-flex;align-items:center;gap:3px;background:var(--orange);color:white;font-size:8px;font-weight:700;padding:1px 6px;border-radius:50px;margin-top:3px;letter-spacing:0.04em;}
+.spbadge.hol{background:var(--maroon);}
+
+/* STATE BOXES */
+.exam-box{text-align:center;padding:36px 20px;background:var(--blue-light);border-radius:var(--r-lg);border:1px solid #C8D8F0;}
+.exam-box .ei{font-size:38px;color:var(--blue);margin-bottom:12px;}
+.exam-box h3{font-family:'Playfair Display',serif;font-size:1.2rem;color:var(--blue);margin-bottom:7px;}
+.exam-box p{color:var(--slate);font-size:12.5px;}
+.hol-box{text-align:center;padding:24px 20px;background:var(--maroon-light);border-radius:var(--r-lg);border:1px solid #FCA5A5;color:var(--maroon);font-weight:600;font-size:13px;}
+.no-class-box{text-align:center;padding:28px 20px;background:var(--slate-light);border-radius:var(--r-lg);border:1px solid var(--border);color:var(--slate);font-size:13px;font-weight:500;}
+
+/* ACTION BAR */
+.abar{display:flex;gap:9px;justify-content:center;margin-top:16px;flex-wrap:wrap;}
+.abtn{display:inline-flex;align-items:center;gap:6px;padding:9px 20px;border-radius:var(--r-md);font-family:'Inter',sans-serif;font-size:12px;font-weight:600;cursor:pointer;border:none;transition:all var(--ease);}
+.abtn.prnt{background:var(--blue);color:white;box-shadow:0 4px 12px rgba(30,58,95,0.2);}
+.abtn.prnt:hover{background:var(--blue-mid);transform:translateY(-1px);}
+.abtn.pdl{background:var(--maroon);color:white;box-shadow:0 4px 12px rgba(123,29,46,0.2);}
+.abtn.pdl:hover{background:#5C1520;transform:translateY(-1px);}
+.abtn:disabled{opacity:.5;cursor:not-allowed;transform:none!important;}
+.bspinner{display:none;width:12px;height:12px;border:2px solid rgba(255,255,255,0.3);border-top-color:white;border-radius:50%;animation:spin .7s linear infinite;}
+
+/* SEARCH */
+.sfcard{background:var(--slate-light);border:1px solid var(--border);border-radius:var(--r-lg);padding:15px;margin-bottom:16px;}
+.fgrid{display:grid;grid-template-columns:1fr 1fr;gap:11px;}
+.fgrid .full{grid-column:1/-1;}
+
+.search-summary{display:none;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:16px;}
+.sum-box{background:var(--slate-light);padding:10px;border-radius:var(--r-sm);text-align:center;border:1px solid var(--border);}
+.sum-label{font-size:8px;font-weight:700;color:var(--slate);text-transform:uppercase;display:block;}
 .sum-count{font-size:18px;font-weight:700;color:var(--blue);}
 
-.result-card{
-  border:1px solid var(--border);padding:12px 14px;
-  border-radius:var(--r-sm);margin-bottom:8px;
-  display:flex;justify-content:space-between;align-items:center;
-  transition:box-shadow .2s;
-}
-.result-card:hover{box-shadow:var(--shadow2);}
-.result-subject{font-weight:700;color:var(--blue);font-size:12px;}
-.result-meta{font-size:10px;color:var(--muted);margin-top:3px;}
-.tag{
-  font-size:9px;padding:3px 9px;border-radius:20px;
-  color:var(--white);font-weight:700;text-transform:uppercase;
-  flex-shrink:0;
-}
+.sec-search-title{font-size:10.5px;font-weight:700;color:var(--blue);text-transform:uppercase;letter-spacing:.07em;padding:6px 11px;background:var(--blue-light);border-radius:var(--r-sm);margin:13px 0 7px;display:flex;align-items:center;gap:7px;}
+.cbadge{background:var(--blue);color:white;font-size:9px;padding:1px 7px;border-radius:50px;}
 
-/* ─── SPINNER ─── */
-.spinner-wrap{text-align:center;padding:50px;}
-.spin{
-  border:3px solid var(--light);border-top:3px solid var(--maroon);
-  border-radius:50%;width:28px;height:28px;
-  animation:spin 1s linear infinite;
-  margin:0 auto 12px;
-}
-@keyframes spin{to{transform:rotate(360deg);}}
+.rcard{border:1px solid var(--border);padding:12px 14px;border-radius:var(--r-md);margin-bottom:8px;display:flex;justify-content:space-between;align-items:flex-start;gap:9px;box-shadow:var(--sh-sm);transition:all var(--ease);}
+.rcard:hover{box-shadow:var(--sh-md);transform:translateY(-1px);}
+.rsub{font-weight:700;color:var(--blue);font-size:12.5px;margin-bottom:2px;}
+.rmeta{font-size:11px;color:#555;line-height:1.7;margin-top:3px;}
+.stag{padding:3px 9px;border-radius:50px;font-size:9px;font-weight:700;text-transform:uppercase;color:white;letter-spacing:.04em;white-space:nowrap;flex-shrink:0;}
+.t-today{background:#10B981;}.t-up{background:#3B82F6;}.t-past{background:var(--slate);}
 
-/* ─── PASSWORD OVERLAY ─── */
-#pwOverlay{
-  position:fixed;inset:0;z-index:9999;
-  display:none;align-items:center;justify-content:center;
-  background:rgba(0,0,0,.55);backdrop-filter:blur(6px);
-}
+/* PASSWORD OVERLAY */
+#pwOverlay{position:fixed;inset:0;z-index:9999;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,.58);backdrop-filter:blur(7px);-webkit-backdrop-filter:blur(7px);}
 #pwOverlay.show{display:flex;}
-.pw-card{
-  background:var(--white);border-radius:20px;
-  width:90%;max-width:340px;overflow:hidden;
-  border-top:5px solid var(--maroon);
-  box-shadow:0 20px 60px rgba(0,0,0,.3);
-}
-.pw-top{
-  background:linear-gradient(135deg,var(--blue),var(--blue2));
-  padding:28px 20px 22px;text-align:center;color:var(--white);
-}
-.pw-photo{
-  width:82px;height:82px;border-radius:50%;
-  border:3px solid var(--gold);margin-bottom:10px;
-  object-fit:cover;background:var(--light);
-}
+.pw-card{background:var(--white);border-radius:20px;width:90%;max-width:340px;overflow:hidden;border-top:5px solid var(--maroon);box-shadow:0 20px 60px rgba(0,0,0,.35);animation:slideUp .32s cubic-bezier(.34,1.56,.64,1);}
+@keyframes slideUp{from{transform:translateY(30px) scale(.97);opacity:0;}to{transform:translateY(0) scale(1);opacity:1;}}
+.pw-top{background:linear-gradient(135deg,var(--blue),var(--blue-mid));padding:28px 20px 22px;text-align:center;color:var(--white);position:relative;}
+.pw-close{position:absolute;top:10px;right:12px;background:rgba(255,255,255,0.12);border:none;color:white;width:26px;height:26px;border-radius:50%;font-size:12px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:.2s;}
+.pw-close:hover{background:var(--maroon);}
+.pw-photo-wrap{width:80px;height:80px;border-radius:50%;border:3px solid var(--gold);margin:0 auto 12px;overflow:hidden;background:rgba(255,255,255,0.15);display:flex;align-items:center;justify-content:center;}
+.pw-photo-wrap img{width:100%;height:100%;object-fit:cover;}
+.pw-avatar-txt{font-size:28px;font-weight:700;color:var(--gold2);font-family:'Playfair Display',serif;}
 .pw-name{font-family:'Playfair Display',serif;font-size:1.05rem;}
 .pw-init{color:var(--gold2);font-size:9px;font-weight:700;letter-spacing:2px;margin-top:4px;}
 .pw-body{padding:22px;}
-.pw-input{
-  width:100%;padding:12px;border-radius:10px;
-  border:2px solid var(--border);text-align:center;
-  font-size:15px;font-family:'DM Sans',sans-serif;
-  outline:none;transition:border-color .2s;
-  background:var(--light);
-}
+.pw-input{width:100%;padding:12px;border-radius:10px;border:2px solid var(--border);text-align:center;font-size:15px;font-family:'Inter',sans-serif;outline:none;transition:border-color .2s;background:var(--slate-light);letter-spacing:2px;}
 .pw-input:focus{border-color:var(--blue);}
 .pw-error{color:#C62828;font-size:11px;margin-top:8px;display:none;text-align:center;}
-.pw-submit{
-  width:100%;margin-top:14px;padding:12px;
-  background:var(--blue);color:var(--white);
-  border:none;border-radius:10px;font-weight:700;
-  font-size:13px;cursor:pointer;font-family:'DM Sans',sans-serif;
-  transition:background .2s;
-}
-.pw-submit:hover{background:var(--blue2);}
-.pw-cancel{
-  margin-top:8px;background:none;border:none;
-  color:var(--muted);font-size:11px;cursor:pointer;
-  display:block;width:100%;text-align:center;
-}
+.pw-submit{width:100%;margin-top:14px;padding:12px;background:var(--blue);color:var(--white);border:none;border-radius:10px;font-weight:700;font-size:13px;cursor:pointer;font-family:'Inter',sans-serif;transition:background .2s;}
+.pw-submit:hover{background:var(--blue-mid);}
+.pw-cancel{margin-top:8px;background:none;border:none;color:var(--slate);font-size:11px;cursor:pointer;display:block;width:100%;text-align:center;font-family:'Inter',sans-serif;}
 
-/* ─── FOOTER ─── */
-footer{
-  position:absolute;bottom:0;width:100%;
-  text-align:center;padding:8px;font-size:9px;
-  font-weight:600;color:var(--muted);
-  background:var(--white);border-top:1px solid var(--border);
-  z-index:10;letter-spacing:1px;
-}
+/* SESSION RESTORE BANNER */
+.session-banner{background:linear-gradient(135deg,#D1FAE5,#ECFDF5);border:1px solid #6EE7B7;border-radius:var(--r-md);padding:10px 14px;margin-bottom:14px;display:flex;align-items:center;gap:10px;font-size:12px;color:#064E3B;font-weight:500;}
+.session-banner i{color:#10B981;font-size:14px;flex-shrink:0;}
 
-/* ─── SCROLLBAR ─── */
+/* LOADING / EMPTY */
+.lstate{text-align:center;padding:38px 20px;color:var(--slate);font-size:13px;}
+.ldot{width:28px;height:28px;border:3px solid #E2E8F0;border-top-color:var(--maroon);border-radius:50%;animation:spin .8s linear infinite;margin:0 auto 12px;}
+.empty{text-align:center;padding:34px 20px;color:var(--slate);font-size:13px;}
+.empty .ei{font-size:28px;margin-bottom:8px;opacity:.35;}
+
+/* TOAST */
+.toast{position:fixed;bottom:22px;right:20px;background:var(--ink);color:white;padding:10px 16px;border-radius:var(--r-md);font-size:12.5px;font-weight:500;box-shadow:var(--sh-lg);z-index:9999;display:flex;align-items:center;gap:7px;transform:translateY(60px);opacity:0;transition:all .28s cubic-bezier(.4,0,.2,1);max-width:290px;}
+.toast.show{transform:translateY(0);opacity:1;}
+.toast.ok{background:var(--green);}
+.toast.err{background:var(--maroon);}
+
+/* FOOTER */
+.foot{text-align:center;padding:11px;font-size:9px;font-weight:600;color:var(--slate);background:var(--slate-light);border-top:1px solid var(--border);letter-spacing:1px;flex-shrink:0;}
+
+/* PRINT HEADER/FOOTER hidden by default */
+#ph,#pf{display:none;}
+
+@keyframes spin{to{transform:rotate(360deg);}}
 ::-webkit-scrollbar{width:5px;}
 ::-webkit-scrollbar-track{background:transparent;}
 ::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px;}
+
+@media(max-width:600px){
+  body{padding:7px 5px 22px;}
+  .hdr{padding:12px 13px 0;}
+  .hdr-logo img{height:38px;}
+  .clock-date{display:none;}
+  .nav-btn{font-size:10.5px;padding:8px 5px;gap:4px;}
+  .tab{padding:13px 11px;max-height:calc(100vh - 220px);}
+  .fgrid{grid-template-columns:1fr;}
+  .fgrid .full{grid-column:1;}
+  table{min-width:460px;}
+  th,td{padding:8px 8px;font-size:11px;}
+}
+@media(max-width:360px){
+  .nav-btn .nl{display:none;}
+  .nav-btn i{font-size:15px;}
+}
+
+/* PRINT */
+@media print{
+  *,*::before,*::after{transition:none!important;animation:none!important;}
+  body{background:white!important;padding:0;-webkit-print-color-adjust:exact;print-color-adjust:exact;display:block;}
+  .nav,.hdr,.abar,.foot,.hod-selector,#dayinfo,#search,#staffLanding,#pwOverlay,.logout-btn,.sec-title,.date-card,.session-banner{display:none!important;}
+  .wrap{box-shadow:none!important;border-radius:0!important;min-height:auto!important;overflow:visible!important;}
+  .tab{display:none!important;max-height:none!important;overflow:visible!important;padding:0!important;}
+  #timetable{display:block!important;padding:10px 0 0!important;}
+  #profileView{display:block!important;}
+  .twrap{overflow:visible!important;border:none!important;box-shadow:none!important;}
+  #ph{display:block!important;text-align:center;margin-bottom:18px;}
+  #ph img{height:55px;margin-bottom:6px;display:block;margin-left:auto;margin-right:auto;}
+  #ph h1{font-size:12pt;color:#000;margin:4px 0 2px;font-family:'Playfair Display',serif;}
+  #ph h2{font-size:10pt;color:#7B1D2E;margin-bottom:4px;}
+  #ph .pmeta{font-size:9pt;color:#333;margin-top:7px;border-top:1px solid #ccc;padding-top:7px;line-height:1.7;}
+  #pf{display:block!important;margin-top:18px;font-size:8pt;color:#555;border-top:1px solid #ccc;padding-top:8px;text-align:center;font-style:italic;}
+  table{width:100%;border-collapse:collapse;}
+  th{padding:7px 9px;font-size:8.5pt;font-weight:700;background:#E8EDF5!important;color:#000!important;border:1px solid #999;text-align:left;}
+  td{padding:7px 9px;border:1px solid #ccc;font-size:9pt;color:#000;vertical-align:top;}
+  tbody tr:nth-child(even){background:#F7F9FC!important;}
+  .subj-name{color:#1E3A5F!important;font-weight:700;}
+  .code-mono{font-size:9pt!important;}
+  .room-tag{background:#E8EDF5!important;color:#000!important;}
+  .hr-label{font-weight:700;}
+  .profile-hdr{background:#E8EDF5!important;border-radius:0!important;padding:12px!important;margin-bottom:12px!important;}
+  .ph-name,.ph-initial,.ph-desig{color:#000!important;}
+}
 </style>
 </head>
-<body oncontextmenu="return false;">
+<body>
+
+<div class="toast" id="toast"></div>
+
+<!-- PRINT HEADER -->
+<div id="ph">
+  <img src="https://loyolazoology.github.io/about-us/azbt-logo.png" alt="AZ-BT Logo">
+  <h1>PG &amp; Research Department of Advanced Zoology and Biotechnology</h1>
+  <h2>Loyola College (Autonomous), Chennai – 34</h2>
+  <div class="pmeta" id="pmeta"></div>
+</div>
 
 <!-- PASSWORD OVERLAY -->
 <div id="pwOverlay">
   <div class="pw-card">
     <div class="pw-top">
-      <img id="pwPhoto" class="pw-photo" src="" alt="">
+      <button class="pw-close" onclick="closePw()"><i class="fas fa-times"></i></button>
+      <div class="pw-photo-wrap" id="pwPhotoWrap"></div>
       <div class="pw-name" id="pwName"></div>
       <div class="pw-init" id="pwInit"></div>
     </div>
     <div class="pw-body">
-      <input type="password" id="pwInput" class="pw-input" placeholder="Enter Password">
-      <div class="pw-error" id="pwError"><i class="fas fa-exclamation-circle"></i> Incorrect password</div>
-      <button class="pw-submit" onclick="submitPw()">LOG IN <i class="fas fa-arrow-right"></i></button>
+      <input type="password" id="pwInput" class="pw-input" placeholder="Enter Password" autocomplete="off">
+      <div class="pw-error" id="pwError"><i class="fas fa-exclamation-circle"></i> Incorrect password. Try again.</div>
+      <button class="pw-submit" onclick="submitPw()"><i class="fas fa-unlock-alt"></i> &nbsp;Login</button>
       <button class="pw-cancel" onclick="closePw()">Cancel</button>
     </div>
   </div>
 </div>
 
-<!-- MAIN APP -->
-<div class="wrapper">
+<!-- PORTAL -->
+<div class="wrap">
 
   <!-- HEADER -->
-  <div class="header">
-    <div class="header-inner">
-      <h2>Staff Timetable Portal</h2>
-      <div class="header-sub">Advanced Zoology and Biotechnology</div>
+  <div class="hdr">
+    <div class="hdr-inner">
+      <div class="hdr-logo">
+        <img src="https://loyolazoology.github.io/about-us/azbt-logo.png" alt="AZ-BT Logo"
+          onerror="this.parentElement.innerHTML='<i class=\'fas fa-dna\' style=\'color:var(--gold);font-size:24px\'></i>'">
+      </div>
+      <div class="hdr-text">
+        <div class="hdr-title">Staff Timetable Portal</div>
+        <div class="hdr-sub">Dept. of Advanced Zoology &amp; Biotechnology</div>
+      </div>
+      <div class="hdr-clock">
+        <div class="clock-time" id="ct">--:--:--</div>
+        <div class="clock-date" id="cd">--</div>
+      </div>
     </div>
-    <div class="clock">
-      <span class="clock-time" id="clockTime">--:--:--</span>
-      <span id="clockDate"></span>
-    </div>
+    <div class="hdr-bar"></div>
   </div>
 
   <!-- NAV -->
-  <div class="nav">
-    <button class="nav-btn active" onclick="goTab('dayinfo',this)">
-      <i class="fas fa-calendar-day"></i>DAY INFO
+  <nav class="nav" id="mainNav">
+    <button class="nav-btn active" data-tab="dayinfo">
+      <i class="fas fa-calendar-day"></i><span class="nl">Day Info</span>
     </button>
-    <button class="nav-btn" onclick="goTab('timetable',this)">
-      <i class="fas fa-table"></i>TIMETABLE
+    <button class="nav-btn" data-tab="timetable">
+      <i class="fas fa-id-card"></i><span class="nl">Timetable</span>
     </button>
-    <button class="nav-btn" id="searchBtn" onclick="goTab('search',this)" disabled>
-      <i class="fas fa-search"></i>SEARCH
+    <button class="nav-btn" id="searchNavBtn" data-tab="search" disabled>
+      <i class="fas fa-magnifying-glass"></i><span class="nl">Search</span>
     </button>
+  </nav>
+
+  <!-- DAY INFO TAB -->
+  <div id="dayinfo" class="tab active">
+    <div class="date-card">
+      <div class="dicon"><i class="fas fa-calendar-alt"></i></div>
+      <div class="dfield">
+        <label class="flabel" for="dp">Select Date</label>
+        <input type="date" id="dp" class="form-ctrl">
+      </div>
+    </div>
+    <div id="dayMeta">
+      <div class="lstate"><div class="ldot"></div>Fetching schedule…</div>
+    </div>
   </div>
 
-  <!-- DAY INFO PANE -->
-  <div id="dayinfo" class="pane active">
-    <div class="date-box">
-      <label><i class="fas fa-calendar-alt"></i> &nbsp;SELECT DATE</label>
-      <input type="date" id="datePick" onchange="onDateChange(this.value)">
-    </div>
-    <div id="metaArea">
-      <div class="spinner-wrap"><div class="spin"></div>Loading…</div>
-    </div>
-  </div>
-
-  <!-- TIMETABLE PANE -->
-  <div id="timetable" class="pane">
+  <!-- TIMETABLE TAB -->
+  <div id="timetable" class="tab">
+    <!-- Staff Landing (before login) -->
     <div id="staffLanding">
+      <div class="staff-landing-title"><i class="fas fa-users"></i> Select Your Name to Log In</div>
       <div class="staff-grid" id="staffGrid">
-        <div class="spinner-wrap"><div class="spin"></div></div>
+        <div class="lstate" style="grid-column:1/-1"><div class="ldot"></div>Loading staff…</div>
       </div>
     </div>
+    <!-- Profile View (after login) -->
     <div id="profileView" style="display:none;">
-      <div class="profile-header">
-        <img id="profImg" src="" alt="">
-        <div class="profile-info">
-          <div class="name" id="profName"></div>
-          <div class="desig" id="profDesig"></div>
-        </div>
-        <button class="logout-btn" onclick="doLogout()"><i class="fas fa-power-off"></i> Logout</button>
+      <div class="hod-selector" id="hodSelector">
+        <span class="hod-badge">HOD View</span>
+        <select id="hodPick" onchange="hodPickStaff(this.value)">
+          <option value="">— View My Timetable —</option>
+        </select>
       </div>
-      <div id="ttArea"></div>
+      <div class="profile-hdr" id="profileHdr"></div>
+      <div class="sec-title"><i class="fas fa-table"></i> Timetable</div>
+      <div id="ttArea">
+        <div class="lstate"><div class="ldot"></div>Loading…</div>
+      </div>
+      <div class="abar">
+        <button class="abtn prnt" id="printBtn"><i class="fas fa-print"></i> Print</button>
+        <button class="abtn pdl" id="pdfBtn">
+          <div class="bspinner" id="pdfSpin"></div>
+          <i class="fas fa-file-pdf" id="pdfIco"></i>
+          <span id="pdfTxt"> Download PDF</span>
+        </button>
+      </div>
     </div>
   </div>
 
-  <!-- SEARCH PANE -->
-  <div id="search" class="pane">
-    <div class="search-filters">
-      <select id="sClass" onchange="onSearchClassChange()"><option value="">— All Classes —</option></select>
-      <select id="sSubject" onchange="runSearch()"><option value="">— All Subjects —</option></select>
+  <!-- SEARCH TAB -->
+  <div id="search" class="tab">
+    <div id="searchLocked" class="empty">
+      <div class="ei"><i class="fas fa-lock"></i></div>
+      Log in to use search.
     </div>
-    <div id="searchSummary" class="search-summary" style="display:none;">
-        <div class="sum-box"><span class="sum-label">Past</span><span class="sum-count" id="countPast">0</span></div>
-        <div class="sum-box"><span class="sum-label">Today</span><span class="sum-count" id="countToday">0</span></div>
-        <div class="sum-box"><span class="sum-label">Upcoming</span><span class="sum-count" id="countUpcoming">0</span></div>
+    <div id="searchContent" style="display:none;">
+      <div class="sfcard">
+        <div class="fgrid">
+          <div>
+            <label class="flabel">Filter by Class</label>
+            <select id="sClass" class="form-ctrl" onchange="onSClassChange()">
+              <option value="">All Classes</option>
+            </select>
+          </div>
+          <div>
+            <label class="flabel">Filter by Subject</label>
+            <select id="sSub" class="form-ctrl" onchange="runSearch()">
+              <option value="">All Subjects</option>
+            </select>
+          </div>
+        </div>
+      </div>
+      <div class="search-summary" id="searchSummary">
+        <div class="sum-box"><span class="sum-label">Past</span><span class="sum-count" id="cPast">0</span></div>
+        <div class="sum-box"><span class="sum-label">Today</span><span class="sum-count" id="cToday">0</span></div>
+        <div class="sum-box"><span class="sum-label">Upcoming</span><span class="sum-count" id="cUp">0</span></div>
+      </div>
+      <div id="searchRes">
+        <div class="empty"><div class="ei"><i class="fas fa-filter"></i></div>Select a class or subject to search.</div>
+      </div>
     </div>
-    <div id="searchRes"></div>
   </div>
 
-  <footer>© 2026 &nbsp;|&nbsp; AZ – BT &nbsp;|&nbsp; STAFF TIMETABLE PORTAL</footer>
+  <footer class="foot">© 2026 AZ–BT | Staff Timetable Portal | Loyola College (Autonomous), Chennai - 34</footer>
+</div>
+
+<!-- PRINT FOOTER -->
+<div id="pf">
+  <p>Generated from AZ-BT Staff Timetable Portal · Loyola College (Autonomous), Chennai</p>
+  <p id="pfdet"></p>
 </div>
 
 <script>
-/* ════════════════════════════════════════════
-   DATA URLS
-════════════════════════════════════════════ */
-const URL_DAY   = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTgt5H7LNGG1CB06ocZIe15CiIYT5DALF5UuTDwGXHXg2zkb13-p8lv5cnPSuIA_e2qfYnjaKuE8SaX/pub?gid=1169802535&single=true&output=csv";
-const URL_STAFF = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTgt5H7LNGG1CB06ocZIe15CiIYT5DALF5UuTDwGXHXg2zkb13-p8lv5cnPSuIA_e2qfYnjaKuE8SaX/pub?gid=1681135593&single=true&output=csv";
-const URL_TT    = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTgt5H7LNGG1CB06ocZIe15CiIYT5DALF5UuTDwGXHXg2zkb13-p8lv5cnPSuIA_e2qfYnjaKuE8SaX/pub?gid=729099669&single=true&output=csv";
-const URL_SPEC  = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTgt5H7LNGG1CB06ocZIe15CiIYT5DALF5UuTDwGXHXg2zkb13-p8lv5cnPSuIA_e2qfYnjaKuE8SaX/pub?gid=1572624085&single=true&output=csv";
+/* ════════════════════════════
+   CONFIG / URLS
+════════════════════════════ */
+const URL_DAY     = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTgt5H7LNGG1CB06ocZIe15CiIYT5DALF5UuTDwGXHXg2zkb13-p8lv5cnPSuIA_e2qfYnjaKuE8SaX/pub?gid=1169802535&single=true&output=csv";
+const URL_STAFF   = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTgt5H7LNGG1CB06ocZIe15CiIYT5DALF5UuTDwGXHXg2zkb13-p8lv5cnPSuIA_e2qfYnjaKuE8SaX/pub?gid=1681135593&single=true&output=csv";
+const URL_TT      = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTgt5H7LNGG1CB06ocZIe15CiIYT5DALF5UuTDwGXHXg2zkb13-p8lv5cnPSuIA_e2qfYnjaKuE8SaX/pub?gid=729099669&single=true&output=csv";
+const URL_TIME    = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTgt5H7LNGG1CB06ocZIe15CiIYT5DALF5UuTDwGXHXg2zkb13-p8lv5cnPSuIA_e2qfYnjaKuE8SaX/pub?gid=628527526&single=true&output=csv";
+const URL_SPECIAL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTgt5H7LNGG1CB06ocZIe15CiIYT5DALF5UuTDwGXHXg2zkb13-p8lv5cnPSuIA_e2qfYnjaKuE8SaX/pub?gid=1572624085&single=true&output=csv";
 
-/* ════════════════════════════════════════════
+const HOD_DESIG   = "Head of the Department";
+const HOURS       = ["1","2","3","4","5"];
+const HOUR_LABELS = {"1":"1st Hour","2":"2nd Hour","3":"3rd Hour","4":"4th Hour","5":"5th Hour"};
+const HOUR_DISPLAY= {"1":"1st Hour","2":"2nd Hour","3":"3rd Hour","4":"4th Hour","5":"5th Hour"};
+
+/* Session persistence */
+const SESSION_KEY     = "azbt_session";
+const SESSION_TTL_MS  = 72 * 60 * 60 * 1000;
+const SESSION_ALIVE_KEY = "azbt_tab_alive";
+
+/* ════════════════════════════
    STATE
-════════════════════════════════════════════ */
-let dayData=[], staffData=[], ttData=[], specData=[];
-let loggedIn=null, pending=null;
+════════════════════════════ */
+let DI=[], STAFF=[], TT=[], TS={}, SP={};
+let loggedIn=null, pending=null, viewStaff=null;
+let todayISO="", dataReady=false;
 
-/* ════════════════════════════════════════════
-   DATE NORMALIZER
-════════════════════════════════════════════ */
-function toISO(raw) {
-  if (!raw) return "";
-  const s = String(raw).trim();
-  if (/^\d{4}-\d{2}-\d{2}$/.test(s)) return s;
-  const dmyDash = s.match(/^(\d{1,2})-(\d{1,2})-(\d{4})$/);
-  if (dmyDash) {
-    const [, d, m, y] = dmyDash;
-    return `${y}-${m.padStart(2,'0')}-${d.padStart(2,'0')}`;
-  }
-  const dmySlash = s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
-  if (dmySlash) {
-    const [, d, m, y] = dmySlash;
-    return `${y}-${m.padStart(2,'0')}-${d.padStart(2,'0')}`;
-  }
-  const d = new Date(s);
-  if (!isNaN(d)) {
-    const y = d.getFullYear();
-    const m = String(d.getMonth()+1).padStart(2,'0');
-    const dd = String(d.getDate()).padStart(2,'0');
-    return `${y}-${m}-${dd}`;
-  }
+/* ════════════════════════════
+   HELPERS
+════════════════════════════ */
+const $=id=>document.getElementById(id);
+function esc(s){if(!s)return"";return String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));}
+
+function toIST(){
+  return new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Kolkata',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date());
+}
+
+/* Convert any date format to YYYY-MM-DD */
+function toYMD(raw){
+  if(!raw)return"";
+  const s=String(raw).trim();
+  if(/^\d{4}-\d{2}-\d{2}$/.test(s))return s;
+  /* DD-MM-YYYY or DD/MM/YYYY */
+  const m=s.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})$/);
+  if(m)return`${m[3]}-${m[2].padStart(2,'0')}-${m[1].padStart(2,'0')}`;
+  const m2=s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{2})$/);
+  if(m2)return`20${m2[3]}-${m2[2].padStart(2,'0')}-${m2[1].padStart(2,'0')}`;
+  const d=new Date(s);
+  if(!isNaN(d))return d.toISOString().split('T')[0];
   return s;
 }
 
-function driveThumb(url) {
-  if (!url) return "";
-  const m = url.match(/\/d\/([a-zA-Z0-9_-]+)/);
-  return m ? `https://drive.google.com/thumbnail?id=${m[1]}&sz=400` : url;
+function ymd2dmy(s){if(!s)return"";const[y,m,d]=s.split('-');return`${d}-${m}-${y}`;}
+
+function driveThumb(url){
+  if(!url)return"";
+  const m=url.match(/\/d\/([a-zA-Z0-9_-]+)/);
+  return m?`https://drive.google.com/thumbnail?id=${m[1]}&sz=400`:url;
 }
 
-/* ════════════════════════════════════════════
-   LOAD DATA
-════════════════════════════════════════════ */
-async function loadData() {
-  const csv = (url) => new Promise(res =>
-    Papa.parse(url, {download:true,header:true,skipEmptyLines:true,complete:r=>res(r.data)})
-  );
-  [dayData, staffData, ttData, specData] = await Promise.all([
-    csv(URL_DAY), csv(URL_STAFF), csv(URL_TT), csv(URL_SPEC)
-  ]);
+function normOrd(s){
+  if(!s)return"";
+  const t=String(s).trim();
+  if(/^[0-9]+$/.test(t))return t;
+  const m=t.match(/^Day[\s\-]*([0-9]+)/i);if(m)return m[1];
+  const m2=t.match(/^([0-9]+)/);if(m2)return m2[1];
+  return t;
+}
 
-  dayData.forEach(r => {
-    r._iso = toISO(r["Date"] || r["date"]);
-    r._working = (r["Working"] || r["working"] || "").trim();
-    r._dayOrder = (r["Day Order"] || r["DayOrder"] || r["day order"] || "").toString().trim();
-    r._hours = (r["Hours"] || r["hours"] || "").toString().trim();
-    r._event = (r["Event"] || r["event"] || "").toString().trim();
-    r._reason = (r["Reason"] || r["reason"] || "").toString().trim();
-    r._day = (r["Day"] || r["day"] || "").toString().trim();
+/*
+ * Exam detection:
+ * * prefix anywhere in Event OR Reason = exam day
+ */
+function isExam(row){
+  if(!row)return false;
+  const ev  = String(row._event  ||'').trim();
+  const rsn = String(row._reason ||'').trim();
+  if(ev.startsWith('*') || rsn.startsWith('*')) return true;
+  return false;
+}
+
+function stripStar(s){ return String(s||'').replace(/^\*+/,'').trim(); }
+
+function loadCSV(url){
+  return new Promise(ok=>{
+    Papa.parse(url,{
+      download:true,header:true,skipEmptyLines:true,
+      complete:r=>ok((r.data||[]).filter(row=>Object.values(row).some(v=>v&&String(v).trim()!==""))),
+      error:()=>ok([])
+    });
   });
-  specData.forEach(r => {
-    r._iso = toISO(r["Date"] || r["date"]);
-  });
-  ttData.forEach(r => {
-    r._staffInitial = (r["StaffInitial"] || "").toString().trim();
-    r._dayOrder = (r["DayOrder"] || "").toString().trim();
-    r._hour = (r["Hour"] || "").toString().trim();
-    r._class = (r["Class"] || "").toString().trim();
-    r._batch = (r["Batch"] || "").toString().trim();
-    r._subjectCode = (r["SubjectCode"] || r["Subject Code"] || "").toString().trim();
-    r._subject = (r["Subject"] || "").toString().trim();
-    r._room = (r["RoomNo"] || "").toString().trim();
-  });
-  staffData.forEach(r => {
-    r._initial = (r["StaffInitial"] || "").toString().trim();
-    r._name = (r["StaffName"] || "").toString().trim();
-    r._desig = (r["Designation"] || "").toString().trim();
-    r._pw = (r["Password"] || "").toString().trim();
-    r._photo = driveThumb(r["Profile"] || r["Photo"] || "");
-  });
-
-  buildStaffGrid();
-  renderDayMeta(document.getElementById('datePick').value);
 }
 
-function buildStaffGrid() {
-  const grid = document.getElementById('staffGrid');
-  const tiles = staffData.filter(s => s._initial).map(s => `
-    <div class="staff-tile" onclick="openLogin('${s._initial}')">
-      <img src="${s._photo || `https://ui-avatars.com/api/?name=${encodeURIComponent(s._initial)}&background=1C2E5A&color=fff&size=120`}"
-           onerror="this.src='https://ui-avatars.com/api/?name=${encodeURIComponent(s._initial)}&background=1C2E5A&color=fff&size=120'">
-      <span class="tile-name">${s._initial}</span>
-    </div>`).join('');
-  grid.innerHTML = tiles || '<p style="color:var(--muted);font-size:12px;">No staff data.</p>';
+/*
+ * Parse hour key from special entry column header
+ * e.g. "1st Hour" → "1", "2nd Hour" → "2"
+ */
+function parseHourNum(h){
+  const m=String(h).match(/(\d+)/);
+  return m?m[1]:"";
 }
 
-/* ════════════════════════════════════════════
-   LOGIN
-════════════════════════════════════════════ */
-function openLogin(init) {
-  pending = staffData.find(s => s._initial === init);
-  if (!pending) return;
-  document.getElementById('pwName').textContent = pending._name;
-  document.getElementById('pwInit').textContent = pending._initial;
-  document.getElementById('pwPhoto').src = pending._photo || `https://ui-avatars.com/api/?name=${encodeURIComponent(pending._initial)}&background=1C2E5A&color=fff&size=200`;
-  document.getElementById('pwInput').value = '';
-  document.getElementById('pwError').style.display = 'none';
-  document.getElementById('pwOverlay').classList.add('show');
-  setTimeout(()=>document.getElementById('pwInput').focus(),300);
+/* ════════════════════════════
+   SESSION PERSISTENCE
+════════════════════════════ */
+function saveSession(initial){
+  try{
+    localStorage.setItem(SESSION_KEY,JSON.stringify({initial,ts:Date.now()}));
+    sessionStorage.setItem(SESSION_ALIVE_KEY,'1');
+  }catch(e){}
 }
-function closePw() { document.getElementById('pwOverlay').classList.remove('show'); }
-function submitPw() {
-  const val = document.getElementById('pwInput').value;
-  if (val === pending._pw) {
-    loggedIn = pending;
-    closePw();
-    showProfile();
-  } else {
-    document.getElementById('pwError').style.display = 'block';
-    document.getElementById('pwInput').value = '';
-    document.getElementById('pwInput').focus();
-  }
+function clearSession(){
+  try{ localStorage.removeItem(SESSION_KEY); }catch(e){}
 }
-document.getElementById('pwInput').addEventListener('keydown', e => { if(e.key==='Enter') submitPw(); });
-
-function showProfile() {
-  document.getElementById('staffLanding').style.display = 'none';
-  document.getElementById('profileView').style.display = 'block';
-  document.getElementById('profImg').src = loggedIn._photo || `https://ui-avatars.com/api/?name=${encodeURIComponent(loggedIn._initial)}&background=1C2E5A&color=fff&size=200`;
-  document.getElementById('profName').textContent = loggedIn._name;
-  document.getElementById('profDesig').textContent = loggedIn._desig;
-  document.getElementById('searchBtn').disabled = false;
-  populateSearchClasses();
-  renderTimetable();
+function getStoredSession(){
+  try{
+    if(!sessionStorage.getItem(SESSION_ALIVE_KEY))return null;
+    const raw=localStorage.getItem(SESSION_KEY);
+    if(!raw)return null;
+    const data=JSON.parse(raw);
+    if(!data||!data.initial||!data.ts)return null;
+    if(Date.now()-data.ts>SESSION_TTL_MS){ clearSession();return null; }
+    return data.initial;
+  }catch(e){ return null; }
 }
-
-function doLogout() { location.reload(); }
-
-/* ════════════════════════════════════════════
-   RENDER DAY META
-════════════════════════════════════════════ */
-function renderDayMeta(iso) {
-  const area = document.getElementById('metaArea');
-  if (!dayData.length) return;
-
-  const row = dayData.find(r => r._iso === iso);
-  if (!row) {
-    area.innerHTML = stateHtml('fa-calendar-xmark','No Calendar Data','This date has no entry in the academic calendar.');
-    return;
-  }
-
-  const isWorking = row._working.toLowerCase() === 'yes';
-  const dayOrder = row._dayOrder && row._dayOrder !== 'N/A' && row._dayOrder !== '-' ? row._dayOrder : null;
-  const isExam = row._event.toLowerCase().includes('exam') || row._reason.toLowerCase().includes('exam');
-  const detail = row._event || row._reason;
-  const [y,m,d] = iso.split('-');
-  const displayDate = `${d} ${['','Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][+m]} ${y}`;
-
-  let statusBadge = isExam
-    ? `<span class="badge badge-exam"><i class="fas fa-file-signature"></i> Exam Day</span>`
-    : isWorking
-      ? `<span class="badge badge-working"><i class="fas fa-check-circle"></i> Working Day</span>`
-      : `<span class="badge badge-holiday"><i class="fas fa-umbrella-beach"></i> Holiday</span>`;
-
-  area.innerHTML = `
-    <div class="cards-grid">
-      <div class="card"><div class="card-label"><i class="fas fa-hashtag"></i> Day Order</div><div class="card-value day-num">${dayOrder || '—'}</div></div>
-      <div class="card"><div class="card-label"><i class="fas fa-info-circle"></i> Status</div><div class="card-value sm">${statusBadge}</div></div>
-      <div class="card"><div class="card-label"><i class="fas fa-calendar"></i> Date</div><div class="card-value sm">${displayDate}</div></div>
-      <div class="card"><div class="card-label"><i class="fas fa-sun"></i> Day</div><div class="card-value sm">${row._day || '—'}</div></div>
-      ${detail ? `<div class="card card-full"><div class="card-label"><i class="fas fa-sticky-note"></i>  Note / Reason</div><div class="card-value sm">${detail}</div></div>` : ''}
-    </div>`;
-
-  if (loggedIn) renderTimetable();
-}
-
-/* ════════════════════════════════════════════
-   TIMETABLE LOGIC
-════════════════════════════════════════════ */
-function renderTimetable() {
-  const iso = document.getElementById('datePick').value;
-  const row = dayData.find(r => r._iso === iso);
-  const area = document.getElementById('ttArea');
-
-  if (!row) { area.innerHTML = stateHtml('fa-calendar-xmark','No Data'); return; }
-  if (row._working.toLowerCase() !== 'yes') {
-    area.innerHTML = stateHtml('fa-umbrella-beach','Holiday',row._reason || row._event || 'No classes scheduled.');
-    return;
-  }
-  if (row._event.toLowerCase().includes('exam') || row._reason.toLowerCase().includes('exam')) {
-    area.innerHTML = `<div class="exam-box"><i class="fas fa-file-signature"></i><b>Exam Day</b><p>${row._event || row._reason}</p></div>`;
-    return;
-  }
-
-  const doNum = row._dayOrder;
-  const activeHours = row._hours ? row._hours.split(',').map(h => h.trim()) : ['1','2','3','4','5'];
-
-  let trs = '';
-  let anyClass = false;
-
-  for (let h = 1; h <= 5; h++) {
-    const isCancelled = !activeHours.includes(h.toString());
-    const tt = ttData.find(t => t._staffInitial === loggedIn._initial && t._dayOrder === doNum && t._hour === h.toString());
-    const spec = specData.find(s => s._iso === iso && String(s["Hour"] || "").includes(h) && ((s["StaffInitial"] || "").trim() === loggedIn._initial || (tt && (s["Class"] || "").trim() === tt._class)));
-
-    if (isCancelled) {
-      trs += `<tr class="cancelled-row"><td class="hr-num">${h}</td><td colspan="3" style="text-align:center;color:var(--maroon);font-size:11px;font-style:italic;">Hour Cancelled</td></tr>`;
-      continue;
+function touchSession(){
+  try{
+    const raw=localStorage.getItem(SESSION_KEY);
+    if(!raw)return;
+    const data=JSON.parse(raw);
+    if(data&&data.initial){
+      data.ts=Date.now();
+      localStorage.setItem(SESSION_KEY,JSON.stringify(data));
+      sessionStorage.setItem(SESSION_ALIVE_KEY,'1');
     }
-
-    let cls = tt ? tt._class : '';
-    let subj = tt ? tt._subject : '';
-    let batch = tt ? tt._batch : '';
-    let code = tt ? tt._subjectCode : '';
-    let room = tt ? tt._room : '';
-    let corrHtml = '';
-
-    if (spec) {
-      if ((spec["Status"] || "").trim().toLowerCase() === 'holiday') subj = `<span class="suspended">[SUSPENDED]</span>`;
-      if (spec["Correction"]) corrHtml = `<span class="correction-note"><i class="fas fa-info-circle"></i> ${spec["Correction"]}</span>`;
-      anyClass = true;
-    }
-
-    if (cls || subj || corrHtml) {
-      anyClass = true;
-      trs += `<tr>
-        <td class="hr-num">${h}</td>
-        <td style="font-weight:600;">${cls || '—'}</td>
-        <td>
-          <div class="subj-main">${subj || '—'}</div>
-          <span class="tt-meta">${code ? code + ' • ' : ''}${batch ? 'Batch: '+batch : ''}</span>
-          ${corrHtml}
-        </td>
-        <td><span class="room-tag">${room || '—'}</span></td>
-      </tr>`;
-    } else {
-      trs += `<tr><td class="hr-num">${h}</td><td>—</td><td class="free-td">Free / No Class</td><td>—</td></tr>`;
-    }
-  }
-
-  if (!anyClass) {
-    area.innerHTML = stateHtml('fa-user-clock','No Scheduled Classes',
-      `No classes assigned for Today (Day Order ${dayOrderNum || row._dayOrder})`);
-    return;
-  }
-  area.innerHTML = `<div class="table-wrap"><table><thead><tr><th>Hr</th><th>Class</th><th>Subject</th><th>Room</th></tr></thead><tbody>${trs}</tbody></table></div>`;
+  }catch(e){}
 }
 
-/* ════════════════════════════════════════════
-   SEARCH LOGIC
-════════════════════════════════════════════ */
-function populateSearchClasses() {
-  const mine = ttData.filter(t => t._staffInitial === loggedIn._initial);
-  const classes = [...new Set(mine.map(t=>t._class))].filter(Boolean).sort();
-  const cs = document.getElementById('sClass');
-  cs.innerHTML = '<option value="">— All Classes —</option>' + classes.map(c=>`<option value="${c}">${c}</option>`).join('');
-  onSearchClassChange();
+/* ════════════════════════════
+   CLOCK & TOAST
+════════════════════════════ */
+function tickClock(){
+  const n=new Date();
+  $('ct').textContent=n.toLocaleTimeString('en-IN',{hour12:true});
+  $('cd').textContent=n.toLocaleDateString('en-IN',{weekday:'short',day:'2-digit',month:'short',year:'numeric'});
+}
+function toast(msg,type='',dur=3000){
+  const el=$('toast');
+  const icons={ok:'<i class="fas fa-check-circle"></i>',err:'<i class="fas fa-times-circle"></i>','':'<i class="fas fa-info-circle"></i>'};
+  el.className=`toast ${type}`;el.innerHTML=`${icons[type]||icons['']} ${msg}`;el.classList.add('show');
+  clearTimeout(el._t);el._t=setTimeout(()=>el.classList.remove('show'),dur);
 }
 
-function onSearchClassChange() {
-  const cls = document.getElementById('sClass').value;
-  const ss = document.getElementById('sSubject');
-  
-  // Dynamic Subject Filter logic: only show subjects belonging to the selected class
-  const filteredTT = ttData.filter(t => t._staffInitial === loggedIn._initial && (!cls || t._class === cls));
-  const subjects = [...new Set(filteredTT.map(t=>t._subject))].filter(Boolean).sort();
-  
-  ss.innerHTML = '<option value="">— All Subjects —</option>' + subjects.map(s=>`<option value="${s}">${s}</option>`).join('');
-  runSearch();
-}
+/* ════════════════════════════
+   INIT
+════════════════════════════ */
+async function init(){
+  todayISO=toIST();
+  setInterval(tickClock,1000);tickClock();
 
-function runSearch() {
-  if (!loggedIn) return;
-  const cls = document.getElementById('sClass').value;
-  const sub = document.getElementById('sSubject').value;
-  const res = document.getElementById('searchRes');
-  const sum = document.getElementById('searchSummary');
-
-  if (!cls && !sub) { res.innerHTML = ''; sum.style.display = 'none'; return; }
-
-  const matches = ttData.filter(t => t._staffInitial === loggedIn._initial && (!cls || t._class === cls) && (!sub || t._subject === sub));
-  const today = new Date().toISOString().split('T')[0];
-  
-  let html = '';
-  let p=0, t=0, u=0;
-
-  // Group days by Day Order
-  const doMap = {};
-  dayData.forEach(r => {
-    if (r._working.toLowerCase() === 'yes' && r._dayOrder) {
-      if (!doMap[r._dayOrder]) doMap[r._dayOrder] = [];
-      doMap[r._dayOrder].push(r);
-    }
-  });
-
-  matches.forEach(m => {
-    (doMap[m._dayOrder] || []).forEach(dr => {
-      const status = dr._iso < today ? 'Past' : (dr._iso === today ? 'Today' : 'Upcoming');
-      if(status === 'Past') p++; else if(status === 'Today') t++; else u++;
-
-      const color = status==='Today' ? '#10B981' : status==='Past' ? '#64748B' : '#3B82F6';
-      const [yy,mo,dd] = dr._iso.split('-');
-      html += `<div class="result-card">
-        <div>
-          <div class="result-subject">${m._subject}</div>
-          <div class="result-meta">
-            <i class="fas fa-calendar-day"></i> ${dd}/${mo}/${yy} &nbsp;•&nbsp;
-            <i class="fas fa-clock"></i> Hour ${m._hour} &nbsp;•&nbsp;
-            <i class="fas fa-users"></i> ${m._class}
-          </div>
-        </div>
-        <span class="tag" style="background:${color}">${status}</span>
-      </div>`;
+  /* Nav switching */
+  document.querySelectorAll('#mainNav .nav-btn').forEach(b=>{
+    b.addEventListener('click',()=>{
+      if(b.disabled)return;
+      document.querySelectorAll('#mainNav .nav-btn').forEach(x=>x.classList.remove('active'));
+      document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));
+      b.classList.add('active');$(b.dataset.tab).classList.add('active');
+      if(b.dataset.tab==='search'&&loggedIn)runSearch();
     });
   });
 
-  document.getElementById('countPast').textContent = p;
-  document.getElementById('countToday').textContent = t;
-  document.getElementById('countUpcoming').textContent = u;
-  sum.style.display = 'grid';
+  const dp=$('dp');dp.value=todayISO;
+  dp.addEventListener('change',()=>{ renderDayMeta(); if(loggedIn)renderTT(); });
 
-  res.innerHTML = html || stateHtml('fa-search-minus','No Results');
+  $('pwInput').addEventListener('keydown',e=>{ if(e.key==='Enter')submitPw(); });
+  $('pwOverlay').addEventListener('click',e=>{ if(e.target===$('pwOverlay'))closePw(); });
+  $('printBtn').addEventListener('click',doPrint);
+  $('pdfBtn').addEventListener('click',doPDF);
+
+  toast('Loading data…','',8000);
+
+  const [di,sf,tt,tp,sp]=await Promise.all([
+    loadCSV(URL_DAY),loadCSV(URL_STAFF),loadCSV(URL_TT),loadCSV(URL_TIME),loadCSV(URL_SPECIAL)
+  ]);
+
+  /* Normalise Day Info */
+  DI=di.map(r=>({
+    _iso:toYMD((r.Date||r.date||"").trim()),
+    _working:(r.Working||r.working||"").trim().toLowerCase(),
+    _dayOrder:normOrd(r["Day Order"]||r.DayOrder||r.dayorder||""),
+    _hours:(r.Hours||r.hours||"").trim(),
+    _event:(r.Event||r.event||"").trim(),
+    _reason:(r.Reason||r.reason||"").trim(),
+    _day:(r.Day||r.day||"").trim()
+  }));
+
+  /* Normalise Staff */
+  STAFF=sf.map(r=>({
+    _initial:(r.StaffInitial||r["Staff Initial"]||"").trim(),
+    _name:(r.StaffName||r["Staff Name"]||"").trim(),
+    _desig:(r.Designation||"").trim(),
+    _pw:(r.Password||r.password||"").trim(),
+    _photo:driveThumb((r.Profile||r.Photo||r.ProfilePicture||r["Profile Picture"]||"").trim())
+  })).filter(s=>s._initial);
+
+  /* Normalise Timetable rows */
+  TT=tt.map(r=>({
+    _initial:(r.StaffInitial||r["Staff Initial"]||"").trim().toUpperCase(),
+    _dayOrder:normOrd(r.DayOrder||r["Day Order"]||""),
+    _hour:String(r.Hour||"").trim(),
+    _class:(r.Class||"").trim(),
+    _batch:(r.Batch||"").trim(),
+    _code:(r.SubjectCode||r["Subject Code"]||"").trim(),
+    _subject:(r.Subject||"").trim(),
+    _room:(r.RoomNo||r["Room No"]||r.Room||"").trim()
+  })).filter(r=>r._initial&&r._dayOrder&&r._hour);
+
+  /* Time periods: hour num → time string */
+  tp.forEach(r=>{
+    const h=(r.Hour||r.hour||"").trim();
+    const t=(r.Time||r.time||"").trim();
+    if(h&&t){
+      TS[h]=t;
+      const nm=h.match(/(\d+)/);
+      if(nm)TS[nm[1]]=t;
+    }
+  });
+
+  /*
+   * Normalise Special entries
+   * Format: Date | Day | Working | Day Order | Class | Hour | Status | Correction | Reason
+   * Key: ISO_DATE|CLASS|HOUR_NUM  e.g. "2026-06-09|1st UG|1"
+   */
+  sp.forEach(r=>{
+    const rawDate=(r.Date||"").trim();
+    const isoDate=toYMD(rawDate);
+    const cls=(r.Class||r.class||r.Year||"").trim();
+    const hr=(r.Hour||r.hour||"").trim();
+    const hNum=parseHourNum(hr);
+    if(isoDate&&cls&&hNum){
+      SP[`${isoDate}|${cls}|${hNum}`]=r;
+    }
+  });
+
+  buildStaffGrid();
+  renderDayMeta();
+  dataReady=true;
+  toast('Portal loaded!','ok',2500);
+
+  /* Attempt session restore */
+  const savedInitial=getStoredSession();
+  if(savedInitial){
+    const savedStaff=STAFF.find(s=>s._initial===savedInitial);
+    if(savedStaff){
+      loggedIn=savedStaff;
+      touchSession();
+      afterLogin(true);
+    }else{
+      clearSession();
+    }
+  }
 }
 
-function stateHtml(icon, title, sub='') {
-  return `<div class="state-screen"><i class="fas ${icon} state-icon"></i><div class="state-title">${title}</div>${sub ? `<div class="state-sub">${sub}</div>` : ''}</div>`;
+/* ════════════════════════════
+   DAY INFO — student-style icard grid
+════════════════════════════ */
+function findDay(ymd){ return DI.find(r=>r._iso===ymd)||null; }
+
+function renderDayMeta(){
+  const ymd=$('dp').value;
+  const row=findDay(ymd);
+  const el=$('dayMeta');
+  const dmy=ymd2dmy(ymd);
+
+  if(!row){
+    el.innerHTML=`<div class="igrid">
+      <div class="icard c-red">
+        <div class="ilabel">Status</div>
+        <div class="ival red">No data for ${esc(dmy)||"selected date"}</div>
+      </div>
+    </div>`;
+    return;
+  }
+
+  const working=row._working==='yes';
+  const exam=isExam(row);
+  const [yr,mo,dy]=ymd.split('-');
+  const months=['','Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  const displayDate=`${dy} ${months[+mo]} ${yr}`;
+
+  let cards=`<div class="icard">
+    <div class="ilabel">Date</div>
+    <div class="ival">${esc(row._day?row._day+', ':'')+ esc(displayDate)}</div>
+  </div>`;
+
+  if(exam){
+    const detail=stripStar(row._event||row._reason||'');
+    cards+=`<div class="icard c-blue">
+      <div class="ilabel">Status</div>
+      <div class="ival">Examination Day</div>
+    </div>`;
+    if(detail) cards+=`<div class="icard c-blue full">
+      <div class="ilabel">Exam Details</div>
+      <div class="ival" style="font-size:12px;">${esc(detail)}</div>
+    </div>`;
+  } else if(!working){
+    const noteText=row._event||row._reason||'';
+    cards+=`<div class="icard c-red">
+      <div class="ilabel">Status</div>
+      <div class="ival red">Holiday</div>
+    </div>`;
+    if(row._event) cards+=`<div class="icard c-orange full">
+      <div class="ilabel">Event</div>
+      <div class="ival" style="font-size:12px;">${esc(row._event)}</div>
+    </div>`;
+    if(row._reason&&row._reason!==row._event) cards+=`<div class="icard c-red full">
+      <div class="ilabel">Reason</div>
+      <div class="ival" style="font-size:12px;color:var(--maroon);">${esc(row._reason)}</div>
+    </div>`;
+  } else {
+    /* Working day */
+    let hNote="";
+    if(row._hours==="-"||row._hours==="–"){
+      hNote=` <span style="font-size:10.5px;color:var(--maroon);font-weight:600;">(No classes today)</span>`;
+    } else if(row._hours){
+      hNote=` <span style="font-size:10.5px;color:var(--slate);">(Hours active: ${esc(row._hours)})</span>`;
+    }
+    cards+=`<div class="icard">
+      <div class="ilabel">Day Order</div>
+      <div class="ival">${esc(row._dayOrder||"—")}${hNote}</div>
+    </div>`;
+    if(row._event) cards+=`<div class="icard c-teal full">
+      <div class="ilabel">Event / Notes</div>
+      <div class="ival" style="font-size:12px;">${esc(row._event)}</div>
+    </div>`;
+    if(row._reason&&row._reason!==row._event) cards+=`<div class="icard c-orange full">
+      <div class="ilabel">Notes</div>
+      <div class="ival" style="font-size:12px;">${esc(row._reason)}</div>
+    </div>`;
+  }
+
+  el.innerHTML=`<div class="igrid">${cards}</div>`;
 }
 
-function goTab(id, btn) {
-  document.querySelectorAll('.pane').forEach(p => p.classList.remove('active'));
-  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
-  document.getElementById(id).classList.add('active');
-  btn.classList.add('active');
-  if (id === 'search' && loggedIn) runSearch();
-  if (id === 'timetable' && loggedIn) renderTimetable();
+/* ════════════════════════════
+   STAFF GRID
+════════════════════════════ */
+function buildStaffGrid(){
+  const grid=$('staffGrid');
+  if(!STAFF.length){
+    grid.innerHTML='<p style="grid-column:1/-1;text-align:center;color:var(--slate);font-size:12px;">No staff data found.</p>';
+    return;
+  }
+  grid.innerHTML=STAFF.map(s=>{
+    const av=`https://ui-avatars.com/api/?name=${encodeURIComponent(s._initial)}&background=1E3A5F&color=fff&size=120`;
+    const src=s._photo||av;
+    return`<div class="staff-tile" onclick="openLogin('${esc(s._initial)}')">
+      <img src="${esc(src)}" alt="${esc(s._initial)}" onerror="this.src='${av}'">
+      <span class="tile-initial">${esc(s._initial)}</span>
+      <span class="tile-name">${esc(s._name)}</span>
+    </div>`;
+  }).join('');
 }
 
-function onDateChange(iso) { renderDayMeta(iso); }
-
-function updateClock() {
-  const now = new Date();
-  document.getElementById('clockTime').textContent = now.toLocaleTimeString('en-IN', {hour12:true});
-  document.getElementById('clockDate').textContent = now.toLocaleDateString('en-IN', {weekday:'short',day:'numeric',month:'short'});
+/* ════════════════════════════
+   PASSWORD OVERLAY
+════════════════════════════ */
+function openLogin(initial){
+  pending=STAFF.find(s=>s._initial===initial);
+  if(!pending)return;
+  $('pwName').textContent=pending._name;
+  $('pwInit').textContent=pending._initial;
+  const wrap=$('pwPhotoWrap');
+  const av=`https://ui-avatars.com/api/?name=${encodeURIComponent(pending._initial)}&background=1E3A5F&color=fff&size=200`;
+  if(pending._photo){
+    wrap.innerHTML=`<img src="${esc(pending._photo)}" alt="${esc(pending._initial)}" onerror="this.parentElement.innerHTML='<span class=\\'pw-avatar-txt\\'>${esc(pending._initial.charAt(0))}</span>'">`;
+  }else{
+    wrap.innerHTML=`<span class="pw-avatar-txt">${esc(pending._initial.charAt(0))}</span>`;
+  }
+  $('pwInput').value='';$('pwError').style.display='none';
+  $('pwOverlay').classList.add('show');
+  setTimeout(()=>$('pwInput').focus(),320);
+}
+function closePw(){ $('pwOverlay').classList.remove('show');pending=null; }
+function submitPw(){
+  if(!pending)return;
+  if($('pwInput').value===pending._pw){
+    loggedIn=pending;closePw();
+    saveSession(loggedIn._initial);
+    afterLogin(false);
+  }else{
+    $('pwError').style.display='block';$('pwInput').value='';$('pwInput').focus();
+  }
 }
 
-document.getElementById('datePick').value = new Date().toISOString().split('T')[0];
-setInterval(updateClock, 1000);
-updateClock();
-loadData();
+/* ════════════════════════════
+   AFTER LOGIN
+════════════════════════════ */
+function afterLogin(isRestore){
+  viewStaff=loggedIn;
+
+  document.querySelectorAll('#mainNav .nav-btn').forEach(x=>x.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));
+  document.querySelector('[data-tab="timetable"]').classList.add('active');
+  $('timetable').classList.add('active');
+
+  $('staffLanding').style.display='none';
+  $('profileView').style.display='block';
+  $('searchNavBtn').disabled=false;
+
+  const isHOD=loggedIn._desig===HOD_DESIG;
+  if(isHOD){
+    $('hodSelector').classList.add('show');
+    $('hodPick').innerHTML='<option value="">— View My Timetable —</option>'+
+      STAFF.filter(s=>s._initial!==loggedIn._initial)
+           .map(s=>`<option value="${esc(s._initial)}">${esc(s._initial)} – ${esc(s._name)}</option>`).join('');
+  }else{
+    $('hodSelector').classList.remove('show');
+  }
+
+  buildProfileHeader(viewStaff,isRestore);
+  renderTT();
+  populateSearchFilters();
+}
+
+function hodPickStaff(initial){
+  viewStaff=initial?STAFF.find(s=>s._initial===initial)||loggedIn:loggedIn;
+  buildProfileHeader(viewStaff,false);
+  renderTT();
+  populateSearchFilters();
+}
+
+function buildProfileHeader(s,showRestoreBanner){
+  const hdr=$('profileHdr');
+  const photoHtml=s._photo
+    ?`<img src="${esc(s._photo)}" alt="${esc(s._name)}" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+       <div class="ph-avatar" style="display:none">${esc(s._initial.charAt(0))}</div>`
+    :`<div class="ph-avatar">${esc(s._initial.charAt(0))}</div>`;
+  hdr.innerHTML=`
+    <button class="logout-btn" onclick="doLogout()"><i class="fas fa-power-off"></i> Logout</button>
+    ${photoHtml}
+    <div class="ph-info">
+      <div class="ph-initial">${esc(s._initial)}</div>
+      <div class="ph-name">${esc(s._name)}</div>
+      ${s._desig?`<div class="ph-desig"><i class="fas fa-briefcase" style="opacity:.6;margin-right:4px;"></i>${esc(s._desig)}</div>`:''}
+    </div>`;
+
+  if(showRestoreBanner){
+    const existing=document.getElementById('restoreBanner');
+    if(existing)existing.remove();
+    const banner=document.createElement('div');
+    banner.id='restoreBanner';
+    banner.className='session-banner';
+    banner.innerHTML=`<i class="fas fa-circle-check"></i> Welcome back, ${esc(s._name.split(' ')[0])}! You were logged in automatically.`;
+    hdr.insertAdjacentElement('afterend',banner);
+    setTimeout(()=>{ if(banner.parentNode)banner.remove(); },5000);
+  }
+}
+
+function doLogout(){
+  clearSession();
+  loggedIn=null;viewStaff=null;
+  const existing=document.getElementById('restoreBanner');
+  if(existing)existing.remove();
+  $('staffLanding').style.display='block';$('profileView').style.display='none';
+  $('hodSelector').classList.remove('show');$('searchNavBtn').disabled=true;
+  $('searchLocked').style.display='block';$('searchContent').style.display='none';
+  $('searchSummary').style.display='none';
+  document.querySelectorAll('#mainNav .nav-btn').forEach(x=>x.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));
+  document.querySelector('[data-tab="dayinfo"]').classList.add('active');$('dayinfo').classList.add('active');
+  toast('Logged out.','',2000);
+}
+
+/* ════════════════════════════
+   TIMETABLE RENDER
+   Special overrides are looked up per hour using:
+   key = ISO_DATE|CLASS|HOUR_NUM
+   If override exists:
+     - Status "Holiday" → show No Class (holiday badge)
+     - Status "Working" → show Correction text (override badge)
+════════════════════════════ */
+function renderTT(){
+  if(!viewStaff)return;
+  const ymd=$('dp').value;
+  const row=findDay(ymd);
+  const area=$('ttArea');
+
+  if(!row){
+    area.innerHTML='<div class="empty"><div class="ei"><i class="fas fa-calendar-xmark"></i></div>No calendar data for '+esc(ymd2dmy(ymd))+'.</div>';
+    return;
+  }
+
+  if(row._working!=='yes'){
+    const noteDisp=stripStar(row._reason||row._event||'Non-working day');
+    area.innerHTML=`<div class="hol-box"><i class="fas fa-umbrella-beach" style="margin-right:8px;"></i><strong>Holiday:</strong> ${esc(noteDisp)}</div>`;
+    return;
+  }
+
+  if(isExam(row)){
+    const noteDisp=stripStar(row._event||row._reason||'Regular classes suspended.');
+    area.innerHTML=`<div class="exam-box"><div class="ei"><i class="fas fa-file-signature"></i></div><h3>Examination Day</h3><p>${esc(noteDisp)}</p></div>`;
+    return;
+  }
+
+  const order=row._dayOrder;
+  if(!order){
+    area.innerHTML='<div class="empty"><div class="ei"><i class="fas fa-circle-question"></i></div>Day order not available for this date.</div>';
+    return;
+  }
+
+  const hoursVal=row._hours;
+  if(hoursVal==='-'||hoursVal==='–'){
+    area.innerHTML='<div class="no-class-box"><i class="fas fa-user-clock" style="margin-right:8px;"></i>No classes scheduled today.</div>';
+    return;
+  }
+
+  let activeSet=null;
+  if(hoursVal&&hoursVal!==''){
+    activeSet=new Set(hoursVal.split(',').map(h=>h.trim()));
+  }
+
+  const initial=viewStaff._initial.toUpperCase();
+  const myRows=TT.filter(r=>r._initial===initial&&r._dayOrder===order);
+
+  const hourMap={};
+  HOURS.forEach(h=>{ hourMap[h]=[]; });
+  myRows.forEach(r=>{
+    if(hourMap[r._hour]!==undefined&&r._class){
+      hourMap[r._hour].push(r);
+    }
+  });
+
+  const dmy=ymd2dmy(ymd);
+  let trs='';
+
+  HOURS.forEach((h,idx)=>{
+    const sfx=['st','nd','rd','th','th'];
+    const label=`${h}${sfx[idx]} Hour`;
+    const items=hourMap[h]||[];
+    const isActive=!activeSet||activeSet.has(h);
+    const timeStr=TS[h]||'';
+
+    /* Check for special override for any class this staff teaches this hour */
+    /* We find the class(es) from timetable rows for this hour */
+    const classesThisHour=items.map(it=>it._class).filter(Boolean);
+
+    /* Build special override HTML helper */
+    function getSpHtml(cls){
+      const spKey=`${ymd}|${cls}|${h}`;
+      return SP[spKey]||null;
+    }
+
+    if(!isActive){
+      trs+=`<tr class="row-cancelled">
+        <td class="hr-label">${esc(label)}</td>
+        <td colspan="5" style="text-align:center;font-size:11px;">Hour Cancelled</td>
+      </tr>`;
+      return;
+    }
+
+    if(!items.length){
+      trs+=`<tr class="row-noclass">
+        <td class="hr-label">${esc(label)}</td>
+        <td>—</td><td>Free / No Class</td><td>—</td><td>—</td>
+        <td class="htime">${esc(timeStr)}</td>
+      </tr>`;
+      return;
+    }
+
+    items.forEach((it,i)=>{
+      const sp=getSpHtml(it._class);
+      if(sp){
+        const st=(sp.Status||"").trim().toLowerCase();
+        const cor=(sp.Correction||"").trim();
+        const rea=(sp.Reason||"").trim();
+        if(st==='holiday'||st.includes('holiday')){
+          trs+=`<tr class="row-sp-holiday">
+            <td class="hr-label">${i===0?esc(label):''}</td>
+            <td><span class="code-mono">—</span></td>
+            <td>
+              <span class="subj-name" style="color:#9B1C2C;">No Class</span>
+              <span class="spbadge hol"><i class="fas fa-triangle-exclamation"></i> Special Holiday</span>
+              ${rea?`<span class="subj-batch" style="color:#9B1C2C;">${esc(rea)}</span>`:''}
+            </td>
+            <td>${esc(it._class||'—')}</td>
+            <td><span class="room-tag">—</span></td>
+            <td class="htime">${i===0?esc(timeStr):''}</td>
+          </tr>`;
+        } else {
+          trs+=`<tr class="row-sp-override">
+            <td class="hr-label">${i===0?esc(label):''}</td>
+            <td><span class="code-mono">—</span></td>
+            <td>
+              <div class="subj-name">${esc(cor||it._subject||'Override')}</div>
+              <span class="spbadge"><i class="fas fa-rotate"></i> Override</span>
+              ${rea?`<span class="subj-batch" style="color:#92400E;">${esc(rea)}</span>`:''}
+            </td>
+            <td>${esc(it._class||'—')}</td>
+            <td><span class="room-tag">${esc(it._room||'—')}</span></td>
+            <td class="htime">${i===0?esc(timeStr):''}</td>
+          </tr>`;
+        }
+      } else {
+        trs+=`<tr>
+          <td class="hr-label">${i===0?esc(label):''}</td>
+          <td><span class="code-mono">${esc(it._code||'—')}</span></td>
+          <td>
+            <div class="subj-name">${esc(it._subject||'—')}</div>
+            ${it._batch?`<span class="subj-batch">Batch: ${esc(it._batch)}</span>`:''}
+          </td>
+          <td>${esc(it._class||'—')}</td>
+          <td><span class="room-tag">${esc(it._room||'—')}</span></td>
+          <td class="htime">${i===0?esc(timeStr):''}</td>
+        </tr>`;
+      }
+    });
+  });
+
+  area.innerHTML=`
+    <div style="font-size:10px;color:var(--slate);text-align:center;margin-bottom:10px;">
+      Day Order: <strong>${esc(order)}</strong>
+      &nbsp;|&nbsp; Date: <strong>${esc(dmy)}</strong>
+      ${activeSet?`&nbsp;|&nbsp; Active Hours: <strong>${esc(hoursVal)}</strong>`:''}
+    </div>
+    <div class="twrap"><table>
+      <thead><tr>
+        <th>Hour</th><th>Code</th><th>Subject</th><th>Class</th><th>Room</th><th>Time</th>
+      </tr></thead>
+      <tbody>${trs}</tbody>
+    </table></div>`;
+}
+
+/* ════════════════════════════
+   SEARCH TAB
+   Logic:
+   1. Get all TT rows for this staff that match class/subject filters
+   2. For each matching TT row, find all DI dates with matching day order
+      that are working days, not exam, and have this hour active
+   3. For each such date+class+hour, check SP for override:
+      - If SP status = holiday → skip (class doesn't happen)
+      - If SP status = working override → still count it (class happens, maybe different content)
+   4. Deduplicate by date|hour|subject|class
+════════════════════════════ */
+function populateSearchFilters(){
+  if(!viewStaff)return;
+  const init=viewStaff._initial.toUpperCase();
+  const myTT=TT.filter(r=>r._initial===init&&r._class&&r._class!=='—');
+
+  const classes=[...new Set(myTT.map(r=>r._class))].sort();
+  $('sClass').innerHTML='<option value="">All Classes</option>'+
+    classes.map(c=>`<option value="${esc(c)}">${esc(c)}</option>`).join('');
+
+  populateSubjectFilter('');
+  $('searchLocked').style.display='none';
+  $('searchContent').style.display='block';
+  $('searchRes').innerHTML='<div class="empty"><div class="ei"><i class="fas fa-filter"></i></div>Select a class or subject to search.</div>';
+  $('searchSummary').style.display='none';
+}
+
+function onSClassChange(){
+  populateSubjectFilter($('sClass').value);
+  runSearch();
+}
+
+function populateSubjectFilter(cls){
+  if(!viewStaff)return;
+  const init=viewStaff._initial.toUpperCase();
+  const filtered=TT.filter(r=>
+    r._initial===init&&r._class&&r._class!=='—'&&r._subject&&
+    (!cls||r._class===cls)
+  );
+  const subjects=[...new Set(filtered.map(r=>r._subject))].sort();
+  $('sSub').innerHTML='<option value="">All Subjects</option>'+
+    subjects.map(s=>`<option value="${esc(s)}">${esc(s)}</option>`).join('');
+}
+
+function runSearch(){
+  if(!loggedIn||!viewStaff)return;
+  const cls=$('sClass').value;
+  const subj=$('sSub').value;
+  const out=$('searchRes');
+
+  if(!cls&&!subj){
+    out.innerHTML='<div class="empty"><div class="ei"><i class="fas fa-filter"></i></div>Select a class or subject to search.</div>';
+    $('searchSummary').style.display='none';
+    return;
+  }
+
+  const init=viewStaff._initial.toUpperCase();
+
+  /* TT rows matching filters */
+  const matched=TT.filter(r=>
+    r._initial===init&&
+    r._class&&r._class!=='—'&&
+    (!cls||r._class===cls)&&
+    (!subj||r._subject===subj)
+  );
+
+  if(!matched.length){
+    out.innerHTML='<div class="empty"><div class="ei"><i class="fas fa-face-meh"></i></div>No matching classes found.</div>';
+    $('searchSummary').style.display='none';
+    return;
+  }
+
+  /*
+   * Build a map: dayOrder → [{iso, dmy, activeHours}]
+   * Only working, non-exam days with at least some hours
+   */
+  const doMap={};
+  DI.forEach(r=>{
+    if(r._working!=='yes'||!r._dayOrder||isExam(r))return;
+    const hv=r._hours;
+    /* Skip no-class days */
+    if(hv==='-'||hv==='–')return;
+    const key=normOrd(r._dayOrder);
+    if(!key)return;
+    if(!doMap[key])doMap[key]=[];
+    /* null activeHours means all hours active */
+    const active=hv?new Set(hv.split(',').map(h=>h.trim())):null;
+    doMap[key].push({iso:r._iso, dmy:ymd2dmy(r._iso), active});
+  });
+
+  const seen=new Set();
+  const results=[];
+
+  matched.forEach(m=>{
+    const doKey=normOrd(m._dayOrder);
+    const dates=doMap[doKey]||[];
+    dates.forEach(d=>{
+      /* Check if this hour is active on this date */
+      if(d.active&&!d.active.has(m._hour))return;
+
+      /* Check special override: if holiday override exists for this date+class+hour, skip */
+      const spKey=`${d.iso}|${m._class}|${m._hour}`;
+      const sp=SP[spKey];
+      if(sp){
+        const st=(sp.Status||"").trim().toLowerCase();
+        if(st==='holiday'||st.includes('holiday'))return; /* class cancelled */
+      }
+
+      const key=`${d.iso}|${m._hour}|${m._subject}|${m._class}`;
+      if(seen.has(key))return;
+      seen.add(key);
+
+      results.push({
+        iso:d.iso, dmy:d.dmy,
+        hour:m._hour,
+        hourLabel:HOUR_LABELS[m._hour]||m._hour+'th Hour',
+        dayOrder:m._dayOrder,
+        subject: sp&&(sp.Correction||"").trim() ? (sp.Correction||"").trim() : m._subject,
+        code:m._code,
+        classVal:m._class, batch:m._batch, room:m._room,
+        time:TS[m._hour]||'',
+        isOverride:!!(sp&&(sp.Status||"").trim().toLowerCase()!=='holiday'),
+        overrideNote:sp?(sp.Correction||sp.Reason||"").trim():""
+      });
+    });
+  });
+
+  if(!results.length){
+    out.innerHTML='<div class="empty"><div class="ei"><i class="fas fa-face-meh"></i></div>No scheduled occurrences found in the calendar.</div>';
+    $('searchSummary').style.display='none';
+    return;
+  }
+
+  results.sort((a,b)=>a.iso.localeCompare(b.iso));
+
+  const past=results.filter(r=>r.iso<todayISO).reverse();
+  const tody=results.filter(r=>r.iso===todayISO);
+  const futu=results.filter(r=>r.iso>todayISO);
+
+  $('cPast').textContent=past.length;
+  $('cToday').textContent=tody.length;
+  $('cUp').textContent=futu.length;
+  $('searchSummary').style.display='grid';
+
+  function rcard(it,type){
+    const tcls=type==='today'?'t-today':type==='upcoming'?'t-up':'t-past';
+    const tlbl=type==='today'?'Today':type==='upcoming'?'Upcoming':'Past';
+    const overrideBadge=it.isOverride
+      ?`<span class="spbadge" style="margin-left:6px;"><i class="fas fa-rotate"></i> Override</span>`:'';
+    return`<div class="rcard">
+      <div>
+        <div class="rsub">${esc(it.subject)}${it.code?` <span style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--black);font-weight:400;">(${esc(it.code)})</span>`:''} ${overrideBadge}</div>
+        <div class="rmeta">
+          <i class="fas fa-calendar-day"></i> <strong>${esc(it.dmy)}</strong>
+          &nbsp;·&nbsp;<i class="fas fa-clock"></i> ${esc(it.hourLabel)}
+          ${it.time?` <span style="color:var(--black);font-size:10px;font-family:'IBM Plex Mono',monospace;">(${esc(it.time)})</span>`:''}
+          &nbsp;·&nbsp; Day ${esc(it.dayOrder)}<br>
+          <i class="fas fa-users"></i> <strong>${esc(it.classVal)}</strong>
+          ${it.batch?` &nbsp;·&nbsp; Batch: ${esc(it.batch)}`:''}
+          ${it.room?` &nbsp;·&nbsp; <i class="fas fa-door-open"></i> ${esc(it.room)}`:''}
+        </div>
+      </div>
+      <span class="stag ${tcls}">${tlbl}</span>
+    </div>`;
+  }
+
+  function section(label,icon,col,arr,type){
+    if(!arr.length)return'';
+    return`<div class="sec-search-title"><i class="${icon}" style="color:${col}"></i> ${label} <span class="cbadge">${arr.length}</span></div>`
+          +arr.map(it=>rcard(it,type)).join('');
+  }
+
+  out.innerHTML=
+    section("Today's Classes","fas fa-circle-dot","#10B981",tody,'today')+
+    section("Upcoming","fas fa-arrow-right","#3B82F6",futu,'upcoming')+
+    section("Past","fas fa-clock-rotate-left","var(--slate)",past,'past');
+}
+
+/* ════════════════════════════
+   PRINT
+════════════════════════════ */
+function doPrint(){
+  if(!viewStaff)return;
+  const ymd=$('dp').value,row=findDay(ymd);
+  let meta=`<strong>Staff:</strong> ${viewStaff._name} (${viewStaff._initial}) &nbsp;|&nbsp; <strong>Date:</strong> ${ymd2dmy(ymd)}`;
+  if(row){
+    if(isExam(row))meta+=` &nbsp;|&nbsp; <strong>Status:</strong> Examination Day`;
+    else if(row._working==='yes')meta+=` &nbsp;|&nbsp; <strong>Day Order:</strong> ${row._dayOrder||'—'}`;
+    else meta+=` &nbsp;|&nbsp; <strong>Status:</strong> Holiday`;
+  }
+  $('pmeta').innerHTML=meta;
+  $('pfdet').textContent=`Printed on: ${new Date().toLocaleString('en-IN')}`;
+  window.print();
+}
+
+/* ════════════════════════════
+   PDF
+════════════════════════════ */
+async function doPDF(){
+  if(!viewStaff)return;
+  const btn=$('pdfBtn'),spin=$('pdfSpin'),ico=$('pdfIco'),txt=$('pdfTxt');
+  btn.disabled=true;spin.style.display='inline-block';ico.style.display='none';txt.textContent=' Generating…';
+  toast('Generating PDF…','',6000);
+  try{
+    const ymd=$('dp').value,row=findDay(ymd);
+    const el=document.createElement('div');
+    el.style.cssText='font-family:Arial,sans-serif;padding:24px 28px;max-width:780px;color:#1E293B;background:white;';
+    let statusNote='';
+    if(row){
+      if(isExam(row))statusNote=`<p style="color:#7B1D2E;font-weight:700;text-align:center;margin-bottom:10px;font-size:10pt;">EXAMINATION DAY — Regular classes suspended</p>`;
+      else if(row._working!=='yes')statusNote=`<p style="color:#7B1D2E;font-weight:700;text-align:center;margin-bottom:10px;font-size:10pt;">HOLIDAY: ${stripStar(row._reason||row._event||'')}</p>`;
+    }
+    let metaLine=`Staff: ${viewStaff._name} (${viewStaff._initial})  |  Date: ${ymd2dmy(ymd)}`;
+    if(row&&row._working==='yes'&&!isExam(row))metaLine+=`  |  Day Order: ${row._dayOrder||'—'}`;
+    const ttHTML=$('ttArea').innerHTML;
+    el.innerHTML=`
+      <div style="text-align:center;border-bottom:2px solid #1E3A5F;padding-bottom:14px;margin-bottom:16px;">
+        <img src="https://loyolazoology.github.io/about-us/azbt-logo.png" style="height:54px;display:block;margin:0 auto 8px;" crossorigin="anonymous">
+        <h2 style="font-family:Georgia,serif;font-size:13pt;color:#1E3A5F;margin:0 0 4px;">PG &amp; Research Department of Advanced Zoology and Biotechnology</h2>
+        <p style="font-size:9.5pt;color:#555;margin:0;">Loyola College (Autonomous), Chennai – 34 · AZ-BT</p>
+        <p style="font-size:8.5pt;color:#777;margin:5px 0 0;font-style:italic;">Staff Timetable</p>
+      </div>
+      <div style="background:#EBF1FA;border-radius:6px;padding:10px 14px;margin-bottom:14px;font-size:10pt;font-weight:600;color:#1E293B;">${metaLine}</div>
+      ${statusNote}${ttHTML}
+      <p style="margin-top:18px;font-size:7.5pt;color:#888;border-top:1px solid #ddd;padding-top:8px;text-align:center;font-style:italic;">
+        Generated on ${new Date().toLocaleString('en-IN')} · AZ-BT Staff Timetable Portal · Loyola College, Chennai</p>`;
+    const tw=el.querySelector('.twrap');if(tw)tw.style.cssText='overflow:visible;border:none;box-shadow:none;';
+    const tbl=el.querySelector('table');
+    if(tbl){
+      tbl.style.cssText='width:100%;border-collapse:collapse;font-size:9.5pt;';
+      tbl.querySelectorAll('th').forEach(t=>t.style.cssText='padding:7px 9px;font-size:8.5pt;font-weight:700;background:#1E3A5F;color:white;border:1px solid #1E3A5F;text-align:left;');
+      tbl.querySelectorAll('td').forEach(t=>t.style.cssText='padding:7px 9px;border:1px solid #E2E8F0;vertical-align:top;font-size:9.5pt;');
+      tbl.querySelectorAll('tbody tr:nth-child(even)').forEach(tr=>tr.style.background='#FAFBFC');
+    }
+    el.querySelectorAll('.subj-name').forEach(e=>e.style.cssText='font-weight:700;color:#1E3A5F;display:block;');
+    el.querySelectorAll('.subj-batch').forEach(e=>e.style.cssText='font-size:9pt;color:#64748B;display:block;margin-top:2px;');
+    el.querySelectorAll('.code-mono').forEach(e=>e.style.cssText='font-family:monospace;font-size:9pt;color:#000;');
+    el.querySelectorAll('.room-tag').forEach(e=>e.style.cssText='background:#EBF1FA;color:#1E3A5F;padding:2px 7px;border-radius:4px;font-size:9pt;font-weight:600;');
+    el.querySelectorAll('.hr-label').forEach(e=>e.style.cssText='font-weight:700;color:#1E3A5F;white-space:nowrap;');
+    el.querySelectorAll('.htime').forEach(e=>e.style.cssText='font-size:8pt;color:#000;font-family:monospace;white-space:nowrap;');
+    el.querySelectorAll('tr.row-cancelled td').forEach(t=>{t.style.color='#7B1D2E';t.style.fontStyle='italic';});
+    el.querySelectorAll('tr.row-noclass td').forEach(t=>{t.style.color='#94A3B8';t.style.fontStyle='italic';});
+    el.querySelectorAll('tr.row-sp-override').forEach(tr=>tr.style.background='#FFF7ED');
+    el.querySelectorAll('tr.row-sp-holiday').forEach(tr=>tr.style.background='#FFF5F5');
+    el.querySelectorAll('.spbadge').forEach(e=>e.style.cssText='display:inline-flex;align-items:center;gap:3px;background:#F97316;color:white;font-size:7.5pt;font-weight:700;padding:2px 7px;border-radius:20px;margin-left:4px;');
+    el.querySelectorAll('.spbadge.hol').forEach(e=>e.style.background='#7B1D2E');
+    await html2pdf().from(el).set({
+      margin:[10,8,10,8],
+      filename:`AZ-BT-Staff-${viewStaff._initial}-${ymd2dmy($('dp').value)}.pdf`,
+      image:{type:'jpeg',quality:.97},
+      html2canvas:{scale:2,useCORS:true,logging:false,backgroundColor:'#ffffff'},
+      jsPDF:{unit:'mm',format:'a4',orientation:'portrait'},
+      pagebreak:{mode:['avoid-all','css']}
+    }).save();
+    toast('PDF downloaded!','ok');
+  }catch(e){
+    console.error('PDF error:',e);
+    toast('PDF failed — try Print instead.','err',4000);
+  }finally{
+    btn.disabled=false;spin.style.display='none';ico.style.display='inline';txt.textContent=' Download PDF';
+  }
+}
+
+init();
 </script>
 </body>
 </html>
