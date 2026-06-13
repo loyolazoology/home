@@ -6,1301 +6,1165 @@
 <title>AZ-BT | Student Timetable Portal</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,600;0,700;1,600&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 <style>
-/* ===== DESIGN TOKENS ===== */
 :root {
-  --blue:       #1E3A5F;
-  --blue-mid:   #2D5490;
-  --blue-light: #EBF1FA;
-  --maroon:     #7B1D2E;
+  --blue:        #1E3A5F;
+  --blue-mid:    #2D5490;
+  --blue-light:  #EBF1FA;
+  --maroon:      #7B1D2E;
   --maroon-light:#FDF0F2;
-  --gold:       #C9963A;
-  --gold-light: #FDF6E8;
-  --teal:       #0E7490;
-  --teal-light: #EFF9FB;
-  --green:      #047857;
-  --green-light:#ECFDF5;
-  --slate:      #64748B;
-  --slate-light:#F8FAFC;
-  --ink:        #1E293B;
-  --border:     #E2E8F0;
-  --white:      #FFFFFF;
-  --special-bg: #FFF7ED;
-  --special-border: #F97316;
-  --shadow-sm:  0 1px 3px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.05);
-  --shadow-md:  0 4px 16px rgba(30,58,95,0.10), 0 2px 6px rgba(0,0,0,0.06);
-  --shadow-lg:  0 12px 40px rgba(30,58,95,0.14), 0 4px 12px rgba(0,0,0,0.08);
-  --radius-sm:  6px;
-  --radius-md:  10px;
-  --radius-lg:  16px;
-  --radius-xl:  22px;
-  --transition: 0.22s cubic-bezier(0.4,0,0.2,1);
+  --gold:        #C9963A;
+  --teal:        #0E7490;
+  --teal-light:  #EFF9FB;
+  --green:       #047857;
+  --slate:       #64748B;
+  --slate-light: #F8FAFC;
+  --ink:         #1E293B;
+  --border:      #E2E8F0;
+  --white:       #FFFFFF;
+  --orange:      #F97316;
+  --orange-light:#FFF7ED;
+  --sh-sm: 0 1px 3px rgba(0,0,0,0.08),0 1px 2px rgba(0,0,0,0.05);
+  --sh-md: 0 4px 16px rgba(30,58,95,0.10),0 2px 6px rgba(0,0,0,0.06);
+  --sh-lg: 0 12px 40px rgba(30,58,95,0.14),0 4px 12px rgba(0,0,0,0.08);
+  --r-sm:6px; --r-md:10px; --r-lg:16px; --r-xl:22px;
+  --ease:0.22s cubic-bezier(0.4,0,0.2,1);
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+html{-webkit-font-smoothing:antialiased;scroll-behavior:smooth;}
+body{
+  font-family:'Inter',sans-serif;
+  background:linear-gradient(135deg,#EBF1FA 0%,#F4F6F9 50%,#FDF0F2 100%);
+  min-height:100vh; color:var(--ink);
+  padding:14px 10px 28px;
 }
 
-/* ===== RESET & BASE ===== */
-*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-html { scroll-behavior: smooth; -webkit-font-smoothing: antialiased; }
-body {
-  font-family: 'Inter', sans-serif;
-  background: linear-gradient(135deg, #EBF1FA 0%, #F4F6F9 50%, #FDF0F2 100%);
-  min-height: 100vh;
-  color: var(--ink);
-  padding: 16px 12px 32px;
+/* WRAPPER */
+.wrap{
+  max-width:960px; margin:0 auto;
+  background:var(--white);
+  border-radius:var(--r-xl);
+  box-shadow:var(--sh-lg);
+  overflow:hidden;
+  display:flex; flex-direction:column;
+  min-height:calc(100vh - 56px);
+  position:relative;
 }
 
-/* ===== WRAPPER ===== */
-.portal-wrap {
-  max-width: 940px;
-  margin: 0 auto;
-  background: var(--white);
-  border-radius: var(--radius-xl);
-  box-shadow: var(--shadow-lg);
-  overflow: hidden;
-  display: flex;
-  flex-direction: column;
-  min-height: calc(100vh - 64px);
-  position: relative;
+/* HEADER */
+.hdr{
+  background:linear-gradient(135deg,var(--blue) 0%,var(--blue-mid) 55%,#1a4a7a 100%);
+  padding:16px 20px 0;
+  position:relative; overflow:hidden;
+}
+.hdr::before{content:'';position:absolute;top:-50px;right:-50px;width:200px;height:200px;background:rgba(255,255,255,0.04);border-radius:50%;}
+.hdr::after{content:'';position:absolute;bottom:-40px;left:-30px;width:150px;height:150px;background:rgba(201,150,58,0.10);border-radius:50%;}
+.hdr-inner{
+  display:flex;align-items:center;gap:12px;
+  position:relative;z-index:1;
+  flex-wrap:nowrap;
+  min-width:0;
+}
+.hdr-logo{flex-shrink:0;display:flex;align-items:center;}
+.hdr-logo img{
+  height:46px;width:auto;object-fit:contain;
+  filter:drop-shadow(0 2px 6px rgba(0,0,0,0.3));
+  display:block;
+}
+.hdr-text{flex:1;min-width:0;overflow:hidden;}
+.hdr-title{
+  font-family:'Playfair Display',serif;
+  font-size:clamp(0.85rem,2.6vw,1.35rem);
+  color:var(--white); font-weight:700;
+  line-height:1.25; letter-spacing:-0.01em;
+  white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+}
+.hdr-sub{
+  font-size:clamp(8px,1.8vw,10px);
+  color:rgba(255,255,255,0.6);font-weight:500;
+  margin-top:3px;letter-spacing:0.04em;text-transform:uppercase;
+  white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+}
+.hdr-clock{
+  display:flex;flex-direction:column;align-items:flex-end;
+  flex-shrink:0;min-width:0;
+}
+.clock-time{
+  font-family:'JetBrains Mono',monospace;
+  font-size:clamp(0.78rem,2.2vw,1.1rem);
+  color:var(--gold);font-weight:500;letter-spacing:0.02em;
+  white-space:nowrap;
+}
+.clock-date{font-size:9px;color:rgba(255,255,255,0.55);margin-top:2px;white-space:nowrap;}
+.hdr-bar{height:3px;background:linear-gradient(90deg,var(--gold) 0%,rgba(201,150,58,0.2) 100%);margin-top:14px;position:relative;z-index:1;}
+
+/* NAV */
+.nav{display:flex;gap:5px;background:var(--slate-light);border-bottom:1px solid var(--border);padding:8px 14px;}
+.nav-btn{
+  flex:1;padding:9px 8px;
+  background:transparent;border:1.5px solid transparent;
+  border-radius:var(--r-md);
+  font-family:'Inter',sans-serif;font-size:11.5px;font-weight:600;color:var(--slate);
+  cursor:pointer;transition:all var(--ease);
+  display:flex;align-items:center;justify-content:center;gap:6px;white-space:nowrap;
+}
+.nav-btn:hover{background:var(--white);color:var(--blue);border-color:var(--border);box-shadow:var(--sh-sm);}
+.nav-btn.active{background:var(--white);color:var(--blue);border-color:var(--blue);box-shadow:var(--sh-sm);}
+.nav-btn i{font-size:12px;}
+
+/* CONTENT */
+.tab{display:none;flex:1;padding:18px 20px;overflow-y:auto;max-height:calc(100vh - 220px);animation:fadeUp 0.22s ease both;}
+.tab.active{display:block;}
+@keyframes fadeUp{from{opacity:0;transform:translateY(7px);}to{opacity:1;transform:translateY(0);}}
+
+/* FORM */
+.form-ctrl{
+  width:100%;padding:9px 12px;
+  border:1.5px solid var(--border);border-radius:var(--r-sm);
+  font-family:'Inter',sans-serif;font-size:12.5px;color:var(--ink);
+  background:var(--slate-light);outline:none;transition:all var(--ease);
+  -webkit-appearance:none;appearance:none;
+}
+.form-ctrl:focus{border-color:var(--blue);background:var(--white);box-shadow:0 0 0 3px rgba(30,58,95,0.08);}
+.flabel{display:block;font-size:10px;font-weight:700;color:var(--blue);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:6px;}
+
+/* DATE PICKER CARD */
+.date-card{
+  background:var(--blue-light);border:1px solid #C8D8F0;
+  border-radius:var(--r-lg);padding:14px 18px;margin-bottom:16px;
+  display:flex;align-items:center;gap:12px;flex-wrap:wrap;
+}
+.date-card .dicon{
+  width:38px;height:38px;background:var(--blue);border-radius:var(--r-sm);
+  display:flex;align-items:center;justify-content:center;color:white;font-size:15px;flex-shrink:0;
+}
+.date-card .dfield{flex:1;min-width:130px;}
+
+/* INFO GRID */
+.igrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:11px;}
+.icard{
+  background:var(--white);border:1px solid var(--border);
+  border-radius:var(--r-md);padding:13px 15px;
+  border-left:4px solid var(--gold);
+  box-shadow:var(--sh-sm);transition:transform var(--ease),box-shadow var(--ease);
+  animation:popIn 0.28s ease both;
+}
+.icard:hover{transform:translateY(-2px);box-shadow:var(--sh-md);}
+@keyframes popIn{from{opacity:0;transform:scale(0.96) translateY(5px);}to{opacity:1;transform:scale(1) translateY(0);}}
+.icard.c-red{border-left-color:var(--maroon);background:var(--maroon-light);}
+.icard.c-teal{border-left-color:var(--teal);background:var(--teal-light);}
+.icard.c-blue{border-left-color:var(--blue);background:var(--blue-light);}
+.icard.c-orange{border-left-color:var(--orange);background:var(--orange-light);}
+.icard.full{grid-column:1/-1;}
+.ilabel{font-size:9.5px;font-weight:700;color:var(--slate);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:4px;}
+.ival{font-size:13px;font-weight:600;color:var(--ink);line-height:1.4;}
+.ival.red{color:var(--maroon);}
+
+/* YEAR TABS — centred, wrapping */
+.ytabs{
+  display:flex;gap:5px;margin-bottom:14px;
+  flex-wrap:wrap;justify-content:center;
+}
+.ybtn{
+  padding:7px 14px;background:var(--white);
+  border:1.5px solid var(--border);border-radius:var(--r-sm);
+  font-family:'Inter',sans-serif;font-size:11px;font-weight:600;color:var(--slate);
+  cursor:pointer;transition:all var(--ease);white-space:nowrap;
+}
+.ybtn:hover{border-color:var(--gold);color:var(--ink);}
+.ybtn.active{background:var(--gold);color:var(--blue);border-color:var(--gold);box-shadow:0 2px 8px rgba(201,150,58,0.3);}
+
+.tt-note{font-size:11px;color:var(--slate);font-style:italic;text-align:center;margin:10px 0 5px;}
+
+/* TABLE */
+.twrap{overflow-x:auto;border-radius:var(--r-md);border:1px solid var(--border);box-shadow:var(--sh-sm);}
+table{width:100%;min-width:520px;border-collapse:collapse;}
+thead tr{background:var(--blue);}
+th{padding:10px 11px;text-align:left;font-size:9.5px;font-weight:700;color:rgba(255,255,255,0.9);text-transform:uppercase;letter-spacing:0.07em;white-space:nowrap;}
+td{padding:10px 11px;font-size:12px;border-bottom:1px solid var(--border);vertical-align:top;line-height:1.45;}
+tr:last-child td{border-bottom:none;}
+tbody tr:nth-child(even){background:#FAFBFC;}
+tbody tr:hover{background:var(--blue-light);}
+tbody tr.noclass td{color:#94A3B8;font-style:italic;background:#FCFCFD;}
+tbody tr.noclass td:first-child{font-style:normal;font-weight:600;color:var(--slate);}
+tbody tr.sp-override{background:var(--orange-light)!important;}
+tbody tr.sp-override:hover{background:#FFF3E0!important;}
+tbody tr.sp-holiday{background:#FFF5F5!important;}
+tbody tr.sp-holiday td{color:#9B1C2C;}
+
+.scode{font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--slate);font-weight:500;}
+.sname{font-weight:600;color:var(--blue);font-size:12px;}
+.sstaff{font-size:11px;color:var(--maroon);font-weight:500;display:block;margin-top:1px;}
+.htime{font-size:9.5px;color:var(--slate);font-family:'JetBrains Mono',monospace;white-space:nowrap;}
+.spbadge{
+  display:inline-flex;align-items:center;gap:3px;
+  background:var(--orange);color:white;
+  font-size:8px;font-weight:700;padding:1px 6px;border-radius:50px;
+  margin-top:3px;letter-spacing:0.04em;
+}
+.spbadge.hol{background:var(--maroon);}
+
+/* EXAM / HOLIDAY BOXES */
+.exam-box{
+  text-align:center;padding:36px 20px;
+  background:var(--blue-light);border-radius:var(--r-lg);
+  border:1px solid #C8D8F0;animation:fadeUp 0.3s ease both;
+}
+.exam-box .ei{font-size:38px;color:var(--blue);margin-bottom:12px;}
+.exam-box h3{font-family:'Playfair Display',serif;font-size:1.25rem;color:var(--blue);margin-bottom:7px;}
+.exam-box p{color:var(--slate);font-size:12.5px;margin-bottom:18px;}
+.exam-btn{
+  display:inline-flex;align-items:center;gap:7px;
+  background:var(--maroon);color:white;padding:9px 20px;
+  border-radius:var(--r-md);font-weight:600;font-size:13px;
+  text-decoration:none;transition:all var(--ease);
+  box-shadow:0 4px 12px rgba(123,29,46,0.25);
+}
+.exam-btn:hover{background:#5C1520;transform:translateY(-2px);}
+.hol-box{
+  text-align:center;padding:24px 20px;
+  background:var(--maroon-light);border-radius:var(--r-lg);
+  border:1px solid #FCA5A5;color:var(--maroon);font-weight:600;font-size:13px;
 }
 
-/* ===== HEADER ===== */
-.portal-header {
-  background: linear-gradient(135deg, var(--blue) 0%, var(--blue-mid) 60%, #1a4a7a 100%);
-  padding: 22px 24px 18px;
-  position: relative;
-  overflow: hidden;
+/* ACTION BAR */
+.abar{display:flex;gap:9px;justify-content:center;margin-top:16px;flex-wrap:wrap;}
+.abtn{
+  display:inline-flex;align-items:center;gap:6px;padding:9px 20px;
+  border-radius:var(--r-md);font-family:'Inter',sans-serif;font-size:12px;font-weight:600;
+  cursor:pointer;border:none;transition:all var(--ease);
 }
-.portal-header::before {
-  content: '';
-  position: absolute;
-  top: -40px; right: -40px;
-  width: 180px; height: 180px;
-  background: rgba(255,255,255,0.05);
-  border-radius: 50%;
+.abtn.prnt{background:var(--blue);color:white;box-shadow:0 4px 12px rgba(30,58,95,0.2);}
+.abtn.prnt:hover{background:var(--blue-mid);transform:translateY(-1px);box-shadow:0 6px 16px rgba(30,58,95,0.28);}
+.abtn.pdl{background:var(--maroon);color:white;box-shadow:0 4px 12px rgba(123,29,46,0.2);}
+.abtn.pdl:hover{background:#5C1520;transform:translateY(-1px);box-shadow:0 6px 16px rgba(123,29,46,0.28);}
+.abtn:disabled{opacity:0.55;cursor:not-allowed;transform:none!important;}
+.bspinner{display:none;width:12px;height:12px;border:2px solid rgba(255,255,255,0.3);border-top-color:white;border-radius:50%;animation:spin 0.7s linear infinite;}
+@keyframes spin{to{transform:rotate(360deg);}}
+
+/* SEARCH */
+.sfcard{background:var(--slate-light);border:1px solid var(--border);border-radius:var(--r-lg);padding:15px;margin-bottom:16px;}
+.fgrid{display:grid;grid-template-columns:1fr 1fr;gap:11px;}
+.fgrid .full{grid-column:1/-1;}
+.sinwrap{position:relative;}
+.sinwrap .si{position:absolute;left:10px;top:50%;transform:translateY(-50%);color:var(--slate);font-size:12px;pointer-events:none;}
+.sinwrap .form-ctrl{padding-left:28px;}
+
+.sec-title{
+  font-size:10.5px;font-weight:700;color:var(--blue);
+  text-transform:uppercase;letter-spacing:0.07em;
+  padding:6px 11px;background:var(--blue-light);
+  border-radius:var(--r-sm);margin:13px 0 7px;
+  display:flex;align-items:center;gap:7px;
 }
-.portal-header::after {
-  content: '';
-  position: absolute;
-  bottom: -30px; left: -20px;
-  width: 120px; height: 120px;
-  background: rgba(201,150,58,0.12);
-  border-radius: 50%;
+.cbadge{background:var(--blue);color:white;font-size:9px;padding:1px 7px;border-radius:50px;}
+
+.rcard{
+  background:var(--white);border:1px solid var(--border);
+  border-radius:var(--r-md);padding:11px 14px;margin-bottom:7px;
+  display:flex;justify-content:space-between;align-items:flex-start;gap:9px;
+  box-shadow:var(--sh-sm);transition:all var(--ease);
 }
-.header-inner {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-  position: relative;
-  z-index: 1;
+.rcard:hover{border-color:#CBD5E1;transform:translateY(-1px);box-shadow:var(--sh-md);}
+.rcard .rsub{font-weight:700;font-size:12.5px;color:var(--blue);margin-bottom:2px;}
+.rcard .rcode{font-family:'JetBrains Mono',monospace;font-size:9.5px;color:var(--slate);}
+.rcard .rmeta{font-size:11px;color:#555;line-height:1.6;margin-top:3px;}
+.rcard .rstaff{color:var(--maroon);font-weight:600;}
+.stag{padding:3px 9px;border-radius:50px;font-size:9px;font-weight:700;text-transform:uppercase;color:white;letter-spacing:0.04em;white-space:nowrap;flex-shrink:0;}
+.t-today{background:#10B981;}.t-up{background:#3B82F6;}.t-past{background:var(--slate);}
+
+/* LOADING / EMPTY */
+.lstate{text-align:center;padding:38px 20px;color:var(--slate);font-size:13px;font-weight:500;}
+.ldot{width:28px;height:28px;border:3px solid #E2E8F0;border-top-color:var(--maroon);border-radius:50%;animation:spin 0.8s linear infinite;margin:0 auto 12px;}
+.empty{text-align:center;padding:34px 20px;color:var(--slate);font-size:13px;}
+.empty .ei{font-size:28px;margin-bottom:8px;opacity:0.35;}
+
+/* FOOTER */
+.foot{text-align:center;padding:11px;font-size:11px;font-weight:600;color:var(--slate);background:var(--slate-light);border-top:1px solid var(--border);}
+
+/* TOAST */
+.toast{
+  position:fixed;bottom:22px;right:20px;
+  background:var(--ink);color:white;padding:10px 16px;
+  border-radius:var(--r-md);font-size:12.5px;font-weight:500;
+  box-shadow:var(--sh-lg);z-index:9999;
+  display:flex;align-items:center;gap:7px;
+  transform:translateY(60px);opacity:0;
+  transition:all 0.28s cubic-bezier(0.4,0,0.2,1);
+  max-width:290px;
 }
-.header-logo {
-  width: 52px; height: 52px;
-  border-radius: 12px;
-  background: rgba(255,255,255,0.12);
-  border: 1.5px solid rgba(255,255,255,0.25);
-  display: flex; align-items: center; justify-content: center;
-  overflow: hidden;
-  flex-shrink: 0;
+.toast.show{transform:translateY(0);opacity:1;}
+.toast.ok{background:var(--green);}
+.toast.err{background:var(--maroon);}
+
+/* PRINT HEADER / FOOTER hidden by default */
+#ph,#pf{display:none;}
+
+/* ==================== RESPONSIVE ==================== */
+@media(max-width:600px){
+  body{padding:7px 5px 22px;}
+  .hdr{padding:12px 13px 0;}
+  .hdr-logo img{height:38px;}
+  .hdr-title{font-size:clamp(0.78rem,4.5vw,1rem);}
+  .hdr-sub{font-size:8px;}
+  .clock-date{display:none;}
+  .clock-time{font-size:0.75rem;}
+  .nav-btn{font-size:10.5px;padding:8px 5px;gap:4px;}
+  .tab{padding:13px 11px;max-height:calc(100vh - 210px);}
+  .fgrid{grid-template-columns:1fr;}
+  .fgrid .full{grid-column:1;}
+  .ybtn{padding:6px 10px;font-size:10.5px;}
+  table{min-width:460px;}
+  th,td{padding:8px 8px;font-size:11px;}
 }
-.header-logo img { width: 42px; height: 42px; object-fit: contain; }
-.header-text { flex: 1; }
-.header-title {
-  font-family: 'Playfair Display', serif;
-  font-size: clamp(1.1rem, 3vw, 1.5rem);
-  color: var(--white);
-  font-weight: 700;
-  line-height: 1.2;
-  letter-spacing: -0.01em;
+@media(max-width:380px){
+  .nav-btn span.nl{display:none;}
+  .nav-btn i{font-size:14px;}
+  .hdr-title{font-size:0.75rem;}
+  .hdr-sub{display:none;}
+  .clock-time{font-size:0.7rem;}
 }
-.header-subtitle {
-  font-size: 10px;
-  color: rgba(255,255,255,0.65);
-  font-weight: 500;
-  margin-top: 3px;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-}
-.live-clock-wrap {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-end;
-  flex-shrink: 0;
-}
-.live-time {
-  font-family: 'JetBrains Mono', monospace;
-  font-size: clamp(1rem, 2.5vw, 1.25rem);
-  color: var(--gold);
-  font-weight: 500;
-  letter-spacing: 0.02em;
-}
-.live-date {
-  font-size: 10px;
-  color: rgba(255,255,255,0.6);
-  margin-top: 2px;
-  font-weight: 400;
-}
-.header-accent-bar {
-  height: 3px;
-  background: linear-gradient(90deg, var(--gold) 0%, rgba(201,150,58,0.3) 100%);
-  margin-top: 16px;
-  border-radius: 2px;
-  position: relative;
-  z-index: 1;
+@media(max-width:320px){
+  .hdr-logo img{height:32px;}
+  .hdr-clock{display:none;}
 }
 
-/* ===== NAV TABS ===== */
-.main-nav {
-  display: flex;
-  gap: 0;
-  background: var(--slate-light);
-  border-bottom: 1px solid var(--border);
-  padding: 8px 16px;
-  gap: 6px;
-}
-.nav-btn {
-  flex: 1;
-  padding: 9px 10px;
-  background: transparent;
-  border: 1.5px solid transparent;
-  border-radius: var(--radius-md);
-  font-family: 'Inter', sans-serif;
-  font-size: 11.5px;
-  font-weight: 600;
-  color: var(--slate);
-  cursor: pointer;
-  transition: all var(--transition);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 6px;
-  white-space: nowrap;
-}
-.nav-btn:hover { background: var(--white); color: var(--blue); border-color: var(--border); box-shadow: var(--shadow-sm); }
-.nav-btn.active {
-  background: var(--white);
-  color: var(--blue);
-  border-color: var(--blue);
-  box-shadow: var(--shadow-sm);
-}
-.nav-btn .nav-icon { font-size: 13px; }
+/* ==================== PRINT ==================== */
+@media print{
+  *,*::before,*::after{transition:none!important;animation:none!important;}
+  body{background:white!important;padding:0;-webkit-print-color-adjust:exact;print-color-adjust:exact;display:block;}
 
-/* ===== CONTENT AREAS ===== */
-.content-area {
-  display: none;
-  flex: 1;
-  padding: 20px;
-  animation: fadeSlideIn 0.25s ease both;
-  overflow-y: auto;
-  max-height: calc(100vh - 260px);
-}
-.content-area.active { display: block; }
-@keyframes fadeSlideIn {
-  from { opacity: 0; transform: translateY(8px); }
-  to   { opacity: 1; transform: translateY(0); }
-}
+  /* Hide UI chrome */
+  .nav,.hdr,.ytabs,.abar,.foot,.tt-note,.date-card,.toast,#dayinfo,#search{display:none!important;}
 
-/* ===== FORM CONTROLS ===== */
-.form-control {
-  width: 100%;
-  padding: 9px 13px;
-  border: 1.5px solid var(--border);
-  border-radius: var(--radius-sm);
-  font-family: 'Inter', sans-serif;
-  font-size: 12.5px;
-  color: var(--ink);
-  background: var(--slate-light);
-  outline: none;
-  transition: all var(--transition);
-  appearance: none;
-}
-.form-control:focus { border-color: var(--blue); background: var(--white); box-shadow: 0 0 0 3px rgba(30,58,95,0.08); }
-label.field-label {
-  display: block;
-  font-size: 10px;
-  font-weight: 700;
-  color: var(--blue);
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-  margin-bottom: 6px;
-}
+  /* Show only timetable tab regardless of active state */
+  .wrap{box-shadow:none!important;border-radius:0!important;min-height:auto!important;overflow:visible!important;}
+  .tab{display:none!important;max-height:none!important;overflow:visible!important;padding:0!important;}
+  #timetable{display:block!important;padding:10px 0 0!important;}
 
-/* ===== DAY INFO TAB ===== */
-.date-picker-card {
-  background: var(--blue-light);
-  border: 1px solid #C8D8F0;
-  border-radius: var(--radius-lg);
-  padding: 16px 20px;
-  margin-bottom: 18px;
-  display: flex;
-  align-items: center;
-  gap: 14px;
-  flex-wrap: wrap;
-}
-.date-picker-card .cal-icon {
-  width: 40px; height: 40px;
-  background: var(--blue);
-  border-radius: var(--radius-sm);
-  display: flex; align-items: center; justify-content: center;
-  color: white;
-  font-size: 16px;
-  flex-shrink: 0;
-}
-.date-picker-card .dp-inner { flex: 1; min-width: 140px; }
-.date-picker-card input[type="date"] { cursor: pointer; }
+  .twrap{overflow:visible!important;border:none!important;box-shadow:none!important;}
 
-.info-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; }
-.info-card {
-  background: var(--white);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-md);
-  padding: 14px 16px;
-  border-left: 4px solid var(--gold);
-  box-shadow: var(--shadow-sm);
-  transition: transform var(--transition), box-shadow var(--transition);
-  animation: cardPop 0.3s ease both;
-}
-.info-card:hover { transform: translateY(-2px); box-shadow: var(--shadow-md); }
-.info-card.alert-card { border-left-color: var(--maroon); background: var(--maroon-light); }
-.info-card.event-card { border-left-color: var(--teal); background: var(--teal-light); grid-column: 1 / -1; }
-.info-card.exam-card { border-left-color: var(--blue); background: var(--blue-light); grid-column: 1 / -1; }
-.info-card.holiday-card { border-left-color: var(--maroon); background: var(--maroon-light); grid-column: 1 / -1; }
-@keyframes cardPop {
-  from { opacity: 0; transform: scale(0.97) translateY(4px); }
-  to   { opacity: 1; transform: scale(1) translateY(0); }
-}
-.info-label { font-size: 9.5px; font-weight: 700; color: var(--slate); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 5px; }
-.info-value { font-size: 13.5px; font-weight: 600; color: var(--ink); line-height: 1.4; }
-.info-value.maroon { color: var(--maroon); }
+  /* Print header / footer */
+  #ph{display:block!important;text-align:center;margin-bottom:18px;}
+  #ph img{height:55px;margin-bottom:6px;}
+  #ph h1{font-size:12pt;color:#000;margin:4px 0 2px;font-family:'Playfair Display',serif;}
+  #ph h2{font-size:10pt;color:#7B1D2E;margin-bottom:4px;}
+  #ph .pmeta{font-size:9pt;color:#333;margin-top:7px;border-top:1px solid #ccc;padding-top:7px;line-height:1.7;}
+  #pf{display:block!important;margin-top:18px;font-size:8pt;color:#555;border-top:1px solid #ccc;padding-top:8px;text-align:center;font-style:italic;}
 
-/* ===== TIMETABLE TAB ===== */
-.year-tabs {
-  display: flex;
-  gap: 6px;
-  margin-bottom: 16px;
-  flex-wrap: wrap;
-}
-.year-btn {
-  padding: 7px 14px;
-  background: var(--white);
-  border: 1.5px solid var(--border);
-  border-radius: var(--radius-sm);
-  font-family: 'Inter', sans-serif;
-  font-size: 11px;
-  font-weight: 600;
-  color: var(--slate);
-  cursor: pointer;
-  transition: all var(--transition);
-  white-space: nowrap;
-}
-.year-btn:hover { border-color: var(--gold); color: var(--ink); }
-.year-btn.active { background: var(--gold); color: var(--blue); border-color: var(--gold); box-shadow: 0 2px 8px rgba(201,150,58,0.3); }
-
-.tt-label {
-  font-size: 11px;
-  color: var(--slate);
-  font-weight: 500;
-  text-align: center;
-  margin: 12px 0 6px;
-  font-style: italic;
-}
-
-/* Table */
-.table-wrap { overflow-x: auto; border-radius: var(--radius-md); border: 1px solid var(--border); box-shadow: var(--shadow-sm); }
-table { width: 100%; min-width: 560px; border-collapse: collapse; }
-thead tr { background: var(--blue); }
-th {
-  padding: 11px 12px;
-  text-align: left;
-  font-size: 9.5px;
-  font-weight: 700;
-  color: rgba(255,255,255,0.9);
-  text-transform: uppercase;
-  letter-spacing: 0.07em;
-  white-space: nowrap;
-}
-td {
-  padding: 11px 12px;
-  font-size: 12px;
-  border-bottom: 1px solid var(--border);
-  vertical-align: top;
-  line-height: 1.45;
-}
-tr:last-child td { border-bottom: none; }
-tbody tr:nth-child(even) { background: var(--slate-light); }
-tbody tr:hover { background: var(--blue-light); }
-tbody tr.no-class td { color: #94A3B8; font-style: italic; background: #FCFCFD; }
-tbody tr.no-class td:first-child { font-style: normal; font-weight: 600; color: var(--slate); }
-
-/* Special entry rows */
-tbody tr.special-override { background: var(--special-bg) !important; }
-tbody tr.special-override td { border-color: rgba(249,115,22,0.2); }
-tbody tr.special-override:hover { background: #FFF3E0 !important; }
-.special-badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  background: var(--special-border);
-  color: white;
-  font-size: 8.5px;
-  font-weight: 700;
-  padding: 2px 7px;
-  border-radius: 50px;
-  margin-top: 4px;
-  letter-spacing: 0.04em;
-}
-tbody tr.special-holiday { background: #FFF5F5 !important; }
-tbody tr.special-holiday td { color: #9B1C2C; }
-
-.subj-code { font-family: 'JetBrains Mono', monospace; font-size: 10px; color: var(--slate); font-weight: 500; }
-.subj-name { font-weight: 600; color: var(--blue); font-size: 12px; }
-.subj-staff { font-size: 11px; color: var(--maroon); font-weight: 500; margin-top: 2px; }
-.subj-multi-staff { display: flex; flex-direction: column; gap: 1px; }
-.hour-time { font-size: 10px; color: var(--slate); font-family: 'JetBrains Mono', monospace; white-space: nowrap; }
-
-/* Exam day */
-.exam-box {
-  text-align: center;
-  padding: 40px 20px;
-  background: var(--blue-light);
-  border-radius: var(--radius-lg);
-  border: 1px solid #C8D8F0;
-  animation: fadeSlideIn 0.3s ease both;
-}
-.exam-box .exam-icon { font-size: 40px; color: var(--blue); margin-bottom: 14px; }
-.exam-box h3 { font-family: 'Playfair Display', serif; font-size: 1.3rem; color: var(--blue); margin-bottom: 8px; }
-.exam-box p { color: var(--slate); font-size: 13px; margin-bottom: 20px; }
-.exam-link-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  background: var(--maroon);
-  color: white;
-  padding: 10px 22px;
-  border-radius: var(--radius-md);
-  font-weight: 600;
-  font-size: 13px;
-  text-decoration: none;
-  transition: all var(--transition);
-  box-shadow: 0 4px 12px rgba(123,29,46,0.25);
-}
-.exam-link-btn:hover { background: #5C1520; transform: translateY(-2px); box-shadow: 0 6px 18px rgba(123,29,46,0.3); }
-
-.holiday-box {
-  text-align: center;
-  padding: 28px 20px;
-  background: var(--maroon-light);
-  border-radius: var(--radius-lg);
-  border: 1px solid #FCA5A5;
-  color: var(--maroon);
-  font-weight: 600;
-  font-size: 13px;
-}
-
-/* Print/Download action buttons */
-.action-bar {
-  display: flex;
-  gap: 10px;
-  justify-content: center;
-  margin-top: 18px;
-  flex-wrap: wrap;
-}
-.action-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 7px;
-  padding: 9px 20px;
-  border-radius: var(--radius-md);
-  font-family: 'Inter', sans-serif;
-  font-size: 12px;
-  font-weight: 600;
-  cursor: pointer;
-  border: none;
-  transition: all var(--transition);
-}
-.action-btn.print-btn { background: var(--blue); color: white; box-shadow: 0 4px 12px rgba(30,58,95,0.2); }
-.action-btn.print-btn:hover { background: var(--blue-mid); transform: translateY(-1px); box-shadow: 0 6px 16px rgba(30,58,95,0.28); }
-.action-btn.pdf-btn { background: var(--maroon); color: white; box-shadow: 0 4px 12px rgba(123,29,46,0.2); }
-.action-btn.pdf-btn:hover { background: #5C1520; transform: translateY(-1px); box-shadow: 0 6px 16px rgba(123,29,46,0.28); }
-.action-btn:disabled { opacity: 0.6; cursor: not-allowed; transform: none !important; }
-
-/* Spinner inside button */
-.btn-spinner {
-  display: none;
-  width: 13px; height: 13px;
-  border: 2px solid rgba(255,255,255,0.3);
-  border-top-color: white;
-  border-radius: 50%;
-  animation: spin 0.7s linear infinite;
-}
-@keyframes spin { to { transform: rotate(360deg); } }
-
-/* ===== SEARCH TAB ===== */
-.search-filters-card {
-  background: var(--slate-light);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-lg);
-  padding: 16px;
-  margin-bottom: 18px;
-}
-.filter-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-.filter-grid .full { grid-column: 1 / -1; }
-.search-input-wrap { position: relative; }
-.search-input-wrap .search-icon { position: absolute; left: 11px; top: 50%; transform: translateY(-50%); color: var(--slate); font-size: 12px; pointer-events: none; }
-.search-input-wrap .form-control { padding-left: 30px; }
-
-.results-section-title {
-  font-size: 11px;
-  font-weight: 700;
-  color: var(--blue);
-  text-transform: uppercase;
-  letter-spacing: 0.07em;
-  padding: 6px 12px;
-  background: var(--blue-light);
-  border-radius: var(--radius-sm);
-  margin: 14px 0 8px;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-.results-section-title .count-badge {
-  background: var(--blue);
-  color: white;
-  font-size: 9px;
-  padding: 2px 7px;
-  border-radius: 50px;
-}
-
-.result-card {
-  background: var(--white);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-md);
-  padding: 12px 15px;
-  margin-bottom: 8px;
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  gap: 10px;
-  box-shadow: var(--shadow-sm);
-  transition: all var(--transition);
-  cursor: default;
-}
-.result-card:hover { border-color: #CBD5E1; transform: translateY(-1px); box-shadow: var(--shadow-md); }
-.result-card .rc-subject { font-weight: 700; font-size: 13px; color: var(--blue); margin-bottom: 3px; }
-.result-card .rc-code { font-family: 'JetBrains Mono', monospace; font-size: 10px; color: var(--slate); }
-.result-card .rc-meta { font-size: 11px; color: #555; line-height: 1.6; margin-top: 4px; }
-.result-card .rc-staff { color: var(--maroon); font-weight: 600; }
-.status-tag {
-  padding: 3px 10px;
-  border-radius: 50px;
-  font-size: 9px;
-  font-weight: 700;
-  text-transform: uppercase;
-  color: white;
-  letter-spacing: 0.05em;
-  white-space: nowrap;
-  flex-shrink: 0;
-}
-.tag-today { background: #10B981; }
-.tag-upcoming { background: #3B82F6; }
-.tag-past { background: var(--slate); }
-
-.empty-state {
-  text-align: center;
-  padding: 36px 20px;
-  color: var(--slate);
-  font-size: 13px;
-}
-.empty-state .empty-icon { font-size: 30px; margin-bottom: 10px; opacity: 0.4; }
-
-/* ===== LOADING ===== */
-.loading-state {
-  text-align: center;
-  padding: 40px 20px;
-  color: var(--slate);
-  font-size: 13px;
-  font-weight: 500;
-}
-.loader {
-  width: 30px; height: 30px;
-  border: 3px solid #E2E8F0;
-  border-top-color: var(--maroon);
-  border-radius: 50%;
-  animation: spin 0.8s linear infinite;
-  margin: 0 auto 14px;
-}
-
-/* ===== FOOTER ===== */
-.portal-footer {
-  text-align: center;
-  padding: 12px;
-  font-size: 11px;
-  font-weight: 600;
-  color: var(--slate);
-  background: var(--slate-light);
-  border-top: 1px solid var(--border);
-  letter-spacing: 0.03em;
-}
-
-/* ===== TOAST ===== */
-.toast {
-  position: fixed;
-  bottom: 24px;
-  right: 24px;
-  background: var(--ink);
-  color: white;
-  padding: 11px 18px;
-  border-radius: var(--radius-md);
-  font-size: 12.5px;
-  font-weight: 500;
-  box-shadow: var(--shadow-lg);
-  z-index: 9999;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  transform: translateY(60px);
-  opacity: 0;
-  transition: all 0.3s cubic-bezier(0.4,0,0.2,1);
-  max-width: 300px;
-}
-.toast.show { transform: translateY(0); opacity: 1; }
-.toast.success { background: var(--green); }
-.toast.error { background: var(--maroon); }
-
-/* ===== PRINT ELEMENTS ===== */
-#print-header, #print-footer { display: none; }
-
-/* ===== RESPONSIVE ===== */
-@media (max-width: 600px) {
-  body { padding: 8px 6px 24px; }
-  .header-inner { gap: 10px; }
-  .header-logo { width: 40px; height: 40px; }
-  .live-time { font-size: 0.9rem; }
-  .live-date { display: none; }
-  .nav-btn { font-size: 10.5px; padding: 8px 6px; gap: 4px; }
-  .content-area { padding: 14px 12px; max-height: calc(100vh - 240px); }
-  .filter-grid { grid-template-columns: 1fr; }
-  .filter-grid .full { grid-column: 1; }
-  .year-tabs { gap: 4px; }
-  .year-btn { padding: 6px 10px; font-size: 10.5px; }
-  table { min-width: 500px; }
-  th, td { padding: 9px 8px; }
-}
-@media (max-width: 380px) {
-  .nav-btn .nav-label { display: none; }
-  .nav-btn .nav-icon { font-size: 14px; }
-}
-
-/* ===== PRINT STYLES ===== */
-@media print {
-  *, *::before, *::after { transition: none !important; animation: none !important; }
-  body { background: white; padding: 0; -webkit-print-color-adjust: exact; print-color-adjust: exact; display: block; }
-  .main-nav, .portal-header, .year-tabs, .action-bar, .portal-footer, .tt-label,
-  #dayinfo, #search, .date-picker-card, .toast { display: none !important; }
-  .portal-wrap { box-shadow: none; border-radius: 0; min-height: auto; }
-  #timetable { display: block !important; padding: 0; }
-  .content-area { max-height: none; overflow: visible; }
-  .table-wrap { overflow: visible; border: none; box-shadow: none; }
-  #print-header { display: block; text-align: center; margin-bottom: 20px; }
-  #print-header img { width: 70px; }
-  #print-header h1 { font-size: 14pt; color: #000; margin: 6px 0 2px; font-family: 'Playfair Display', serif; }
-  #print-header h2 { font-size: 11pt; color: #7B1D2E; margin-bottom: 4px; }
-  #print-header .print-meta { font-size: 10pt; color: #333; margin-top: 8px; border-top: 1px solid #ccc; padding-top: 8px; }
-  table { width: 100%; border-collapse: collapse; }
-  th, td { border: 1px solid #999; padding: 7px 9px; text-align: left; font-size: 9.5pt; color: #000; }
-  th { background: #EEE !important; font-weight: bold; }
-  tbody tr.special-override td { background: #FFF7ED !important; }
-  tbody tr.no-class td { color: #888; }
-  #print-footer { display: block; margin-top: 20px; font-size: 8.5pt; color: #555; border-top: 1px solid #ccc; padding-top: 8px; text-align: center; font-style: italic; }
+  /* Table */
+  table{width:100%;border-collapse:collapse;}
+  th{padding:7px 9px;text-align:left;font-size:8.5pt;font-weight:700;background:#E8EDF5!important;color:#000!important;border:1px solid #999;}
+  td{padding:7px 9px;border:1px solid #ccc;font-size:9pt;color:#000;vertical-align:top;}
+  tbody tr:nth-child(even){background:#F7F9FC!important;}
+  tbody tr.sp-override td{background:#FFF7ED!important;}
+  tbody tr.sp-holiday td{background:#FFF5F5!important;}
+  tbody tr.noclass td{color:#999!important;}
+  .sname{color:#1E3A5F!important;font-weight:700;}
+  .sstaff{color:#7B1D2E!important;}
+  .scode{font-size:8pt!important;}
+  .htime{font-size:8pt!important;}
+  .spbadge{font-size:7pt!important;padding:1px 5px!important;}
+  .exam-box,.hol-box{border:1px solid #ccc!important;background:#F8F9FA!important;}
 }
 </style>
 </head>
 <body>
 
-<!-- TOAST -->
 <div class="toast" id="toast"></div>
 
 <!-- PRINT HEADER -->
-<div id="print-header">
+<div id="ph">
   <img src="https://loyolazoology.github.io/about-us/azbt-logo.png" alt="AZ-BT Logo">
-  <h1>PG & Research Department of Advanced Zoology and Biotechnology</h1>
+  <h1>PG &amp; Research Department of Advanced Zoology and Biotechnology</h1>
   <h2>Loyola College (Autonomous), Chennai – 34</h2>
-  <div class="print-meta" id="print-meta-content"></div>
+  <div class="pmeta" id="pmeta"></div>
 </div>
 
-<!-- MAIN PORTAL -->
-<div class="portal-wrap">
+<!-- PORTAL -->
+<div class="wrap">
 
   <!-- HEADER -->
-  <div class="portal-header">
-    <div class="header-inner">
-      <div class="header-logo">
-        <img src="https://loyolazoology.github.io/about-us/azbt-logo.png" alt="Logo" onerror="this.style.display='none'; this.parentElement.innerHTML='<i class=\'fas fa-dna\' style=\'color:var(--gold);font-size:20px\'></i>'">
+  <div class="hdr">
+    <div class="hdr-inner">
+      <div class="hdr-logo">
+        <img src="https://loyolazoology.github.io/about-us/azbt-logo.png" alt="AZ-BT Logo"
+          onerror="this.parentElement.innerHTML='<i class=\'fas fa-dna\' style=\'color:var(--gold);font-size:24px\'></i>'">
       </div>
-      <div class="header-text">
-        <div class="header-title">Student Timetable Portal</div>
-        <div class="header-subtitle">Dept. of Advanced Zoology &amp; Biotechnology</div>
+      <div class="hdr-text">
+        <div class="hdr-title">Student Timetable Portal</div>
+        <div class="hdr-sub">Dept. of Advanced Zoology &amp; Biotechnology · Loyola College</div>
       </div>
-      <div class="live-clock-wrap">
-        <div class="live-time" id="clock-time">--:--:--</div>
-        <div class="live-date" id="clock-date">Loading...</div>
+      <div class="hdr-clock">
+        <div class="clock-time" id="ct">--:--:--</div>
+        <div class="clock-date" id="cd">--</div>
       </div>
     </div>
-    <div class="header-accent-bar"></div>
+    <div class="hdr-bar"></div>
   </div>
 
   <!-- NAV -->
-  <nav class="main-nav" id="mainNav">
+  <nav class="nav" id="nav">
     <button class="nav-btn active" data-tab="dayinfo">
-      <i class="fas fa-calendar-day nav-icon"></i>
-      <span class="nav-label">Day Info</span>
+      <i class="fas fa-calendar-day"></i><span class="nl">Day Info</span>
     </button>
     <button class="nav-btn" data-tab="timetable">
-      <i class="fas fa-table-cells nav-icon"></i>
-      <span class="nav-label">Timetable</span>
+      <i class="fas fa-table-cells"></i><span class="nl">Timetable</span>
     </button>
     <button class="nav-btn" data-tab="search">
-      <i class="fas fa-magnifying-glass nav-icon"></i>
-      <span class="nav-label">Search</span>
+      <i class="fas fa-magnifying-glass"></i><span class="nl">Search</span>
     </button>
   </nav>
 
-  <!-- ===== DAY INFO TAB ===== -->
-  <div id="dayinfo" class="content-area active">
-    <div class="date-picker-card">
-      <div class="cal-icon"><i class="fas fa-calendar-alt"></i></div>
-      <div class="dp-inner">
-        <label class="field-label" for="datePick">Select Date</label>
-        <input type="date" id="datePick" class="form-control">
+  <!-- DAY INFO -->
+  <div id="dayinfo" class="tab active">
+    <div class="date-card">
+      <div class="dicon"><i class="fas fa-calendar-alt"></i></div>
+      <div class="dfield">
+        <label class="flabel" for="dp">Select Date</label>
+        <input type="date" id="dp" class="form-ctrl">
       </div>
     </div>
     <div id="dayMeta">
-      <div class="loading-state"><div class="loader"></div>Fetching schedule…</div>
+      <div class="lstate"><div class="ldot"></div>Fetching schedule…</div>
     </div>
   </div>
 
-  <!-- ===== TIMETABLE TAB ===== -->
-  <div id="timetable" class="content-area">
-    <div class="year-tabs" id="yearTabs">
-      <button class="year-btn active" data-year="1st UG">1st UG</button>
-      <button class="year-btn" data-year="2nd UG">2nd UG</button>
-      <button class="year-btn" data-year="3rd UG">3rd UG</button>
-      <button class="year-btn" data-year="1st PG">1st PG</button>
-      <button class="year-btn" data-year="2nd PG">2nd PG</button>
+  <!-- TIMETABLE -->
+  <div id="timetable" class="tab">
+    <div class="ytabs" id="ytabs">
+      <button class="ybtn active" data-year="1st UG">1st UG</button>
+      <button class="ybtn" data-year="2nd UG">2nd UG</button>
+      <button class="ybtn" data-year="3rd UG">3rd UG</button>
+      <button class="ybtn" data-year="1st PG">1st PG</button>
+      <button class="ybtn" data-year="2nd PG">2nd PG</button>
     </div>
-    <div id="tableContainer">
-      <div class="loading-state"><div class="loader"></div>Loading timetable…</div>
+    <div id="ttBox">
+      <div class="lstate"><div class="ldot"></div>Loading timetable…</div>
     </div>
-    <div class="tt-label" id="ttLabel"></div>
-    <div class="action-bar" id="actionBar">
-      <button class="action-btn print-btn" id="printBtn">
-        <i class="fas fa-print"></i> Print
-      </button>
-      <button class="action-btn pdf-btn" id="pdfBtn">
-        <div class="btn-spinner" id="pdfSpinner"></div>
-        <i class="fas fa-file-pdf" id="pdfIcon"></i>
-        <span id="pdfBtnText"> Download PDF</span>
+    <div class="tt-note" id="ttNote"></div>
+    <div class="abar">
+      <button class="abtn prnt" id="printBtn"><i class="fas fa-print"></i> Print</button>
+      <button class="abtn pdl" id="pdfBtn">
+        <div class="bspinner" id="pdfSpin"></div>
+        <i class="fas fa-file-pdf" id="pdfIco"></i>
+        <span id="pdfTxt"> Download PDF</span>
       </button>
     </div>
   </div>
 
-  <!-- ===== SEARCH TAB ===== -->
-  <div id="search" class="content-area">
-    <div class="search-filters-card">
-      <div class="filter-grid">
+  <!-- SEARCH -->
+  <div id="search" class="tab">
+    <div class="sfcard">
+      <div class="fgrid">
         <div>
-          <label class="field-label">Class</label>
-          <select id="searchYear" class="form-control">
+          <label class="flabel">Class</label>
+          <select id="sYear" class="form-ctrl">
             <option value="">All Classes</option>
             <option>1st UG</option><option>2nd UG</option>
             <option>3rd UG</option><option>1st PG</option><option>2nd PG</option>
           </select>
         </div>
         <div>
-          <label class="field-label">Subject</label>
-          <select id="searchSubject" class="form-control">
-            <option value="">All Subjects</option>
-          </select>
+          <label class="flabel">Subject</label>
+          <select id="sSub" class="form-ctrl"><option value="">All Subjects</option></select>
         </div>
         <div class="full">
-          <label class="field-label">Staff Name</label>
-          <div class="search-input-wrap">
-            <i class="fas fa-search search-icon"></i>
-            <input type="text" id="staffSearch" class="form-control" placeholder="Type staff name to search…">
+          <label class="flabel">Staff Name</label>
+          <div class="sinwrap">
+            <i class="fas fa-search si"></i>
+            <input type="text" id="sStaff" class="form-ctrl" placeholder="Type staff name to search…">
           </div>
         </div>
       </div>
     </div>
-    <div id="searchOut">
-      <div class="empty-state"><div class="empty-icon"><i class="fas fa-search"></i></div>Use the filters above to find classes.</div>
+    <div id="srOut">
+      <div class="empty"><div class="ei"><i class="fas fa-search"></i></div>Use the filters above to find classes.</div>
     </div>
   </div>
 
-  <!-- FOOTER -->
-  <footer class="portal-footer">© 2026 AZ-BT, Loyola College, Chennai</footer>
+  <footer class="foot">© 2026 AZ-BT · Loyola College (Autonomous), Chennai</footer>
 </div>
 
 <!-- PRINT FOOTER -->
-<div id="print-footer">
-  <p>Generated from the Student Timetable Portal — AZ-BT · Loyola College (Autonomous), Chennai</p>
-  <p id="print-footer-details"></p>
+<div id="pf">
+  <p>Generated from AZ-BT Student Timetable Portal · Loyola College (Autonomous), Chennai</p>
+  <p id="pfdet"></p>
 </div>
 
 <script>
-/* ===== CONFIG ===== */
-const URLS = {
+/* ============================
+   CONFIG
+   ============================ */
+const CSV = {
   dayInfo:    "https://docs.google.com/spreadsheets/d/e/2PACX-1vTgt5H7LNGG1CB06ocZIe15CiIYT5DALF5UuTDwGXHXg2zkb13-p8lv5cnPSuIA_e2qfYnjaKuE8SaX/pub?gid=1169802535&single=true&output=csv",
   generalTT:  "https://docs.google.com/spreadsheets/d/e/2PACX-1vTgt5H7LNGG1CB06ocZIe15CiIYT5DALF5UuTDwGXHXg2zkb13-p8lv5cnPSuIA_e2qfYnjaKuE8SaX/pub?gid=267021428&single=true&output=csv",
   timePeriod: "https://docs.google.com/spreadsheets/d/e/2PACX-1vTgt5H7LNGG1CB06ocZIe15CiIYT5DALF5UuTDwGXHXg2zkb13-p8lv5cnPSuIA_e2qfYnjaKuE8SaX/pub?gid=628527526&single=true&output=csv",
-  specialEntry:"https://docs.google.com/spreadsheets/d/e/2PACX-1vTgt5H7LNGG1CB06ocZIe15CiIYT5DALF5UuTDwGXHXg2zkb13-p8lv5cnPSuIA_e2qfYnjaKuE8SaX/pub?gid=1572624085&single=true&output=csv",
-  examTT:     "https://loyolazoology.wixsite.com/az-bt/exam-timetable"
+  special:    "https://docs.google.com/spreadsheets/d/e/2PACX-1vTgt5H7LNGG1CB06ocZIe15CiIYT5DALF5UuTDwGXHXg2zkb13-p8lv5cnPSuIA_e2qfYnjaKuE8SaX/pub?gid=1572624085&single=true&output=csv",
 };
-
+const EXAM_LINK = "https://loyolazoology.wixsite.com/az-bt/exam-timetable";
 const HOURS = ["1st Hour","2nd Hour","3rd Hour","4th Hour","5th Hour"];
 const YEARS = ["1st UG","2nd UG","3rd UG","1st PG","2nd PG"];
 
-/* ===== STATE ===== */
-let dayInfoData = [];
-let ttMap        = {};   // "dayOrder|year" → row
-let timeSlots    = {};   // "1st Hour" → "08:15 AM – 09:10 AM"
-let specialMap   = {};   // "DD-MM-YYYY|year|hour" → specialEntry row
-let subjectsByYear = {}; // year → sorted Set
-let todayUTC;
-let selectedDate = "";   // DD-MM-YYYY
-let currentYear  = "1st UG";
+/* STATE */
+let DI=[], TT={}, TS={}, SP={}, SUBJ={};
+let todayUTC, selDate="", curYear="1st UG";
+let dataReady=false;
 
-/* ===== UTILITIES ===== */
-const $ = id => document.getElementById(id);
-function toIST_YMD() {
+/* ============================
+   HELPERS
+   ============================ */
+const $=id=>document.getElementById(id);
+
+function toIST(){
   return new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Kolkata',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date());
 }
-function ymdToDMY(ymd) { if(!ymd)return""; const[y,m,d]=ymd.split('-'); return `${d}-${m}-${y}`; }
-function dmyToDate(dmy) {
-  if(!dmy||dmy.length!==10)return null;
-  const[d,m,y]=dmy.split('-');
+function ymd2dmy(s){ if(!s)return""; const[y,m,d]=s.split('-'); return `${d}-${m}-${y}`; }
+function dmy2date(s){
+  if(!s||s.length!==10)return null;
+  const[d,m,y]=s.split('-');
   return new Date(Date.UTC(+y,+m-1,+d));
 }
-function getTodayUTC() { const n=new Date(); return new Date(Date.UTC(n.getFullYear(),n.getMonth(),n.getDate())); }
-function loadCSV(url) {
-  return new Promise(resolve=>{
-    Papa.parse(url,{download:true,header:true,complete:r=>resolve(r.data.filter(row=>Object.values(row).some(v=>v!=null&&v!="")))});
+function nowUTC(){
+  const n=new Date();
+  return new Date(Date.UTC(n.getFullYear(),n.getMonth(),n.getDate()));
+}
+
+function csv(url){
+  return new Promise(ok=>{
+    Papa.parse(url,{
+      download:true, header:true, skipEmptyLines:true,
+      complete:r=>ok(r.data.filter(row=>Object.values(row).some(v=>v&&String(v).trim()!==""))),
+      error:()=>ok([])
+    });
   });
 }
 
-/* Parse "CODE - Subject Name - Staff1, Staff2" */
-function parseSubjectCell(txt) {
-  if(!txt||txt.trim()==="")return{code:"-",name:"-",staff:[]};
+/*
+ * Parse cell text: "CODE - Subject Name - Staff1, Staff2"
+ * Handles: missing code, multiple dashes in subject name, multiple staff
+ */
+function parseCell(txt){
+  if(!txt||!txt.trim())return{code:"-",name:"-",staff:[]};
   const t=txt.trim();
-  const dashIdx=t.indexOf(' - ');
-  if(dashIdx===-1)return{code:t,name:t,staff:[]};
-  const code=t.slice(0,dashIdx).trim();
-  const rest=t.slice(dashIdx+3).trim();
-  const dashIdx2=rest.indexOf(' - ');
-  if(dashIdx2===-1)return{code,name:rest,staff:[]};
-  const name=rest.slice(0,dashIdx2).trim();
-  const staffRaw=rest.slice(dashIdx2+3).trim();
+  // Split on " - " (space-dash-space) to preserve dashes inside names
+  const parts=t.split(' - ');
+  if(parts.length===1)return{code:"-",name:t,staff:[]};
+  if(parts.length===2)return{code:parts[0].trim(),name:parts[1].trim(),staff:[]};
+  // parts[0]=code, parts[1]=name, parts[2+]=staff (rejoin in case staff has " - ")
+  const code=parts[0].trim();
+  const name=parts[1].trim();
+  const staffRaw=parts.slice(2).join(' - ').trim();
   const staff=staffRaw?staffRaw.split(',').map(s=>s.trim()).filter(Boolean):[];
   return{code,name,staff};
 }
 
-function isExamDay(row) {
+/* Normalize Day Order: "Day 3"->"3", "3rd"->"3", "3"->"3" */
+function normOrd(s){
+  if(!s) return "";
+  var t = s.toString().trim();
+  // plain number already
+  if(/^[0-9]+$/.test(t)) return t;
+  // "Day 3", "Day-3", "Day - 3" style
+  var m = t.match(/^Day[\s\-]*([0-9]+)/i);
+  if(m) return m[1];
+  // leading digits: "3rd", "4th" etc
+  var m2 = t.match(/^([0-9]+)/);
+  if(m2) return m2[1];
+  return t;
+}
+
+function isExam(row){
   if(!row)return false;
-  const ev=(row.Event||"").trim();
-  const re=(row.Reason||"").trim();
-  return ev.startsWith('*')||re.startsWith('*');
+  return (row.Event||"").trim().startsWith('*')||(row.Reason||"").trim().startsWith('*');
 }
 
-/* ===== CLOCK ===== */
-function updateClock() {
-  const now=new Date();
-  $('clock-time').textContent=now.toLocaleTimeString('en-IN',{hour12:true});
-  $('clock-date').textContent=now.toLocaleDateString('en-IN',{weekday:'short',day:'2-digit',month:'short',year:'numeric'});
+/* Active hour number: "1st Hour"→"1", "2nd Hour"→"2", etc. */
+function hourNum(h){
+  const m=h.match(/(\d+)/);
+  return m?m[1]:"";
 }
 
-/* ===== TOAST ===== */
-function showToast(msg,type='info',duration=3000) {
-  const t=$('toast');
-  t.className=`toast ${type}`;
-  const icons={success:'<i class="fas fa-check-circle"></i>',error:'<i class="fas fa-exclamation-circle"></i>',info:'<i class="fas fa-info-circle"></i>'};
-  t.innerHTML=`${icons[type]||''} ${msg}`;
-  t.classList.add('show');
-  setTimeout(()=>t.classList.remove('show'),duration);
+/* CLOCK */
+function tickClock(){
+  const n=new Date();
+  $('ct').textContent=n.toLocaleTimeString('en-IN',{hour12:true});
+  $('cd').textContent=n.toLocaleDateString('en-IN',{weekday:'short',day:'2-digit',month:'short',year:'numeric'});
 }
 
-/* ===== INIT ===== */
-async function init() {
-  todayUTC=getTodayUTC();
-  setInterval(updateClock,1000); updateClock();
+/* TOAST */
+function toast(msg,type='',dur=3000){
+  const el=$('toast');
+  const icons={ok:'<i class="fas fa-check-circle"></i>',err:'<i class="fas fa-times-circle"></i>','':'<i class="fas fa-info-circle"></i>'};
+  el.className=`toast ${type}`;
+  el.innerHTML=`${icons[type]||icons['']} ${msg}`;
+  el.classList.add('show');
+  clearTimeout(el._t);
+  el._t=setTimeout(()=>el.classList.remove('show'),dur);
+}
 
-  // Tab switching
-  document.querySelectorAll('#mainNav .nav-btn').forEach(btn=>{
-    btn.addEventListener('click',()=>{
-      document.querySelectorAll('#mainNav .nav-btn').forEach(b=>b.classList.remove('active'));
-      document.querySelectorAll('.content-area').forEach(c=>c.classList.remove('active'));
-      btn.classList.add('active');
-      const tab=btn.dataset.tab;
-      $(tab).classList.add('active');
-      if(tab==='search')runSearch();
+/* ============================
+   INIT
+   ============================ */
+async function init(){
+  todayUTC=nowUTC();
+  setInterval(tickClock,1000);
+  tickClock();
+
+  /* Tab switching */
+  document.querySelectorAll('#nav .nav-btn').forEach(b=>{
+    b.addEventListener('click',()=>{
+      document.querySelectorAll('#nav .nav-btn').forEach(x=>x.classList.remove('active'));
+      document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));
+      b.classList.add('active');
+      $(b.dataset.tab).classList.add('active');
+      if(b.dataset.tab==='search')runSearch();
     });
   });
 
-  // Year tabs
-  document.querySelectorAll('#yearTabs .year-btn').forEach(btn=>{
-    btn.addEventListener('click',()=>{
-      document.querySelectorAll('#yearTabs .year-btn').forEach(b=>b.classList.remove('active'));
-      btn.classList.add('active');
-      currentYear=btn.dataset.year;
-      renderTimetable();
+  /* Year tabs */
+  document.querySelectorAll('#ytabs .ybtn').forEach(b=>{
+    b.addEventListener('click',()=>{
+      document.querySelectorAll('#ytabs .ybtn').forEach(x=>x.classList.remove('active'));
+      b.classList.add('active');
+      curYear=b.dataset.year;
+      renderTT();
     });
   });
 
-  // Date picker
-  const dp=$('datePick');
-  dp.value=toIST_YMD();
-  selectedDate=ymdToDMY(dp.value);
+  /* Date picker — set today */
+  const dp=$('dp');
+  dp.value=toIST();
+  selDate=ymd2dmy(dp.value);
   dp.addEventListener('change',e=>{
-    selectedDate=ymdToDMY(e.target.value);
-    $('dayMeta').innerHTML='<div class="loading-state"><div class="loader"></div>Fetching…</div>';
-    renderDayMeta();
+    selDate=ymd2dmy(e.target.value);
+    if(dataReady){ renderDayInfo(); }
   });
 
-  // Load data
-  showToast('Loading portal data…','info',4000);
-  const[di,gt,tp,sp]=await Promise.all([loadCSV(URLS.dayInfo),loadCSV(URLS.generalTT),loadCSV(URLS.timePeriod),loadCSV(URLS.specialEntry)]);
-  dayInfoData=di;
-  tp.forEach(r=>{ if(r.Hour)timeSlots[r.Hour.trim()]=r.Time; });
-  gt.forEach(r=>{ if(r["Day Order"]&&r["Year"])ttMap[`${r["Day Order"].trim()}|${r["Year"].trim()}`]=r; });
-  sp.forEach(r=>{
-    const date=(r.Date||"").trim();
-    const yr=(r.Class||"").trim();
-    const hr=(r.Hour||"").trim();
-    if(date&&yr&&hr) specialMap[`${date}|${yr}|${hr}`]=r;
-  });
-  buildSubjectIndex();
-  populateSubjectDropdown("");
-
-  // Search listeners
-  $('searchYear').addEventListener('change',()=>{ populateSubjectDropdown($('searchYear').value); runSearch(); });
-  $('searchSubject').addEventListener('change',runSearch);
-  $('staffSearch').addEventListener('input',runSearch);
-
-  // Print button
+  /* Action buttons */
   $('printBtn').addEventListener('click',doPrint);
-  // PDF button
-  $('pdfBtn').addEventListener('click',doDownloadPDF);
+  $('pdfBtn').addEventListener('click',doPDF);
 
-  renderDayMeta();
-  showToast('Portal ready!','success',2000);
+  /* Search listeners */
+  $('sYear').addEventListener('change',()=>{ fillSubDrop($('sYear').value); runSearch(); });
+  $('sSub').addEventListener('change',runSearch);
+  $('sStaff').addEventListener('input',runSearch);
+
+  toast('Loading data…','',6000);
+
+  /* Load all CSV sources in parallel */
+  const [di,gt,tp,sp]=await Promise.all([
+    csv(CSV.dayInfo),
+    csv(CSV.generalTT),
+    csv(CSV.timePeriod),
+    csv(CSV.special)
+  ]);
+
+  DI=di;
+
+  /* Time periods: Hour → Time string */
+  tp.forEach(r=>{
+    const h=(r.Hour||r.hour||"").trim();
+    if(h) TS[h]=(r.Time||r.time||"").trim();
+  });
+
+  /* General timetable: "DayOrder|Year" → row */
+  gt.forEach(r=>{
+    const ord=normOrd(r["Day Order"]||r["day order"]||r["DayOrder"]||"").trim();
+    const yr=(r["Year"]||r["year"]||"").trim();
+    if(ord&&yr) TT[`${ord}|${yr}`]=r;
+    // DEBUG remove after confirming
+    if(ord&&yr) console.log("TT key built:", `${ord}|${yr}`);
+  });
+
+  /* Special overrides: "Date|Year|Hour" → row */
+  sp.forEach(r=>{
+    const d=(r.Date||"").trim();
+    const yr=(r.Class||r.class||r.Year||"").trim();
+    const hr=(r.Hour||r.hour||"").trim();
+    if(d&&yr&&hr) SP[`${d}|${yr}|${hr}`]=r;
+  });
+
+  buildSubjectIndex();
+  fillSubDrop("");
+  dataReady=true;
+
+  renderDayInfo();
+  toast('Portal loaded!','ok',2500);
 }
 
-/* ===== BUILD SUBJECT INDEX ===== */
-function buildSubjectIndex() {
-  subjectsByYear={};
-  YEARS.forEach(y=>subjectsByYear[y]=new Set());
-  Object.entries(ttMap).forEach(([key,row])=>{
-    const yr=key.split('|')[1];
-    if(!subjectsByYear[yr])return;
+/* ============================
+   SUBJECT INDEX (for search dropdown)
+   ============================ */
+function buildSubjectIndex(){
+  SUBJ={};
+  YEARS.forEach(y=>SUBJ[y]=new Set());
+  Object.entries(TT).forEach(([k,row])=>{ // keys are already normalized
+    const yr=k.split('|')[1];
+    if(!SUBJ[yr])return;
     HOURS.forEach(h=>{
-      const cell=row[h]||"";
-      if(cell&&cell!=="No Class"){
-        const{name}=parseSubjectCell(cell);
-        if(name&&name!=="-")subjectsByYear[yr].add(name);
+      const c=(row[h]||"").trim();
+      if(c&&c!=="No Class"){
+        const{name}=parseCell(c);
+        if(name&&name!=="-")SUBJ[yr].add(name);
       }
     });
   });
-  YEARS.forEach(y=>{ subjectsByYear[y]=Array.from(subjectsByYear[y]).sort(); });
+  YEARS.forEach(y=>{ SUBJ[y]=Array.from(SUBJ[y]).sort(); });
 }
 
-function populateSubjectDropdown(yr) {
-  const sel=$('searchSubject');
+function fillSubDrop(yr){
+  const sel=$('sSub');
   sel.innerHTML='<option value="">All Subjects</option>';
-  const list=yr?subjectsByYear[yr]:YEARS.flatMap(y=>subjectsByYear[y]||[]).filter((v,i,a)=>a.indexOf(v)===i).sort();
+  const list=yr
+    ?SUBJ[yr]||[]
+    :YEARS.flatMap(y=>SUBJ[y]||[]).filter((v,i,a)=>a.indexOf(v)===i).sort();
   list.forEach(s=>{
     const o=document.createElement('option');
-    o.value=s.toLowerCase(); o.textContent=s;
+    o.value=s.toLowerCase();
+    o.textContent=s;
     sel.appendChild(o);
   });
 }
 
-function findDayInfo(dmy) { return dayInfoData.find(r=>r.Date===dmy)||null; }
+function findDay(dmy){ return DI.find(r=>r.Date===dmy)||null; }
 
-/* ===== RENDER DAY META ===== */
-function renderDayMeta() {
-  const row=findDayInfo(selectedDate);
+/* ============================
+   DAY INFO TAB
+   ============================ */
+function renderDayInfo(){
+  const row=findDay(selDate);
   const el=$('dayMeta');
-  if(!row){
-    el.innerHTML=`<div class="info-grid"><div class="info-card alert-card"><div class="info-label">Status</div><div class="info-value maroon">No data available for ${selectedDate}</div></div></div>`;
-    renderTimetable(); return;
-  }
-  const working=(row.Working||"").toLowerCase()==="yes";
-  const examDay=isExamDay(row);
-  let cards=`
-    <div class="info-card">
-      <div class="info-label">Date</div>
-      <div class="info-value">${row.Day}, ${selectedDate}</div>
-    </div>`;
 
-  if(examDay){
-    const evText=((row.Event||row.Reason||"").replace(/^\*/,'')).trim();
-    cards+=`
-      <div class="info-card" style="border-left-color:var(--blue);background:var(--blue-light);">
-        <div class="info-label">Status</div><div class="info-value">Examination Day</div>
-      </div>`;
-    if(evText) cards+=`
-      <div class="info-card exam-card">
-        <div class="info-label">Exam Details</div>
-        <div class="info-value" style="font-size:12px;">${evText}</div>
-      </div>`;
-  } else if(!working){
-    const reason=(row.Reason||row.Event||"No specific reason provided.").trim();
-    cards+=`
-      <div class="info-card alert-card">
-        <div class="info-label">Status</div><div class="info-value maroon">Holiday</div>
-      </div>
-      <div class="info-card holiday-card">
-        <div class="info-label">Reason</div>
-        <div class="info-value" style="font-size:12px; color:var(--maroon);">${reason}</div>
-      </div>`;
-  } else {
-    const order=row["Day Order"]||"-";
-    const hours=(row.Hours||"").trim();
-    let hourNote="";
-    if(hours==="-") hourNote=' <span style="color:var(--maroon);font-size:11px;">(No regular classes)</span>';
-    else if(hours) hourNote=` <span style="font-size:11px;color:var(--slate);">(Hours: ${hours})</span>`;
-    cards+=`
-      <div class="info-card">
-        <div class="info-label">Day Order</div>
-        <div class="info-value">${order}${hourNote}</div>
-      </div>`;
-    if(row.Event){
-      cards+=`
-        <div class="info-card event-card">
-          <div class="info-label">Event / Notes</div>
-          <div class="info-value" style="font-size:12px;">${row.Event}</div>
-        </div>`;
-    }
+  if(!row){
+    el.innerHTML=`<div class="igrid"><div class="icard c-red"><div class="ilabel">Status</div><div class="ival red">No data for ${selDate||"selected date"}</div></div></div>`;
+    renderTT();
+    return;
   }
-  el.innerHTML=`<div class="info-grid">${cards}</div>`;
-  renderTimetable();
+
+  const working=(row.Working||"").toLowerCase()==="yes";
+  const exam=isExam(row);
+  const event=(row.Event||"").trim();
+  const reason=(row.Reason||"").trim();
+  const order=(row["Day Order"]||"").trim();
+  const hours=(row.Hours||"").trim();
+
+  let cards=`<div class="icard"><div class="ilabel">Date</div><div class="ival">${row.Day||""}, ${selDate}</div></div>`;
+
+  if(exam){
+    const detail=((event.startsWith('*')?event.slice(1):reason.startsWith('*')?reason.slice(1):"")).trim();
+    cards+=`<div class="icard c-blue"><div class="ilabel">Status</div><div class="ival">Examination Day</div></div>`;
+    if(detail) cards+=`<div class="icard c-blue full"><div class="ilabel">Exam Details</div><div class="ival" style="font-size:12px;">${detail}</div></div>`;
+  } else if(!working){
+    cards+=`<div class="icard c-red"><div class="ilabel">Status</div><div class="ival red">Holiday</div></div>`;
+    if(event) cards+=`<div class="icard c-orange full"><div class="ilabel">Event</div><div class="ival" style="font-size:12px;">${event}</div></div>`;
+    if(reason) cards+=`<div class="icard c-red full"><div class="ilabel">Reason</div><div class="ival" style="font-size:12px;color:var(--maroon);">${reason}</div></div>`;
+  } else {
+    let hNote="";
+    if(hours==="-") hNote=` <span style="font-size:10.5px;color:var(--maroon);font-weight:600;">(No classes today)</span>`;
+    else if(hours) hNote=` <span style="font-size:10.5px;color:var(--slate);">(Hours active: ${hours})</span>`;
+    cards+=`<div class="icard"><div class="ilabel">Day Order</div><div class="ival">${order||"—"}${hNote}</div></div>`;
+    if(event) cards+=`<div class="icard c-teal full"><div class="ilabel">Event / Notes</div><div class="ival" style="font-size:12px;">${event}</div></div>`;
+    if(reason&&reason!==event) cards+=`<div class="icard c-orange full"><div class="ilabel">Notes</div><div class="ival" style="font-size:12px;">${reason}</div></div>`;
+  }
+
+  el.innerHTML=`<div class="igrid">${cards}</div>`;
+  renderTT();
 }
 
-/* ===== RENDER TIMETABLE ===== */
-function renderTimetable() {
-  const row=findDayInfo(selectedDate);
-  const tc=$('tableContainer');
-  const lbl=$('ttLabel');
-  tc.innerHTML=""; lbl.textContent="";
+/* ============================
+   TIMETABLE TAB
+   ============================ */
+function renderTT(){
+  const row=findDay(selDate);
+  const box=$('ttBox');
+  const note=$('ttNote');
+  box.innerHTML="";
+  note.textContent="";
 
-  if(!row){ tc.innerHTML='<div class="empty-state"><div class="empty-icon"><i class="fas fa-calendar-xmark"></i></div>No data for this date.</div>'; return; }
-
-  // Exam day
-  if(isExamDay(row)){
-    tc.innerHTML=`
-      <div class="exam-box">
-        <div class="exam-icon"><i class="fas fa-file-pen"></i></div>
-        <h3>Examination Day</h3>
-        <p>Regular classes are suspended. Please check the Exam portal for your schedule.</p>
-        <a href="${URLS.examTT}" target="_blank" rel="noopener" class="exam-link-btn">
-          <i class="fas fa-external-link-alt"></i> View Exam Timetable
-        </a>
-      </div>`;
-    lbl.textContent=`${currentYear} · Examination Day · ${selectedDate}`;
+  if(!row){
+    box.innerHTML='<div class="empty"><div class="ei"><i class="fas fa-calendar-xmark"></i></div>No data for this date.</div>';
     return;
   }
 
-  // Holiday
+  /* Exam day */
+  if(isExam(row)){
+    box.innerHTML=`<div class="exam-box">
+      <div class="ei"><i class="fas fa-file-pen"></i></div>
+      <h3>Examination Day</h3>
+      <p>Regular classes are suspended. Check the Exam portal for your schedule.</p>
+      <a href="${EXAM_LINK}" target="_blank" rel="noopener" class="exam-btn">
+        <i class="fas fa-external-link-alt"></i> View Exam Timetable
+      </a></div>`;
+    note.textContent=`${curYear} · Examination Day · ${selDate}`;
+    return;
+  }
+
+  /* Holiday */
   if((row.Working||"").toLowerCase()!=="yes"){
-    tc.innerHTML=`<div class="holiday-box"><i class="fas fa-umbrella-beach" style="margin-right:8px;"></i><strong>Holiday:</strong> ${row.Reason||row.Event||"No classes scheduled"}</div>`;
+    const r=(row.Reason||row.Event||"No classes scheduled").trim();
+    box.innerHTML=`<div class="hol-box"><i class="fas fa-umbrella-beach" style="margin-right:8px;"></i><strong>Holiday:</strong> ${r}</div>`;
     return;
   }
 
-  const order=(row["Day Order"]||"").trim();
+  const order=normOrd(row["Day Order"]||"");
   const hoursVal=(row.Hours||"").trim();
-  const isNoClass=hoursVal==="-";
-  let allowedHours=[];
-  if(!isNoClass&&hoursVal!=="") allowedHours=hoursVal.split(',').map(h=>h.trim());
+  const noClassDay=hoursVal==="-";
+  console.log("Looking up TT key:", `${order}|${curYear}`, "Found:", !!TT[`${order}|${curYear}`]);
 
-  const entry=ttMap[`${order}|${currentYear}`];
+  /* Build allowed hours set: e.g. "1,2,4" → Set{"1","2","4"} */
+  let allowedSet=new Set();
+  if(!noClassDay&&hoursVal!==""){
+    hoursVal.split(',').forEach(h=>allowedSet.add(h.trim()));
+  }
+
+  const entry=TT[`${order}|${curYear}`];
   if(!entry){
-    tc.innerHTML=`<div class="empty-state"><div class="empty-icon"><i class="fas fa-circle-question"></i></div>No timetable data found for Day ${order}, ${currentYear}.</div>`;
+    box.innerHTML=`<div class="empty"><div class="ei"><i class="fas fa-circle-question"></i></div>No timetable found for Day ${order||"—"}, ${curYear}.</div>`;
     return;
   }
 
-  let rows="";
+  let trs="";
   HOURS.forEach((h,idx)=>{
     const hNum=String(idx+1);
-    const isAllowed=!isNoClass&&(hoursVal===""||allowedHours.includes(hNum));
-    const specialKey=`${selectedDate}|${currentYear}|${h}`;
-    const specialEntry=specialMap[specialKey];
-    const timeStr=timeSlots[h]||"";
+    /* Hour is active if: not a no-class day AND (no restriction OR this hour number is in allowed set) */
+    const isActive=!noClassDay&&(hoursVal===""||allowedSet.has(hNum));
+    const spKey=`${selDate}|${curYear}|${h}`;
+    const sp=SP[spKey];
+    const timeStr=TS[h]||"";
 
-    // Check for special entry override
-    if(specialEntry){
-      const spStatus=(specialEntry.Status||"").toLowerCase();
-      const spCorrection=(specialEntry.Correction||"").trim();
-      const spReason=(specialEntry.Reason||"").trim();
-      if(spStatus==="holiday"||spStatus.includes("holiday")){
-        rows+=`<tr class="special-holiday">
+    /* Special override row */
+    if(sp){
+      const st=(sp.Status||"").toLowerCase();
+      const cor=(sp.Correction||"").trim();
+      const rea=(sp.Reason||"").trim();
+      if(st.includes("holiday")){
+        trs+=`<tr class="sp-holiday">
           <td><strong>${h}</strong></td>
-          <td><span class="subj-code">—</span></td>
-          <td><span style="font-weight:600;">No Class</span><br>
-              <span class="special-badge"><i class="fas fa-triangle-exclamation"></i> Special</span>
-              ${spReason?`<br><span style="font-size:10px;color:var(--maroon);">${spReason}</span>`:""}
+          <td><span class="scode">—</span></td>
+          <td><span style="font-weight:600;">No Class</span>
+            <span class="spbadge hol"><i class="fas fa-triangle-exclamation"></i> Special Holiday</span>
+            ${rea?`<br><span style="font-size:10px;color:var(--maroon);display:block;margin-top:2px;">${rea}</span>`:""}
           </td>
           <td>—</td>
-          <td class="hour-time">${timeStr}</td>
-        </tr>`;
+          <td class="htime">${timeStr}</td></tr>`;
       } else {
-        // Working special override: show correction text
-        rows+=`<tr class="special-override">
+        trs+=`<tr class="sp-override">
           <td><strong>${h}</strong></td>
-          <td><span class="subj-code">—</span></td>
-          <td><span style="font-weight:600;color:var(--blue);">${spCorrection||"See Notes"}</span>
-              <span class="special-badge"><i class="fas fa-rotate"></i> Override</span>
-              ${spReason?`<br><span style="font-size:10px;color:#92400E;">${spReason}</span>`:""}
+          <td><span class="scode">—</span></td>
+          <td><span class="sname">${cor||"See Notes"}</span>
+            <span class="spbadge"><i class="fas fa-rotate"></i> Override</span>
+            ${rea?`<br><span style="font-size:10px;color:#92400E;display:block;margin-top:2px;">${rea}</span>`:""}
           </td>
-          <td>${specialEntry.Staff||"—"}</td>
-          <td class="hour-time">${timeStr}</td>
-        </tr>`;
+          <td>${sp.Staff||"—"}</td>
+          <td class="htime">${timeStr}</td></tr>`;
       }
       return;
     }
 
-    if(!isAllowed){
-      rows+=`<tr class="no-class"><td>${h}</td><td>—</td><td>No Class</td><td>—</td><td class="hour-time">${timeStr}</td></tr>`;
+    /* Inactive hour */
+    if(!isActive){
+      trs+=`<tr class="noclass">
+        <td>${h}</td><td>—</td><td>No Class</td><td>—</td>
+        <td class="htime">${timeStr}</td></tr>`;
       return;
     }
-    const cellVal=(entry[h]||"").trim();
-    if(!cellVal||cellVal==="No Class"){
-      rows+=`<tr class="no-class"><td>${h}</td><td>—</td><td>No Class</td><td>—</td><td class="hour-time">${timeStr}</td></tr>`;
+
+    /* Normal class hour */
+    const cell=(entry[h]||"").trim();
+    if(!cell||cell==="No Class"){
+      trs+=`<tr class="noclass">
+        <td>${h}</td><td>—</td><td>No Class</td><td>—</td>
+        <td class="htime">${timeStr}</td></tr>`;
       return;
     }
-    const{code,name,staff}=parseSubjectCell(cellVal);
-    const staffHtml=staff.length>1
-      ?`<div class="subj-multi-staff">${staff.map(s=>`<span class="subj-staff">${s}</span>`).join('')}</div>`
-      :(staff[0]?`<span class="subj-staff">${staff[0]}</span>`:`<span style="color:#94A3B8;font-size:11px;">—</span>`);
-    rows+=`<tr>
+    const{code,name,staff}=parseCell(cell);
+    const shtml=staff.length>0
+      ?staff.map(s=>`<span class="sstaff">${s}</span>`).join('')
+      :`<span style="color:#94A3B8;font-size:11px;">—</span>`;
+    trs+=`<tr>
       <td><strong>${h}</strong></td>
-      <td><span class="subj-code">${code}</span></td>
-      <td><span class="subj-name">${name}</span></td>
-      <td>${staffHtml}</td>
-      <td class="hour-time">${timeStr}</td>
-    </tr>`;
+      <td><span class="scode">${code}</span></td>
+      <td><span class="sname">${name}</span></td>
+      <td>${shtml}</td>
+      <td class="htime">${timeStr}</td></tr>`;
   });
 
-  tc.innerHTML=`
-    <div class="table-wrap">
-      <table>
-        <thead><tr>
-          <th>Hour</th><th>Code</th><th>Subject</th><th>Staff</th><th>Time</th>
-        </tr></thead>
-        <tbody>${rows}</tbody>
-      </table>
-    </div>`;
-  lbl.textContent=`${currentYear} · Day ${order} · ${selectedDate}`;
+  box.innerHTML=`<div class="twrap"><table>
+    <thead><tr>
+      <th>Hour</th><th>Code</th><th>Subject</th><th>Staff</th><th>Time</th>
+    </tr></thead>
+    <tbody>${trs}</tbody>
+  </table></div>`;
+  note.textContent=`${curYear} · Day ${order} · ${selDate}`;
 }
 
-/* ===== SEARCH ===== */
-function runSearch() {
-  const out=$('searchOut');
-  const q=$('staffSearch').value.trim().toLowerCase();
-  const sy=$('searchYear').value;
-  const ss=$('searchSubject').value.toLowerCase();
+/* ============================
+   SEARCH TAB
+   ============================ */
+function runSearch(){
+  const out=$('srOut');
+  const q=$('sStaff').value.trim().toLowerCase();
+  const sy=$('sYear').value;
+  const ss=$('sSub').value.toLowerCase();
 
+  /* Need at least one filter active */
   if(q.length<2&&!ss&&!sy){
-    out.innerHTML='<div class="empty-state"><div class="empty-icon"><i class="fas fa-search"></i></div>Use the filters above to find classes.</div>';
+    out.innerHTML='<div class="empty"><div class="ei"><i class="fas fa-search"></i></div>Use the filters above to find classes.</div>';
     return;
   }
 
   const results=[];
-  dayInfoData.forEach(row=>{
-    const order=row["Day Order"];
-    const hoursVal=(row.Hours||"").trim();
-    if(!order||(row.Working||"").toLowerCase()!=="yes"||hoursVal==="-"||isExamDay(row))return;
-    const allowedH=hoursVal===""?["1","2","3","4","5"]:hoursVal.split(',').map(x=>x.trim());
+
+  DI.forEach(row=>{
+    const ord=normOrd(row["Day Order"]||"");
+    const hv=(row.Hours||"").trim();
+    /* Skip non-working, no-class days, and exam days */
+    if(!ord||(row.Working||"").toLowerCase()!=="yes"||hv==="-"||isExam(row))return;
+
+    const allowedHrs=hv===""
+      ?new Set(["1","2","3","4","5"])
+      :new Set(hv.split(',').map(x=>x.trim()));
+
     const years=sy?[sy]:YEARS;
+
     years.forEach(yr=>{
-      const entry=ttMap[`${order.trim()}|${yr}`];
+      const entry=TT[`${ord}|${yr}`];
       if(!entry)return;
+
       HOURS.forEach((h,idx)=>{
-        const hNum=String(idx+1);
-        if(hoursVal!==""&&!allowedH.includes(hNum))return;
+        const hn=String(idx+1);
+        if(hv!==""&&!allowedHrs.has(hn))return;
+
         const cell=(entry[h]||"").trim();
         if(!cell||cell==="No Class")return;
-        const{code,name,staff}=parseSubjectCell(cell);
+
+        const{code,name,staff}=parseCell(cell);
         const staffStr=staff.join(', ');
-        const nameMatch=ss===""||name.toLowerCase()===ss||name.toLowerCase().includes(ss);
-        const staffMatch=q.length<2||staffStr.toLowerCase().includes(q)||name.toLowerCase().includes(q);
-        if(nameMatch&&staffMatch){
-          const matchedDays=dayInfoData.filter(d=>d["Day Order"]&&d["Day Order"].trim()===order.trim()&&(d.Working||"").toLowerCase()==="yes"&&!isExamDay(d));
-          matchedDays.forEach(d=>{
-            const hNum2=String(idx+1);
-            const dHours=(d.Hours||"").trim();
-            const dAllowed=dHours===""?["1","2","3","4","5"]:dHours.split(',').map(x=>x.trim());
-            if(dHours==="-")return;
-            if(dHours!==""&&!dAllowed.includes(hNum2))return;
-            results.push({date:d.Date,dateObj:dmyToDate(d.Date),hour:h,code,name,staff:staffStr,yr,order:order.trim()});
+
+        /* Apply filters */
+        const matchName=!ss||name.toLowerCase().includes(ss);
+        const matchStaff=q.length<2||staffStr.toLowerCase().includes(q)||name.toLowerCase().includes(q);
+        if(!matchName||!matchStaff)return;
+
+        /* Find every actual date that uses this day order and has this hour active */
+        DI.filter(d=>{
+          if(normOrd(d["Day Order"]||"")!==ord)return false;
+          if((d.Working||"").toLowerCase()!=="yes")return false;
+          if(isExam(d))return false;
+          const dh=(d.Hours||"").trim();
+          if(dh==="-")return false;
+          const da=dh===""?new Set(["1","2","3","4","5"]):new Set(dh.split(',').map(x=>x.trim()));
+          return da.has(hn);
+        }).forEach(d=>{
+          results.push({
+            date:d.Date,
+            dobj:dmy2date(d.Date),
+            hour:h,
+            code,
+            name,
+            staff:staffStr,
+            yr,
+            ord
           });
-        }
+        });
       });
     });
   });
 
-  // Deduplicate
+  /* Deduplicate: same date + hour + year + subject */
   const seen=new Set();
-  const unique=results.filter(r=>{
+  const uniq=results.filter(r=>{
     const k=`${r.date}|${r.hour}|${r.yr}|${r.name}`;
-    if(seen.has(k))return false; seen.add(k); return true;
+    if(seen.has(k))return false;
+    seen.add(k);
+    return true;
   });
-  unique.sort((a,b)=>a.dateObj-b.dateObj);
 
-  const today=[], upcoming=[], past=[];
-  unique.forEach(r=>{
-    if(!r.dateObj)return;
-    const t=r.dateObj.getTime(),n=todayUTC.getTime();
-    if(t===n)today.push(r); else if(t>n)upcoming.push(r); else past.push(r);
+  uniq.sort((a,b)=>{
+    if(!a.dobj||!b.dobj)return 0;
+    return a.dobj-b.dobj;
   });
-  past.reverse();
+
+  const tod=[],up=[],past=[];
+  uniq.forEach(r=>{
+    if(!r.dobj)return;
+    const t=r.dobj.getTime();
+    const n=todayUTC.getTime();
+    if(t===n)tod.push(r);
+    else if(t>n)up.push(r);
+    else past.push(r);
+  });
+  past.reverse(); /* Most recent past first */
 
   let html="";
-  if(today.length) html+=`<div class="results-section-title"><i class="fas fa-circle-dot" style="color:#10B981"></i> Today's Classes <span class="count-badge">${today.length}</span></div>`+today.map(r=>resultCard(r,'today')).join('');
-  if(upcoming.length) html+=`<div class="results-section-title"><i class="fas fa-arrow-right" style="color:#3B82F6"></i> Upcoming <span class="count-badge">${upcoming.length}</span></div>`+upcoming.map(r=>resultCard(r,'upcoming')).join('');
-  if(past.length) html+=`<div class="results-section-title"><i class="fas fa-clock-rotate-left" style="color:var(--slate)"></i> Past <span class="count-badge">${past.length}</span></div>`+past.map(r=>resultCard(r,'past')).join('');
-  out.innerHTML=html||'<div class="empty-state"><div class="empty-icon"><i class="fas fa-face-meh"></i></div>No matching classes found.</div>';
+  const sec=(label,icon,col,arr,tag)=>arr.length
+    ?`<div class="sec-title"><i class="${icon}" style="color:${col}"></i> ${label} <span class="cbadge">${arr.length}</span></div>`+arr.map(r=>rcard(r,tag)).join('')
+    :"";
+
+  html+=sec("Today's Classes","fas fa-circle-dot","#10B981",tod,"tod");
+  html+=sec("Upcoming","fas fa-arrow-right","#3B82F6",up,"up");
+  html+=sec("Past","fas fa-clock-rotate-left","var(--slate)",past,"past");
+
+  out.innerHTML=html||'<div class="empty"><div class="ei"><i class="fas fa-face-meh"></i></div>No matching classes found.</div>';
 }
 
-function resultCard(r,type) {
-  const tag=type==='today'?'tag-today':(type==='past'?'tag-past':'tag-upcoming');
-  const label=type==='today'?'Today':(type==='past'?'Past':'Upcoming');
-  return `<div class="result-card">
+function rcard(r,type){
+  const tcls=type==='tod'?'t-today':type==='up'?'t-up':'t-past';
+  const tlbl=type==='tod'?'Today':type==='up'?'Upcoming':'Past';
+  return `<div class="rcard">
     <div>
-      <div class="rc-subject">${r.name} <span class="rc-code">(${r.code})</span></div>
-      <div class="rc-meta">
+      <div class="rsub">${r.name} <span class="rcode">(${r.code})</span></div>
+      <div class="rmeta">
         <strong>${r.date}</strong> · ${r.hour}<br>
-        <strong>Class:</strong> ${r.yr} · Day ${r.order}<br>
-        <strong>Staff:</strong> <span class="rc-staff">${r.staff||"—"}</span>
+        <strong>Class:</strong> ${r.yr} · Day ${r.ord}<br>
+        <strong>Staff:</strong> <span class="rstaff">${r.staff||"—"}</span>
       </div>
     </div>
-    <span class="status-tag ${tag}">${label}</span>
+    <span class="stag ${tcls}">${tlbl}</span>
   </div>`;
 }
 
-/* ===== PRINT ===== */
-async function doPrint() {
-  const row=findDayInfo(selectedDate);
-  let meta=`<strong>Date:</strong> ${selectedDate} &nbsp;|&nbsp; <strong>Class:</strong> ${currentYear}`;
+/* ============================
+   PRINT
+   ============================ */
+async function doPrint(){
+  const row=findDay(selDate);
+  let meta=`<strong>Date:</strong> ${selDate} &nbsp;|&nbsp; <strong>Class:</strong> ${curYear}`;
   if(row){
-    if(isExamDay(row)) meta+=` &nbsp;|&nbsp; <strong>Status:</strong> Examination Day`;
-    else if((row.Working||"").toLowerCase()==="yes") meta+=` &nbsp;|&nbsp; <strong>Day Order:</strong> Day ${row["Day Order"]||"—"}`;
+    if(isExam(row)) meta+=` &nbsp;|&nbsp; <strong>Status:</strong> Examination Day`;
+    else if((row.Working||"").toLowerCase()==="yes") meta+=` &nbsp;|&nbsp; <strong>Day Order:</strong> ${row["Day Order"]||"—"}`;
     else meta+=` &nbsp;|&nbsp; <strong>Status:</strong> Holiday`;
   }
-  $('print-meta-content').innerHTML=meta;
-  $('print-footer-details').textContent=`Printed on: ${new Date().toLocaleString('en-IN')}`;
+  $('pmeta').innerHTML=meta;
+  $('pfdet').textContent=`Printed on: ${new Date().toLocaleString('en-IN')}`;
   window.print();
 }
 
-/* ===== PDF DOWNLOAD ===== */
-async function doDownloadPDF() {
-  const btn=$('pdfBtn');
-  const spinner=$('pdfSpinner');
-  const icon=$('pdfIcon');
-  const text=$('pdfBtnText');
-
+/* ============================
+   PDF DOWNLOAD
+   ============================ */
+async function doPDF(){
+  const btn=$('pdfBtn'),spin=$('pdfSpin'),ico=$('pdfIco'),txt=$('pdfTxt');
   btn.disabled=true;
-  spinner.style.display='inline-block';
-  icon.style.display='none';
-  text.textContent=' Generating…';
-  showToast('Generating PDF…','info',5000);
+  spin.style.display='inline-block';
+  ico.style.display='none';
+  txt.textContent=' Generating…';
+  toast('Generating PDF…','',6000);
 
-  try {
-    // Build a clean printable element
-    const row=findDayInfo(selectedDate);
-    const printEl=document.createElement('div');
-    printEl.style.cssText='font-family:Inter,sans-serif;padding:28px;max-width:800px;color:#1E293B;background:white;';
+  try{
+    const row=findDay(selDate);
+    const el=document.createElement('div');
+    el.style.cssText='font-family:Arial,sans-serif;padding:24px 28px;max-width:780px;color:#1E293B;background:white;';
 
-    // Header
-    let examNote="";
+    /* Status note for exam/holiday */
+    let statusNote="";
     if(row){
-      if(isExamDay(row)) examNote=`<p style="color:#7B1D2E;font-weight:bold;text-align:center;margin-bottom:12px;">EXAMINATION DAY — Regular classes suspended</p>`;
-      else if((row.Working||"").toLowerCase()!=="yes") examNote=`<p style="color:#7B1D2E;font-weight:bold;text-align:center;margin-bottom:12px;">HOLIDAY: ${row.Reason||row.Event||""}</p>`;
+      if(isExam(row))
+        statusNote=`<p style="color:#7B1D2E;font-weight:700;text-align:center;margin-bottom:10px;font-size:10pt;">EXAMINATION DAY — Regular classes suspended</p>`;
+      else if((row.Working||"").toLowerCase()!=="yes")
+        statusNote=`<p style="color:#7B1D2E;font-weight:700;text-align:center;margin-bottom:10px;font-size:10pt;">HOLIDAY: ${row.Reason||row.Event||""}</p>`;
     }
-    let metaLine=`Date: ${selectedDate}  |  Class: ${currentYear}`;
-    if(row&&(row.Working||"").toLowerCase()==="yes"&&!isExamDay(row)) metaLine+=`  |  Day Order: ${row["Day Order"]||"—"}`;
 
-    printEl.innerHTML=`
-      <div style="text-align:center;border-bottom:2px solid #1E3A5F;padding-bottom:14px;margin-bottom:14px;">
-        <img src="https://static.wixstatic.com/media/e98a4d_b935ab57540b41bdb320efa88b5e69b1~mv2.png" style="height:55px;margin-bottom:8px;" crossorigin="anonymous">
-        <h2 style="font-family:Georgia,serif;font-size:14pt;color:#1E3A5F;margin:0 0 4px;">PG & Research Department of Advanced Zoology and Biotechnology</h2>
-        <p style="font-size:10pt;color:#555;margin:0;">Loyola College (Autonomous), Chennai – 34 · AZ-BT</p>
-        <p style="font-size:9pt;color:#777;margin:6px 0 0;font-style:italic;">Student Timetable</p>
+    let metaLine=`Date: ${selDate}  |  Class: ${curYear}`;
+    if(row&&(row.Working||"").toLowerCase()==="yes"&&!isExam(row))
+      metaLine+=`  |  Day Order: ${row["Day Order"]||"—"}`;
+
+    /* Clone the rendered timetable HTML */
+    const ttHTML=$('ttBox').innerHTML;
+
+    el.innerHTML=`
+      <div style="text-align:center;border-bottom:2px solid #1E3A5F;padding-bottom:14px;margin-bottom:16px;">
+        <img src="https://loyolazoology.github.io/about-us/azbt-logo.png"
+          style="height:54px;margin-bottom:8px;display:block;margin-left:auto;margin-right:auto;" crossorigin="anonymous">
+        <h2 style="font-family:Georgia,serif;font-size:13pt;color:#1E3A5F;margin:0 0 4px;">
+          PG &amp; Research Department of Advanced Zoology and Biotechnology
+        </h2>
+        <p style="font-size:9.5pt;color:#555;margin:0;">Loyola College (Autonomous), Chennai – 34 · AZ-BT</p>
+        <p style="font-size:8.5pt;color:#777;margin:5px 0 0;font-style:italic;">Student Timetable</p>
       </div>
-      <div style="background:#EBF1FA;border-radius:6px;padding:10px 14px;margin-bottom:14px;font-size:10pt;font-weight:600;">${metaLine}</div>
-      ${examNote}
-      ${$('tableContainer').innerHTML}
-      <p style="margin-top:18px;font-size:8pt;color:#888;border-top:1px solid #ddd;padding-top:8px;text-align:center;font-style:italic;">
-        Generated from AZ-BT Student Timetable Portal · Loyola College, Chennai · ${new Date().toLocaleString('en-IN')}
+      <div style="background:#EBF1FA;border-radius:6px;padding:10px 14px;margin-bottom:14px;font-size:10pt;font-weight:600;color:#1E293B;">
+        ${metaLine}
+      </div>
+      ${statusNote}
+      ${ttHTML}
+      <p style="margin-top:18px;font-size:7.5pt;color:#888;border-top:1px solid #ddd;padding-top:8px;text-align:center;font-style:italic;">
+        Generated on ${new Date().toLocaleString('en-IN')} · AZ-BT Student Timetable Portal · Loyola College, Chennai
       </p>`;
 
-    // Fix special-override styling inline for PDF
-    printEl.querySelectorAll('tr.special-override').forEach(tr=>{
-      tr.style.background='#FFF7ED';
-    });
-    printEl.querySelectorAll('tr.no-class td').forEach(td=>{
+    /* ---- Inline styles so html2pdf renders them correctly ---- */
+
+    /* Table wrapper */
+    const tw=el.querySelector('.twrap');
+    if(tw) tw.style.cssText='overflow:visible;border:none;box-shadow:none;margin-top:4px;';
+
+    /* Table itself */
+    const tbl=el.querySelector('table');
+    if(tbl){
+      tbl.style.cssText='width:100%;border-collapse:collapse;font-size:9.5pt;';
+      tbl.querySelectorAll('th').forEach(t=>
+        t.style.cssText='padding:7px 9px;text-align:left;font-size:8.5pt;font-weight:700;background:#1E3A5F;color:white;border:1px solid #1E3A5F;');
+      tbl.querySelectorAll('td').forEach(t=>
+        t.style.cssText='padding:7px 9px;border:1px solid #E2E8F0;vertical-align:top;font-size:9.5pt;');
+      /* Even rows */
+      tbl.querySelectorAll('tbody tr:nth-child(even)').forEach(tr=>
+        tr.style.background='#FAFBFC');
+    }
+
+    /* Special rows */
+    el.querySelectorAll('tr.sp-override').forEach(tr=>tr.style.background='#FFF7ED');
+    el.querySelectorAll('tr.sp-holiday').forEach(tr=>tr.style.background='#FFF5F5');
+    el.querySelectorAll('tr.noclass').forEach(tr=>tr.style.background='#FCFCFD');
+    el.querySelectorAll('tr.noclass td').forEach(td=>{
       td.style.color='#94A3B8';
       td.style.fontStyle='italic';
     });
-    printEl.querySelectorAll('.subj-code').forEach(el=>{
-      el.style.cssText='font-family:monospace;font-size:10px;color:#64748B;';
-    });
-    printEl.querySelectorAll('.subj-name').forEach(el=>{
-      el.style.cssText='font-weight:600;color:#1E3A5F;';
-    });
-    printEl.querySelectorAll('.subj-staff').forEach(el=>{
-      el.style.cssText='font-size:11px;color:#7B1D2E;font-weight:500;';
-    });
-    printEl.querySelectorAll('.special-badge').forEach(el=>{
-      el.style.cssText='display:inline-flex;align-items:center;gap:3px;background:#F97316;color:white;font-size:8px;font-weight:700;padding:2px 7px;border-radius:50px;margin-left:6px;';
-    });
-    // Table
-    const table=printEl.querySelector('table');
-    if(table){
-      table.style.cssText='width:100%;border-collapse:collapse;font-size:10pt;';
-      table.querySelectorAll('th').forEach(th=>{
-        th.style.cssText='padding:8px 10px;text-align:left;font-size:9pt;font-weight:700;background:#1E3A5F;color:white;';
-      });
-      table.querySelectorAll('td').forEach(td=>{
-        td.style.cssText='padding:8px 10px;border-bottom:1px solid #E2E8F0;vertical-align:top;';
-      });
-    }
-    // Remove table-wrap div borders
-    const tw=printEl.querySelector('.table-wrap');
-    if(tw){ tw.style.cssText='overflow:visible;border:none;box-shadow:none;'; }
 
-    const opt={
-      margin:[12,10,12,10],
-      filename:`AZ-BT-Timetable-${currentYear.replace(/\s/g,'-')}-${selectedDate}.pdf`,
+    /* Cell elements */
+    el.querySelectorAll('.scode').forEach(e=>
+      e.style.cssText='font-family:monospace;font-size:9pt;color:#64748B;');
+    el.querySelectorAll('.sname').forEach(e=>
+      e.style.cssText='font-weight:700;color:#1E3A5F;font-size:9.5pt;display:block;');
+    el.querySelectorAll('.sstaff').forEach(e=>
+      e.style.cssText='font-size:9pt;color:#7B1D2E;font-weight:600;display:block;margin-top:1px;');
+    el.querySelectorAll('.htime').forEach(e=>
+      e.style.cssText='font-size:8.5pt;color:#64748B;font-family:monospace;white-space:nowrap;');
+    el.querySelectorAll('.spbadge').forEach(e=>
+      e.style.cssText='display:inline-flex;align-items:center;gap:3px;background:#F97316;color:white;font-size:7.5pt;font-weight:700;padding:2px 7px;border-radius:20px;margin-left:4px;');
+    el.querySelectorAll('.spbadge.hol').forEach(e=>
+      e.style.background='#7B1D2E');
+
+    /* Exam / holiday boxes */
+    const examBox=el.querySelector('.exam-box');
+    if(examBox) examBox.style.cssText='text-align:center;padding:30px 20px;background:#EBF1FA;border-radius:8px;border:1px solid #C8D8F0;';
+    const holBox=el.querySelector('.hol-box');
+    if(holBox) holBox.style.cssText='text-align:center;padding:20px;background:#FDF0F2;border-radius:8px;border:1px solid #FCA5A5;color:#7B1D2E;font-weight:600;font-size:10pt;';
+
+    await html2pdf().from(el).set({
+      margin:[10,8,10,8],
+      filename:`AZ-BT-${curYear.replace(/\s+/g,'-')}-${selDate}.pdf`,
       image:{type:'jpeg',quality:0.97},
-      html2canvas:{scale:2,useCORS:true,logging:false,allowTaint:true},
+      html2canvas:{scale:2,useCORS:true,logging:false,allowTaint:true,backgroundColor:'#ffffff'},
       jsPDF:{unit:'mm',format:'a4',orientation:'portrait'},
-      pagebreak:{mode:['avoid-all','css','legacy']}
-    };
+      pagebreak:{mode:['avoid-all','css']}
+    }).save();
 
-    await html2pdf().from(printEl).set(opt).save();
-    showToast('PDF downloaded!','success');
-  } catch(e) {
-    console.error(e);
-    showToast('PDF generation failed. Try Print instead.','error',4000);
-  } finally {
+    toast('PDF downloaded!','ok');
+  }catch(e){
+    console.error('PDF error:',e);
+    toast('PDF failed — try Print instead.','err',4000);
+  }finally{
     btn.disabled=false;
-    spinner.style.display='none';
-    icon.style.display='inline';
-    text.textContent=' Download PDF';
+    spin.style.display='none';
+    ico.style.display='inline';
+    txt.textContent=' Download PDF';
   }
 }
 
-/* ===== START ===== */
 init();
 </script>
 </body>
