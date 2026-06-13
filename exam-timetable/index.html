@@ -1,0 +1,956 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AZ-BT | Exam Timetable Portal</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;600;700&family=Source+Sans+3:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+<style>
+:root {
+  --navy:        #1C2E4A;
+  --navy-mid:    #243858;
+  --navy-light:  #EBF0F8;
+  --maroon:      #6B1C27;
+  --maroon-soft: #F8ECEE;
+  --gold:        #B8832E;
+  --gold2:       #D4A04A;
+  --gold-light:  #FAF2E3;
+  --slate:       #4E5F7A;
+  --slate-light: #F4F6FA;
+  --ink:         #18243A;
+  --border:      #DDE3ED;
+  --border-strong:#C5CEDF;
+  --white:       #FFFFFF;
+  --ease:        0.22s cubic-bezier(0.4,0,0.2,1);
+  --r-sm:        6px;
+  --r-md:        10px;
+  --r-lg:        16px;
+  --r-xl:        22px;
+}
+
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+html{-webkit-font-smoothing:antialiased;}
+
+body {
+  font-family: 'Source Sans 3', sans-serif;
+  background: #E8EBF2;
+  min-height: 100vh;
+  color: var(--ink);
+}
+
+/* PRINT HIDDEN */
+#ph, #pf { display: none; }
+
+/* OUTER WRAP */
+.page-wrap {
+  max-width: 1140px;
+  margin: 0 auto;
+  padding: 20px 16px 32px;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+/* CARD SHELL — full portal lives here */
+.shell {
+  background: var(--white);
+  border-radius: var(--r-xl);
+  box-shadow: 0 4px 32px rgba(28,46,74,0.13), 0 1px 4px rgba(28,46,74,0.07);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ── HEADER ─────────────────────────────── */
+.hdr {
+  background: var(--navy);
+  padding: 20px 28px 0;
+  position: relative;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+.hdr::before {
+  content: '';
+  position: absolute;
+  top: -60px; right: -60px;
+  width: 220px; height: 220px;
+  background: rgba(255,255,255,0.03);
+  border-radius: 50%;
+}
+.hdr-row {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  position: relative;
+  z-index: 1;
+}
+.hdr-logo {
+  flex-shrink: 0;
+}
+.hdr-logo img {
+  height: 52px;
+  width: auto;
+  object-fit: contain;
+  display: block;
+  filter: drop-shadow(0 2px 6px rgba(0,0,0,0.3));
+}
+.hdr-text { flex: 1; min-width: 0; }
+.hdr-dept {
+  font-family: 'Playfair Display', serif;
+  font-size: clamp(0.82rem, 2.4vw, 1.2rem);
+  font-weight: 600;
+  color: var(--white);
+  line-height: 1.25;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.hdr-college {
+  font-size: clamp(9px, 1.8vw, 11px);
+  color: rgba(255,255,255,0.55);
+  font-weight: 400;
+  margin-top: 3px;
+  letter-spacing: 0.02em;
+}
+.hdr-portal {
+  font-size: clamp(9px, 1.7vw, 10.5px);
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--gold2);
+  margin-top: 6px;
+}
+.hdr-bar {
+  height: 3px;
+  background: linear-gradient(90deg, var(--maroon) 0%, var(--gold2) 50%, var(--maroon) 100%);
+  margin-top: 18px;
+  position: relative;
+  z-index: 1;
+}
+
+/* ── FILTER PANEL ───────────────────────── */
+.filter-panel {
+  border-bottom: 1px solid var(--border);
+  background: var(--slate-light);
+  flex-shrink: 0;
+}
+.filter-toggle-btn {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 11px 24px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-family: 'Source Sans 3', sans-serif;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--navy);
+  letter-spacing: 0.02em;
+  transition: background var(--ease);
+}
+.filter-toggle-btn:hover { background: rgba(28,46,74,0.04); }
+.ftb-left { display: flex; align-items: center; gap: 8px; }
+.ftb-left i { color: var(--gold); font-size: 13px; }
+.ftb-arrow { font-size: 10px; color: var(--slate); transition: transform var(--ease); }
+.ftb-arrow.up { transform: rotate(180deg); }
+
+.filter-collapsible {
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.5s cubic-bezier(0.4,0,0.2,1);
+}
+.filter-collapsible.open { max-height: 500px; }
+
+.filter-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px 16px;
+  padding: 14px 24px 16px;
+}
+.fspan2 { grid-column: span 2; }
+
+.flbl {
+  display: block;
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--navy);
+  text-transform: uppercase;
+  letter-spacing: 0.09em;
+  margin-bottom: 5px;
+}
+
+select, input[type="text"] {
+  width: 100%;
+  padding: 8px 12px;
+  border: 1.5px solid var(--border);
+  border-radius: var(--r-sm);
+  font-family: 'Source Sans 3', sans-serif;
+  font-size: 13px;
+  color: var(--ink);
+  background: var(--white);
+  outline: none;
+  appearance: none;
+  -webkit-appearance: none;
+  transition: border-color var(--ease), box-shadow var(--ease);
+}
+select {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%234E5F7A'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 11px center;
+  padding-right: 30px;
+  cursor: pointer;
+}
+select:focus, input[type="text"]:focus {
+  border-color: var(--navy);
+  box-shadow: 0 0 0 3px rgba(28,46,74,0.09);
+  background: var(--white);
+}
+
+/* ACTIVE FILTER PILLS */
+.active-pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding: 0 24px 12px;
+  min-height: 0;
+}
+.pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 10px;
+  border-radius: 50px;
+  font-size: 10.5px;
+  font-weight: 600;
+  background: var(--navy);
+  color: var(--white);
+  letter-spacing: 0.02em;
+  animation: pillIn 0.18s ease both;
+}
+@keyframes pillIn { from{opacity:0;transform:scale(0.85)} to{opacity:1;transform:scale(1)} }
+.pill i { font-size: 8px; opacity: 0.7; }
+
+/* ── TABLE CONTAINER (fixed height + scroll) ── */
+.table-section {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.table-meta-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 9px 24px 8px;
+  border-bottom: 1px solid var(--border);
+  background: var(--white);
+  flex-shrink: 0;
+}
+.meta-count {
+  font-size: 12px;
+  color: var(--slate);
+  font-weight: 500;
+}
+.meta-count strong { color: var(--navy); font-weight: 700; }
+.meta-hint {
+  font-size: 10.5px;
+  color: var(--slate);
+  opacity: 0.7;
+}
+.meta-hint i { margin-right: 3px; }
+
+/* THE SCROLLABLE TABLE CONTAINER */
+.table-scroll-box {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: auto;
+  /* Fixed visible area — scroll within */
+  max-height: 54vh;
+  min-height: 220px;
+  position: relative;
+}
+
+/* Custom scrollbar */
+.table-scroll-box::-webkit-scrollbar { width: 6px; height: 6px; }
+.table-scroll-box::-webkit-scrollbar-track { background: var(--slate-light); }
+.table-scroll-box::-webkit-scrollbar-thumb { background: var(--border-strong); border-radius: 3px; }
+.table-scroll-box::-webkit-scrollbar-thumb:hover { background: var(--slate); }
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 680px;
+  font-family: 'Source Sans 3', sans-serif;
+}
+
+/* STICKY HEADER inside scroll box */
+thead tr {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+th {
+  background: var(--navy);
+  color: rgba(255,255,255,0.92);
+  padding: 10px 12px;
+  font-size: 10.5px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  text-align: center;
+  cursor: pointer;
+  white-space: nowrap;
+  user-select: none;
+  border-right: 1px solid rgba(255,255,255,0.08);
+  transition: background var(--ease);
+}
+th:last-child { border-right: none; }
+th:hover { background: #253f60; }
+th i.sort-icon { opacity: 0.45; font-size: 8px; margin-left: 4px; vertical-align: middle; }
+
+td {
+  padding: 9px 12px;
+  border-bottom: 1px solid var(--border);
+  font-size: 12.5px;
+  color: var(--ink);
+  text-align: center;
+  vertical-align: middle;
+  line-height: 1.45;
+  border-right: 1px solid var(--border);
+}
+td:last-child { border-right: none; }
+tr:last-child td { border-bottom: none; }
+tbody tr:nth-child(even) { background: #FAFBFD; }
+tbody tr:hover { background: var(--navy-light); transition: background 0.12s; }
+
+/* TODAY ROW */
+tr.row-today {
+  background: var(--gold-light) !important;
+}
+tr.row-today td {
+  color: #2C1800;
+  font-weight: 600;
+  border-bottom-color: #E8D4A8;
+}
+tr.row-today td:first-child {
+  border-left: 3px solid var(--gold);
+  padding-left: 9px;
+}
+
+/* SUBJECT CELL */
+td.td-subject { text-align: left; }
+.subj-name {
+  font-weight: 600;
+  color: var(--navy);
+  display: block;
+  font-size: 12.5px;
+}
+
+/* MULTI ENTRY */
+.multi-entry {
+  display: block;
+  padding: 2px 0;
+  border-bottom: 1px dashed var(--border);
+  line-height: 1.5;
+}
+.multi-entry:last-child { border-bottom: none; }
+
+/* DATE MONO */
+.date-mono {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11.5px;
+  font-weight: 500;
+  color: var(--ink);
+  letter-spacing: 0.02em;
+}
+.today-dot {
+  display: inline-block;
+  width: 7px; height: 7px;
+  background: var(--gold);
+  border-radius: 50%;
+  margin-right: 5px;
+  vertical-align: middle;
+  position: relative;
+  top: -1px;
+}
+
+/* CODE MONO */
+.code-mono {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--ink);
+  letter-spacing: 0.02em;
+}
+
+/* EXAM TYPE BADGE */
+.ebadge {
+  display: inline-block;
+  padding: 2px 9px;
+  border-radius: 50px;
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  white-space: nowrap;
+  border: 1px solid transparent;
+}
+.eb-cia1  { background: #E4EDFC; color: #1A3E88; border-color: #B8CCEE; }
+.eb-cia2  { background: #E4F5EC; color: #0D5A30; border-color: #A8D9BC; }
+.eb-prac  { background: #EEE4F8; color: #5B1A8A; border-color: #CBABEA; }
+.eb-sem   { background: var(--maroon-soft); color: var(--maroon); border-color: #DDAAB4; }
+.eb-other { background: var(--slate-light); color: var(--slate); border-color: var(--border); }
+
+/* EMPTY & SKELETON */
+.empty-state {
+  text-align: center;
+  padding: 60px 24px;
+}
+.empty-state .ei { font-size: 40px; color: var(--border); margin-bottom: 14px; }
+.empty-state p { font-size: 13px; color: var(--slate); }
+
+.skel {
+  height: 13px;
+  background: linear-gradient(90deg, #EDF0F7 0%, #F8F9FC 50%, #EDF0F7 100%);
+  background-size: 200% 100%;
+  border-radius: 4px;
+  animation: skelAnim 1.6s ease infinite;
+  display: block;
+}
+@keyframes skelAnim {
+  0%{background-position:200% 0}
+  100%{background-position:-200% 0}
+}
+
+/* ── FOOTER BAR ─────────────────────────── */
+.footer-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 13px 24px;
+  border-top: 1px solid var(--border);
+  background: var(--slate-light);
+  flex-shrink: 0;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.footer-atb {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--navy);
+  font-family: 'Playfair Display', serif;
+}
+.footer-atb i { color: var(--gold); font-size: 14px; }
+
+.btn-group { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 8px 18px;
+  border: none;
+  border-radius: var(--r-md);
+  font-family: 'Source Sans 3', sans-serif;
+  font-size: 12.5px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all var(--ease);
+  white-space: nowrap;
+}
+.btn:disabled { opacity: 0.5; cursor: not-allowed; }
+.btn-navy { background: var(--navy); color: var(--white); }
+.btn-navy:hover:not(:disabled) { background: var(--navy-mid); transform: translateY(-1px); }
+.btn-maroon { background: var(--maroon); color: var(--white); }
+.btn-maroon:hover:not(:disabled) { background: #531520; transform: translateY(-1px); }
+.btn:active:not(:disabled) { transform: translateY(0) !important; }
+
+.btn-spin {
+  display: none;
+  width: 13px; height: 13px;
+  border: 2px solid rgba(255,255,255,0.3);
+  border-top-color: white;
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ── TOAST ──────────────────────────────── */
+.toast {
+  position: fixed;
+  bottom: 22px; right: 20px;
+  background: var(--ink);
+  color: white;
+  padding: 10px 16px;
+  border-radius: var(--r-md);
+  font-size: 12.5px;
+  font-weight: 500;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  transform: translateY(60px);
+  opacity: 0;
+  transition: all 0.28s cubic-bezier(0.4,0,0.2,1);
+  max-width: 300px;
+  pointer-events: none;
+}
+.toast.show { transform: translateY(0); opacity: 1; }
+.toast.ok { background: #0B6E4F; }
+.toast.err { background: var(--maroon); }
+
+/* ── RESPONSIVE ─────────────────────────── */
+@media (max-width: 700px) {
+  body { background: var(--white); }
+  .page-wrap { padding: 0; }
+  .shell { border-radius: 0; box-shadow: none; }
+  .hdr { padding: 14px 16px 0; }
+  .hdr-logo img { height: 40px; }
+  .filter-toggle-btn, .active-pills { padding-left: 16px; padding-right: 16px; }
+  .filter-grid { grid-template-columns: 1fr; padding: 12px 16px 14px; }
+  .fspan2 { grid-column: span 1; }
+  .table-scroll-box { max-height: 50vh; }
+  .table-meta-bar { padding: 8px 14px; }
+  th, td { padding: 8px 9px; font-size: 11.5px; }
+  .footer-bar { padding: 10px 16px; }
+}
+
+@media (max-width: 480px) {
+  .hdr-dept { font-size: 0.82rem; white-space: normal; }
+  .table-scroll-box { max-height: 45vh; }
+  .btn { padding: 7px 13px; font-size: 11.5px; }
+}
+
+/* ═══════════════════════════════════════════
+   PRINT & PDF STYLES
+═══════════════════════════════════════════ */
+@media print {
+  @page { size: A4 landscape; margin: 12mm 10mm; }
+  body { background: white !important; font-family: 'Source Sans 3', sans-serif; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  .page-wrap { padding: 0; }
+  .shell { box-shadow: none !important; border-radius: 0 !important; }
+  .filter-panel, .footer-bar, .table-meta-bar .meta-hint { display: none !important; }
+  .table-meta-bar { border-bottom: none; padding: 0 0 6px; }
+  .meta-count { font-size: 9pt; }
+  .hdr { padding: 14px 18px 0; }
+  .hdr-bar { margin-top: 12px; }
+  .table-scroll-box { max-height: none !important; overflow: visible !important; }
+  table { min-width: 0; }
+  thead tr { position: static; }
+  th { font-size: 8.5pt; padding: 7px 9px; background: var(--navy) !important; color: white !important; -webkit-print-color-adjust: exact; }
+  td { font-size: 9pt; padding: 6px 9px; color: #000 !important; border-color: #ccc !important; }
+  .subj-name { color: #000 !important; font-weight: 700; }
+  .code-mono { color: #000 !important; font-size: 8.5pt; }
+  .date-mono { color: #000 !important; font-size: 8.5pt; }
+  .ebadge { border: 1px solid #999 !important; background: #f5f5f5 !important; color: #000 !important; font-size: 8pt; }
+  tr.row-today { background: #FFF8EA !important; }
+  tr.row-today td { color: #000 !important; }
+  tbody tr:nth-child(even) { background: #F9F9FB !important; }
+}
+</style>
+</head>
+<body>
+
+<div class="toast" id="toast"></div>
+
+<!-- PDF/PRINT HEADER (hidden by default, shown in PDF generation) -->
+<div id="ph">
+  <img src="https://loyolazoology.github.io/about-us/azbt-logo.png" alt="AZ-BT Logo">
+  <h1>PG &amp; Research Department of Advanced Zoology and Biotechnology</h1>
+  <h2>Loyola College (Autonomous), Chennai – 34</h2>
+  <div id="ph-meta"></div>
+</div>
+<div id="pf"><p>Generated from AZ-BT Exam Timetable Portal · Loyola College (Autonomous), Chennai</p><p id="pf-det"></p></div>
+
+<div class="page-wrap">
+  <div class="shell">
+
+    <!-- HEADER -->
+    <div class="hdr">
+      <div class="hdr-row">
+        <div class="hdr-logo">
+          <img src="https://loyolazoology.github.io/about-us/azbt-logo.png" alt="AZ-BT"
+            onerror="this.parentElement.innerHTML='<i class=\'fas fa-dna\' style=\'color:var(--gold2);font-size:26px\'></i>'">
+        </div>
+        <div class="hdr-text">
+          <div class="hdr-dept">PG &amp; Research Dept. of Advanced Zoology and Biotechnology</div>
+          <div class="hdr-college">Loyola College (Autonomous), Chennai – 34</div>
+          <div class="hdr-portal"><i class="fas fa-calendar-check" style="margin-right:5px;font-size:9px;"></i>Exam Timetable Portal</div>
+        </div>
+      </div>
+      <div class="hdr-bar"></div>
+    </div>
+
+    <!-- FILTER PANEL -->
+    <div class="filter-panel">
+      <button class="filter-toggle-btn" id="filterToggleBtn" onclick="toggleFilters()">
+        <span class="ftb-left"><i class="fas fa-sliders-h"></i> Search &amp; Filter</span>
+        <i class="fas fa-chevron-up ftb-arrow up" id="ftbArrow"></i>
+      </button>
+      <div class="filter-collapsible open" id="filterCollapsible">
+        <div class="filter-grid">
+          <div><label class="flbl" for="year">Academic Year</label><select id="year" onchange="updateFilters('year')"></select></div>
+          <div><label class="flbl" for="cls">Class</label><select id="cls" onchange="updateFilters('class')"></select></div>
+          <div><label class="flbl" for="semester">Semester</label><select id="semester" onchange="updateFilters('semester')"></select></div>
+          <div><label class="flbl" for="exam">Exam Type</label><select id="exam" onchange="updateFilters('exam')"></select></div>
+          <div class="fspan2"><label class="flbl" for="searchBox">Search Subject or Code</label>
+            <input type="text" id="searchBox" placeholder="Type to search subject name or code…" oninput="render()"></div>
+        </div>
+      </div>
+      <div class="active-pills" id="activePills"></div>
+    </div>
+
+    <!-- TABLE SECTION -->
+    <div class="table-section">
+      <div class="table-meta-bar">
+        <span class="meta-count" id="metaCount">Loading…</span>
+        <span class="meta-hint"><i class="fas fa-sort-amount-down"></i> Click header to sort</span>
+      </div>
+      <div class="table-scroll-box" id="tableScrollBox">
+        <table id="timetable">
+          <thead>
+            <tr>
+              <th style="width:95px" onclick="setSort('dateObj')">Date <i class="fas fa-sort sort-icon"></i></th>
+              <th style="width:46px" onclick="setSort('sem')">Sem <i class="fas fa-sort sort-icon"></i></th>
+              <th style="width:90px" onclick="setSort('class')">Class <i class="fas fa-sort sort-icon"></i></th>
+              <th style="width:100px">Code</th>
+              <th style="text-align:left;min-width:200px" onclick="setSort('subject')">Subject Name <i class="fas fa-sort sort-icon"></i></th>
+              <th style="width:72px">Type</th>
+              <th style="width:130px">Exam</th>
+            </tr>
+          </thead>
+          <tbody id="archiveBody">
+            <tr><td><span class="skel"></span></td><td><span class="skel"></span></td><td><span class="skel"></span></td><td><span class="skel"></span></td><td><span class="skel"></span></td><td><span class="skel"></span></td><td><span class="skel"></span></td></tr>
+            <tr><td><span class="skel" style="width:70%"></span></td><td><span class="skel"></span></td><td><span class="skel" style="width:80%"></span></td><td><span class="skel"></span></td><td><span class="skel" style="width:90%"></span></td><td><span class="skel"></span></td><td><span class="skel" style="width:75%"></span></td></tr>
+            <tr><td><span class="skel" style="width:85%"></span></td><td><span class="skel"></span></td><td><span class="skel"></span></td><td><span class="skel" style="width:60%"></span></td><td><span class="skel" style="width:95%"></span></td><td><span class="skel"></span></td><td><span class="skel"></span></td></tr>
+            <tr><td><span class="skel"></span></td><td><span class="skel"></span></td><td><span class="skel" style="width:70%"></span></td><td><span class="skel" style="width:80%"></span></td><td><span class="skel"></span></td><td><span class="skel" style="width:65%"></span></td><td><span class="skel" style="width:85%"></span></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- FOOTER -->
+    <div class="footer-bar">
+      <div class="footer-atb"><i class="fas fa-trophy"></i> All the Best!</div>
+      <div class="btn-group">
+        <button class="btn btn-navy" id="printBtn" onclick="doPrint()">
+          <i class="fas fa-print"></i> Print
+        </button>
+        <button class="btn btn-maroon" id="pdfBtn" onclick="doPDF()">
+          <div class="btn-spin" id="pdfSpin"></div>
+          <i class="fas fa-file-pdf" id="pdfIco"></i>
+          <span id="pdfTxt">Download PDF</span>
+        </button>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+/* ── STATE ── */
+let allData = [];
+let sortCol = 'dateObj';
+let sortAsc = true;
+const classOrder = ["1st UG","2nd UG","3rd UG","1st PG","2nd PG"];
+
+/* ── HELPERS ── */
+function esc(s){ return String(s||'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
+
+function toast(msg, type='', dur=3000){
+  const el = document.getElementById('toast');
+  const icons = { ok:'<i class="fas fa-check-circle"></i>', err:'<i class="fas fa-times-circle"></i>', '':'<i class="fas fa-info-circle"></i>' };
+  el.className = `toast ${type}`;
+  el.innerHTML = `${icons[type]||icons['']} ${msg}`;
+  el.classList.add('show');
+  clearTimeout(el._t);
+  el._t = setTimeout(()=>el.classList.remove('show'), dur);
+}
+
+function sortClasses(arr){
+  return arr.sort((a,b)=>{
+    if(a==='All')return -1; if(b==='All')return 1;
+    let iA=classOrder.indexOf(a), iB=classOrder.indexOf(b);
+    if(iA!==-1&&iB!==-1)return iA-iB;
+    if(iA!==-1)return -1; if(iB!==-1)return 1;
+    return a.localeCompare(b);
+  });
+}
+
+function shortenDate(d){
+  if(!d)return '';
+  const p=d.split(/[-/]/);
+  return p.length===3?`${p[0]}-${p[1]}-${p[2].substring(2)}`:d;
+}
+
+function examBadge(t){
+  if(!t)return '';
+  const tl=t.toLowerCase();
+  let cls='eb-other';
+  if(tl.includes('first')||tl.includes('1st')||tl==='cia 1') cls='eb-cia1';
+  else if(tl.includes('second')||tl.includes('2nd')||tl.includes('second cia')) cls='eb-cia2';
+  else if(tl.includes('pract')) cls='eb-prac';
+  else if(tl.includes('semester')||tl.includes('sem exam')) cls='eb-sem';
+  return `<span class="ebadge ${cls}">${esc(t)}</span>`;
+}
+
+/* ── CSV LOADER ── */
+async function loadCSV(url, examType){
+  try{
+    const res = await fetch(url);
+    const text = await res.text();
+    const rows = text.trim().split('\n').map(r=>r.split(','));
+    if(rows.length>0) rows.shift();
+    return rows.map(r=>({
+      year:r[0]?.trim(), sem:r[1]?.trim(), class:r[2]?.trim(),
+      date:r[3]?.trim(), code:r[4]?.trim(), subject:r[5]?.trim(),
+      type:r[6]?.trim(), examType:examType
+    })).filter(d=>d.date);
+  } catch(e){ return []; }
+}
+
+/* ── INIT ── */
+async function init(){
+  toast('Loading timetable data…','',10000);
+  const sheetLinks = {
+    "First CIA":    "https://docs.google.com/spreadsheets/d/e/2PACX-1vRmRxH3Aq-pt73-CbIjy7Z6SGDQjii93DaptenMWelDoqqXF9xjqVi97K4M5ULHIE2k9uYWA4xotPzz/pub?gid=15408967&single=true&output=csv",
+    "Second CIA":   "https://docs.google.com/spreadsheets/d/e/2PACX-1vRmRxH3Aq-pt73-CbIjy7Z6SGDQjii93DaptenMWelDoqqXF9xjqVi97K4M5ULHIE2k9uYWA4xotPzz/pub?gid=489603286&single=true&output=csv",
+    "Practical":    "https://docs.google.com/spreadsheets/d/e/2PACX-1vRmRxH3Aq-pt73-CbIjy7Z6SGDQjii93DaptenMWelDoqqXF9xjqVi97K4M5ULHIE2k9uYWA4xotPzz/pub?gid=942019491&single=true&output=csv",
+    "Semester Exam":"https://docs.google.com/spreadsheets/d/e/2PACX-1vRmRxH3Aq-pt73-CbIjy7Z6SGDQjii93DaptenMWelDoqqXF9xjqVi97K4M5ULHIE2k9uYWA4xotPzz/pub?gid=1057150601&single=true&output=csv"
+  };
+  const results = await Promise.all(Object.entries(sheetLinks).map(([type,url])=>loadCSV(url,type)));
+  allData = results.flat();
+
+  allData.forEach(d=>{
+    const p=d.date.split(/[-/]/);
+    if(p.length===3){ d.dateObj=new Date(p[2],p[1]-1,p[0]); d.dateObj.setHours(0,0,0,0); }
+    else d.dateObj=new Date(0);
+  });
+
+  const rawYears=[...new Set(allData.map(d=>d.year))].filter(y=>y);
+  const sortedYears=rawYears.sort((a,b)=>b.localeCompare(a));
+  const latestYear=sortedYears[0]||'All';
+
+  populateSel('year',['All',...sortedYears],latestYear);
+  updateFilters('init');
+  toast('Data loaded!','ok',2000);
+
+  setTimeout(()=>{
+    const c=document.getElementById('filterCollapsible');
+    const a=document.getElementById('ftbArrow');
+    c.classList.remove('open'); a.classList.remove('up');
+  },2500);
+}
+
+function updateFilters(source){
+  const yF=document.getElementById('year').value;
+  const cF=document.getElementById('cls')?.value||'All';
+  const sF=document.getElementById('semester')?.value||'All';
+  let filtered=allData;
+
+  if(source==='year'||source==='init'){
+    let cd=yF==='All'?filtered:filtered.filter(d=>d.year===yF);
+    const classes=sortClasses(['All',...[...new Set(cd.map(d=>d.class))].filter(c=>c)]);
+    populateSel('cls',classes,cF);
+  }
+  if(source==='year'||source==='class'||source==='init'){
+    const newCF=document.getElementById('cls').value;
+    let sd=filtered;
+    if(yF!=='All')sd=sd.filter(d=>d.year===yF);
+    if(newCF!=='All')sd=sd.filter(d=>d.class===newCF);
+    const sems=['All',...new Set(sd.map(d=>d.sem))].filter(s=>s).sort((a,b)=>a-b);
+    populateSel('semester',sems,sF);
+  }
+  if(source==='year'||source==='class'||source==='semester'||source==='init'){
+    const newCF=document.getElementById('cls').value;
+    const newSF=document.getElementById('semester').value;
+    let td=filtered;
+    if(yF!=='All')td=td.filter(d=>d.year===yF);
+    if(newCF!=='All')td=td.filter(d=>d.class===newCF);
+    if(newSF!=='All')td=td.filter(d=>d.sem===newSF);
+    const types=['All',...new Set(td.map(d=>d.examType))].filter(t=>t).sort();
+    populateSel('exam',types,document.getElementById('exam')?.value||'All');
+  }
+  render();
+}
+
+function populateSel(id,options,cur){
+  const sel=document.getElementById(id);
+  if(!sel)return;
+  sel.innerHTML=options.map(o=>`<option value="${esc(o)}">${esc(o)}</option>`).join('');
+  sel.value=options.includes(cur)?cur:'All';
+}
+
+function setSort(col){
+  if(sortCol===col)sortAsc=!sortAsc;
+  else{sortCol=col;sortAsc=true;}
+  render();
+}
+
+function toggleFilters(){
+  const c=document.getElementById('filterCollapsible');
+  const a=document.getElementById('ftbArrow');
+  c.classList.toggle('open');
+  a.classList.toggle('up');
+}
+
+function updatePills(yF,cF,sF,eF){
+  const pils=document.getElementById('activePills');
+  const active=[[yF,'Year'],[cF,'Class'],[sF,'Semester'],[eF,'Exam']].filter(([v])=>v&&v!=='All');
+  if(!active.length){pils.innerHTML='';return;}
+  pils.innerHTML=active.map(([v,l])=>`<span class="pill"><i class="fas fa-tag"></i>${esc(l)}: ${esc(v)}</span>`).join('');
+}
+
+function render(){
+  const yF=document.getElementById('year').value;
+  const cF=document.getElementById('cls').value;
+  const sF=document.getElementById('semester').value;
+  const eF=document.getElementById('exam').value;
+  const search=document.getElementById('searchBox').value.toLowerCase();
+
+  updatePills(yF,cF,sF,eF);
+
+  let filtered=allData;
+  if(yF!=='All')filtered=filtered.filter(d=>d.year===yF);
+  if(cF!=='All')filtered=filtered.filter(d=>d.class===cF);
+  if(sF!=='All')filtered=filtered.filter(d=>d.sem===sF);
+  if(eF!=='All')filtered=filtered.filter(d=>d.examType===eF);
+  if(search)filtered=filtered.filter(d=>(d.subject||'').toLowerCase().includes(search)||(d.code||'').toLowerCase().includes(search));
+
+  filtered.sort((a,b)=>{
+    let vA=a[sortCol],vB=b[sortCol];
+    return sortAsc?(vA<vB?-1:1):(vA>vB?-1:1);
+  });
+
+  const grouped=[];
+  filtered.forEach(item=>{
+    const key=`${item.date}_${item.class}`;
+    let ex=grouped.find(g=>`${g.date}_${g.class}`===key);
+    if(ex){ex.codes.push(item.code);ex.subjects.push(item.subject);ex.types.push(item.type);ex.examTypes.push(item.examType);}
+    else grouped.push({...item,codes:[item.code],subjects:[item.subject],types:[item.type],examTypes:[item.examType]});
+  });
+
+  const todayTs=new Date().setHours(0,0,0,0);
+  const tbody=document.getElementById('archiveBody');
+  const mc=document.getElementById('metaCount');
+  mc.innerHTML=`<strong>${grouped.length}</strong> exam record${grouped.length!==1?'s':''} shown`;
+
+  if(!grouped.length){
+    tbody.innerHTML=`<tr><td colspan="7"><div class="empty-state"><div class="ei"><i class="fas fa-calendar-xmark"></i></div><p>No exams match the current filters.</p></div></td></tr>`;
+    return;
+  }
+
+  const fmtMulti=(arr,cls)=>arr.map(v=>`<span class="multi-entry${cls?' '+cls:''}">${esc(v)}</span>`).join('');
+  const fmtBadge=arr=>arr.map(v=>`<span class="multi-entry">${examBadge(v)}</span>`).join('');
+
+  tbody.innerHTML=grouped.map(g=>{
+    const isToday=g.dateObj.getTime()===todayTs;
+    return `<tr class="${isToday?'row-today':''}">
+      <td><span class="date-mono">${isToday?'<span class="today-dot"></span>':''}${esc(shortenDate(g.date))}</span></td>
+      <td><strong>${esc(g.sem)}</strong></td>
+      <td>${esc(g.class)}</td>
+      <td>${fmtMulti(g.codes,'code-mono')}</td>
+      <td class="td-subject">${fmtMulti(g.subjects,'subj-name')}</td>
+      <td>${fmtMulti(g.types)}</td>
+      <td>${fmtBadge(g.examTypes)}</td>
+    </tr>`;
+  }).join('');
+}
+
+/* ── PRINT ── */
+function doPrint(){
+  window.print();
+}
+
+/* ── PDF DOWNLOAD ── */
+async function doPDF(){
+  const btn=document.getElementById('pdfBtn');
+  const spin=document.getElementById('pdfSpin');
+  const ico=document.getElementById('pdfIco');
+  const txt=document.getElementById('pdfTxt');
+  btn.disabled=true; spin.style.display='inline-block'; ico.style.display='none'; txt.textContent=' Generating…';
+  toast('Building PDF…','',8000);
+
+  try{
+    const yF=document.getElementById('year').value;
+    const cF=document.getElementById('cls').value;
+    const sF=document.getElementById('semester').value;
+    const eF=document.getElementById('exam').value;
+
+    const tbody=document.getElementById('archiveBody');
+    const el=document.createElement('div');
+    el.style.cssText='font-family:"Source Sans 3",sans-serif;padding:0;background:#fff;color:#18243A;';
+
+    // Build full table HTML for PDF
+    const tableHTML=document.getElementById('timetable').outerHTML;
+
+    el.innerHTML=`
+      <div style="text-align:center;padding:16px 0 14px;border-bottom:3px solid #1C2E4A;margin-bottom:16px;">
+        <img src="https://loyolazoology.github.io/about-us/azbt-logo.png" style="height:58px;display:block;margin:0 auto 10px;" crossorigin="anonymous" onerror="this.style.display='none'">
+        <h1 style="font-family:'Playfair Display',serif;font-size:13pt;font-weight:700;color:#1C2E4A;margin:0 0 3px;">PG &amp; Research Department of Advanced Zoology and Biotechnology</h1>
+        <p style="font-size:10pt;color:#4E5F7A;margin:0 0 2px;font-weight:400;">Loyola College (Autonomous), Chennai – 34</p>
+        <p style="font-size:9pt;color:#6B1C27;font-weight:700;text-transform:uppercase;letter-spacing:0.1em;margin:8px 0 6px;">Exam Timetable</p>
+        <p style="font-size:8.5pt;color:#666;margin:0;">Year: <strong>${esc(yF)}</strong> &nbsp;|&nbsp; Class: <strong>${esc(cF)}</strong> &nbsp;|&nbsp; Semester: <strong>${esc(sF)}</strong> &nbsp;|&nbsp; Exam: <strong>${esc(eF)}</strong></p>
+      </div>
+      ${tableHTML}
+      <p style="margin-top:16px;font-size:7.5pt;color:#888;border-top:1px solid #ddd;padding-top:8px;text-align:center;font-style:italic;">
+        Generated on ${new Date().toLocaleString('en-IN')} &nbsp;·&nbsp; AZ-BT Exam Timetable Portal &nbsp;·&nbsp; Loyola College (Autonomous), Chennai
+      </p>`;
+
+    // Style the table for PDF
+    const tbl=el.querySelector('table');
+    if(tbl){
+      tbl.style.cssText='width:100%;border-collapse:collapse;font-size:9.5pt;font-family:"Source Sans 3",sans-serif;';
+      tbl.querySelectorAll('th').forEach(th=>{
+        th.style.cssText='padding:7px 10px;font-size:8.5pt;font-weight:700;background:#1C2E4A;color:#fff;border:1px solid #1C2E4A;text-align:center;white-space:nowrap;letter-spacing:0.05em;text-transform:uppercase;';
+      });
+      tbl.querySelectorAll('td').forEach(td=>{
+        td.style.cssText='padding:7px 10px;border:1px solid #DDE3ED;color:#18243A;font-size:9.5pt;vertical-align:middle;text-align:center;';
+      });
+      tbl.querySelectorAll('td.td-subject').forEach(td=>{ td.style.textAlign='left'; });
+      tbl.querySelectorAll('tbody tr:nth-child(even)').forEach(tr=>tr.style.background='#F7F9FC');
+      tbl.querySelectorAll('tr.row-today').forEach(tr=>tr.style.background='#FAF2E3');
+      tbl.querySelectorAll('.subj-name').forEach(e=>{ e.style.cssText='font-weight:700;color:#1C2E4A;display:block;font-size:9.5pt;'; });
+      tbl.querySelectorAll('.code-mono').forEach(e=>{ e.style.cssText='font-family:monospace;font-size:9pt;color:#18243A;font-weight:500;display:block;'; });
+      tbl.querySelectorAll('.date-mono').forEach(e=>{ e.style.cssText='font-family:monospace;font-size:9pt;color:#18243A;font-weight:500;'; });
+      tbl.querySelectorAll('.ebadge').forEach(e=>{ e.style.cssText='display:inline-block;padding:2px 8px;border-radius:50px;font-size:8.5pt;font-weight:700;border:1px solid #ccc;background:#f5f5f5;color:#18243A;'; });
+      tbl.querySelectorAll('.multi-entry').forEach(e=>{ e.style.cssText='display:block;padding:1px 0;border-bottom:1px dashed #dde3ed;line-height:1.5;'; e.querySelector(':last-child') && (e.style.borderBottom='none'); });
+      tbl.querySelectorAll('.today-dot').forEach(e=>e.remove());
+      tbl.querySelectorAll('.sort-icon').forEach(e=>e.remove());
+      tbl.querySelectorAll('thead tr').forEach(tr=>tr.style.position='static');
+    }
+
+    await html2pdf().from(el).set({
+      margin: [8,6,8,6],
+      filename: `AZ-BT-ExamTimetable-${yF.replace(/\//g,'-')}-${cF}-${new Date().toLocaleDateString('en-IN').replace(/\//g,'-')}.pdf`,
+      image: { type:'jpeg', quality:0.97 },
+      html2canvas: { scale:2, useCORS:true, logging:false, backgroundColor:'#ffffff' },
+      jsPDF: { unit:'mm', format:'a4', orientation:'landscape' },
+      pagebreak: { mode:['avoid-all','css'] }
+    }).save();
+
+    toast('PDF downloaded!','ok');
+  } catch(err){
+    console.error(err);
+    toast('PDF failed — try Print instead.','err',4000);
+  } finally {
+    btn.disabled=false; spin.style.display='none'; ico.style.display='inline'; txt.textContent=' Download PDF';
+  }
+}
+
+window.onload = init;
+</script>
+</body>
+</html>
