@@ -9,46 +9,51 @@
     <style>
         :root { --azbt-blue: #23365D; --azbt-maroon: #6C232E; --azbt-gold: #D4A64A; --azbt-light: #F4F6F9; }
         
-        /* Auto fit to screen size & aligned to top */
-        body { 
+        /* Fully responsive and fluid layout */
+        html, body { 
             margin: 0; 
+            padding: 0;
+            width: 100%;
+            height: 100%;
             background: transparent; 
             font-family: 'Poppins', sans-serif; 
+            box-sizing: border-box; 
+        }
+
+        body {
             display: flex; 
             justify-content: center; 
             align-items: flex-start; 
-            min-height: 100vh; 
-            box-sizing: border-box; 
-            padding: 10px;
         }
 
         .portal-container { 
             width: 100%; 
             max-width: 900px; 
+            height: 100%;
+            max-height: 100vh;
             margin: 0 auto; 
             display: flex;
             flex-direction: column;
-            height: 100vh;
-            max-height: 600px;
             box-sizing: border-box;
+            padding: 8px;
             position: relative;
         }
         
         .portal-header { 
             text-align: center; 
-            margin-bottom: 12px; 
+            margin-bottom: 8px; 
             flex-shrink: 0;
         }
         
         .portal-header h1 { 
             font-family: 'Playfair Display', serif; 
             color: var(--azbt-blue); 
-            font-size: clamp(1.3rem, 4vw, 1.8rem); 
+            font-size: clamp(1.1rem, 4vw, 1.6rem); 
             margin: 0; 
             display: flex; 
             align-items: center; 
             justify-content: center; 
-            gap: 10px; 
+            gap: 8px; 
         }
         
         .portal-header h1 i { 
@@ -58,35 +63,36 @@
         .portal-header::after { 
             content: ''; 
             display: block; 
-            width: 40px; 
+            width: 35px; 
             height: 3px; 
             background: var(--azbt-maroon); 
-            margin: 6px auto 0; 
+            margin: 4px auto 0; 
         }
 
-        /* SLIDER FRAME - Flex to fill container */
+        /* SLIDER FRAME - Takes up remaining vertical height and auto fits mobile screens */
         .slider-frame { 
             overflow: hidden; 
             position: relative; 
-            border-radius: 20px; 
+            border-radius: 16px; 
             background: #fff; 
-            box-shadow: 0 10px 25px rgba(35, 54, 93, 0.12); 
+            box-shadow: 0 6px 20px rgba(35, 54, 93, 0.1); 
             cursor: grab; 
             flex-grow: 1; 
             display: flex;
+            width: 100%;
             min-height: 0;
         }
         
         /* SIDE NAVIGATION BUTTONS FOR LAPTOP / DESKTOP */
         .side-nav { 
             position: absolute; 
-            top: 55%; 
+            top: calc(50% + 15px); 
             transform: translateY(-50%); 
             background: var(--azbt-blue); 
             color: white; 
             border: none; 
-            width: 40px; 
-            height: 40px; 
+            width: 38px; 
+            height: 38px; 
             border-radius: 50%; 
             cursor: pointer; 
             z-index: 20; 
@@ -98,17 +104,17 @@
         }
         
         .side-nav:hover { background: var(--azbt-maroon); }
-        .prev-side { left: -20px; }
-        .next-side { right: -20px; }
+        .prev-side { left: -15px; }
+        .next-side { right: -15px; }
 
         @media (min-width: 900px) { .side-nav { display: flex; } }
 
         .slider-track { display: flex; transition: transform 0.6s cubic-bezier(0.23, 1, 0.32, 1); width: 100%; height: 100%; }
-        .slide { min-width: 100%; box-sizing: border-box; height: 100%; display: flex; }
+        .slide { min-width: 100%; width: 100%; box-sizing: border-box; height: 100%; display: flex; flex-shrink: 0; }
 
         .card { text-align: left; background: #fff; position: relative; width: 100%; height: 100%; display: flex; flex-direction: column; }
 
-        /* IMAGE BOX - Auto scales to container */
+        /* IMAGE BOX - Fills slide perfectly on mobile and desktop without overflowing */
         .gallery-img-box { 
             width: 100%; 
             height: 100%; 
@@ -120,17 +126,17 @@
             overflow: hidden; 
         }
         
-        .bg-blur { position: absolute; width: 100%; height: 100%; object-fit: cover; filter: blur(12px); opacity: 0.4; z-index: 1; }
-        .gallery-img { max-width: 100%; max-height: 100%; object-fit: contain; position: relative; z-index: 2; animation: fadeIn 0.6s ease-in-out; }
+        .bg-blur { position: absolute; width: 100%; height: 100%; object-fit: cover; filter: blur(10px); opacity: 0.4; z-index: 1; }
+        .gallery-img { width: 100%; height: 100%; max-width: 100%; max-height: 100%; object-fit: contain; position: relative; z-index: 2; animation: fadeIn 0.5s ease-in-out; }
 
-        @keyframes fadeIn { from { opacity: 0; transform: scale(0.98); } to { opacity: 1; transform: scale(1); } }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 
         /* RECTANGLE OVERLAY INFO BOX */
-        .image-overlay-info { position: absolute; bottom: 0; left: 0; width: 100%; background: rgba(35, 54, 93, 0.88); backdrop-filter: blur(6px); color: #fff; padding: 10px 15px; box-sizing: border-box; display: flex; justify-content: space-between; align-items: center; z-index: 5; font-size: 12px; }
-        .overlay-title { font-weight: 600; font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 65%; font-family: 'Playfair Display', serif; }
-        .overlay-date { color: var(--azbt-gold); font-weight: 500; font-size: 11px; display: flex; align-items: center; gap: 5px; white-space: nowrap; }
+        .image-overlay-info { position: absolute; bottom: 0; left: 0; width: 100%; background: rgba(35, 54, 93, 0.88); backdrop-filter: blur(6px); color: #fff; padding: 8px 12px; box-sizing: border-box; display: flex; justify-content: space-between; align-items: center; z-index: 5; font-size: 11px; }
+        .overlay-title { font-weight: 600; font-size: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 65%; font-family: 'Playfair Display', serif; }
+        .overlay-date { color: var(--azbt-gold); font-weight: 500; font-size: 10px; display: flex; align-items: center; gap: 4px; white-space: nowrap; }
 
-        .loading { text-align: center; width: 100%; padding: 40px; font-size: 15px; color: var(--azbt-blue); font-weight: 600; display: flex; align-items: center; justify-content: center; gap: 8px; }
+        .loading { text-align: center; width: 100%; padding: 30px; font-size: 14px; color: var(--azbt-blue); font-weight: 600; display: flex; align-items: center; justify-content: center; gap: 6px; }
     </style>
 </head>
 <body>
@@ -294,7 +300,7 @@ function initTouchSwipe() {
         let endX = e.changedTouches[0].clientX;
         let diff = startX - endX;
 
-        if (Math.abs(diff) > 50) {
+        if (Math.abs(diff) > 40) {
             if (diff > 0) {
                 manualMove(1);
             } else {
