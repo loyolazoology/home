@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AZ-BT | Gallery Slideshow</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+    <style>
+        :root { --azbt-blue: #23365D; --azbt-maroon: #6C232E; --azbt-gold: #D4A64A; --azbt-light: #F4F6F9; }
+        
+        /* Auto fit to screen size & aligned to top */
+        body { 
+            margin: 0; 
+            background: transparent; 
+            font-family: 'Poppins', sans-serif; 
+            display: flex; 
+            justify-content: center; 
+            align-items: flex-start; 
+            min-height: 100vh; 
+            box-sizing: border-box; 
+            padding: 10px;
+        }
+
+        .portal-container { 
+            width: 100%; 
+            max-width: 900px; 
+            margin: 0 auto; 
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            max-height: 600px;
+            box-sizing: border-box;
+            position: relative;
+        }
+        
+        .portal-header { 
+            text-align: center; 
+            margin-bottom: 12px; 
+            flex-shrink: 0;
+        }
+        
+        .portal-header h1 { 
+            font-family: 'Playfair Display', serif; 
+            color: var(--azbt-blue); 
+            font-size: clamp(1.3rem, 4vw, 1.8rem); 
+            margin: 0; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            gap: 10px; 
+        }
+        
+        .portal-header h1 i { 
+            color: var(--azbt-blue); 
+        }
+
+        .portal-header::after { 
+            content: ''; 
+            display: block; 
+            width: 40px; 
+            height: 3px; 
+            background: var(--azbt-maroon); 
+            margin: 6px auto 0; 
+        }
+
+        /* SLIDER FRAME - Flex to fill container */
+        .slider-frame { 
+            overflow: hidden; 
+            position: relative; 
+            border-radius: 20px; 
+            background: #fff; 
+            box-shadow: 0 10px 25px rgba(35, 54, 93, 0.12); 
+            cursor: grab; 
+            flex-grow: 1; 
+            display: flex;
+            min-height: 0;
+        }
+        
+        /* SIDE NAVIGATION BUTTONS FOR LAPTOP / DESKTOP */
+        .side-nav { 
+            position: absolute; 
+            top: 55%; 
+            transform: translateY(-50%); 
+            background: var(--azbt-blue); 
+            color: white; 
+            border: none; 
+            width: 40px; 
+            height: 40px; 
+            border-radius: 50%; 
+            cursor: pointer; 
+            z-index: 20; 
+            display: none; 
+            align-items: center; 
+            justify-content: center; 
+            transition: 0.3s; 
+            box-shadow: 0 4px 10px rgba(0,0,0,0.2); 
+        }
+        
+        .side-nav:hover { background: var(--azbt-maroon); }
+        .prev-side { left: -20px; }
+        .next-side { right: -20px; }
+
+        @media (min-width: 900px) { .side-nav { display: flex; } }
+
+        .slider-track { display: flex; transition: transform 0.6s cubic-bezier(0.23, 1, 0.32, 1); width: 100%; height: 100%; }
+        .slide { min-width: 100%; box-sizing: border-box; height: 100%; display: flex; }
+
+        .card { text-align: left; background: #fff; position: relative; width: 100%; height: 100%; display: flex; flex-direction: column; }
+
+        /* IMAGE BOX - Auto scales to container */
+        .gallery-img-box { 
+            width: 100%; 
+            height: 100%; 
+            position: relative; 
+            background: #1a1a1a; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            overflow: hidden; 
+        }
+        
+        .bg-blur { position: absolute; width: 100%; height: 100%; object-fit: cover; filter: blur(12px); opacity: 0.4; z-index: 1; }
+        .gallery-img { max-width: 100%; max-height: 100%; object-fit: contain; position: relative; z-index: 2; animation: fadeIn 0.6s ease-in-out; }
+
+        @keyframes fadeIn { from { opacity: 0; transform: scale(0.98); } to { opacity: 1; transform: scale(1); } }
+
+        /* RECTANGLE OVERLAY INFO BOX */
+        .image-overlay-info { position: absolute; bottom: 0; left: 0; width: 100%; background: rgba(35, 54, 93, 0.88); backdrop-filter: blur(6px); color: #fff; padding: 10px 15px; box-sizing: border-box; display: flex; justify-content: space-between; align-items: center; z-index: 5; font-size: 12px; }
+        .overlay-title { font-weight: 600; font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 65%; font-family: 'Playfair Display', serif; }
+        .overlay-date { color: var(--azbt-gold); font-weight: 500; font-size: 11px; display: flex; align-items: center; gap: 5px; white-space: nowrap; }
+
+        .loading { text-align: center; width: 100%; padding: 40px; font-size: 15px; color: var(--azbt-blue); font-weight: 600; display: flex; align-items: center; justify-content: center; gap: 8px; }
+    </style>
+</head>
+<body>
+
+<div class="portal-container">
+    <div class="portal-header">
+        <h1><i class="fa-solid fa-photo-film"></i> Gallery</h1>
+    </div>
+
+    <!-- SIDE NAVIGATION BUTTONS FOR DESKTOP -->
+    <button class="side-nav prev-side" onclick="manualMove(-1)"><i class="fas fa-chevron-left"></i></button>
+    <button class="side-nav next-side" onclick="manualMove(1)"><i class="fas fa-chevron-right"></i></button>
+
+    <div class="slider-frame" id="slider-frame">
+        <div class="slider-track" id="track">
+            <div class="loading"><i class="fa-solid fa-spinner fa-spin"></i> Loading gallery...</div>
+        </div>
+    </div>
+</div>
+
+<script>
+const SHEET_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTO6d_PwCcPO0y-zUWyyu08wowivwNVjzvI0vt4pqwqfdgKu3izBfjjIxdwK4NRsse1-TC9jaGY2D7c/pub?gid=0&single=true&output=csv";
+
+let slideWidth = 0;
+let currentIndex = 0;
+let slideCount = 0;
+let manualOverride = false;
+let autoPlayInterval;
+
+function parseCSV(text) {
+    const lines = text.split(/\r?\n/).filter(line => line.trim() !== "");
+    const headers = lines[0].split(',').map(h => h.trim());
+    return lines.slice(1).map(line => {
+        const values = line.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/);
+        let obj = {};
+        headers.forEach((h, i) => {
+            let val = values[i] ? values[i].replace(/"/g,"").trim() : "";
+            obj[h] = (val === "" || val.toLowerCase() === "null") ? null : val;
+        });
+        return obj;
+    });
+}
+
+function parseDate(d) {
+    if(!d) return null;
+    const p = d.split("-");
+    const dateObj = new Date(`${p[2]}-${p[1]}-${p[0]}T00:00:00`);
+    return isNaN(dateObj.getTime()) ? null : dateObj;
+}
+
+function getDriveImg(url) {
+    if(!url) return "";
+    const match = url.match(/[-\w]{25,}/);
+    return match ? `https://drive.google.com/thumbnail?id=${match[0]}&sz=w900` : url;
+}
+
+async function loadGallery() {
+    try {
+        const res = await fetch(SHEET_URL);
+        const text = await res.text();
+        const data = parseCSV(text);
+        const track = document.getElementById("track");
+        const now = new Date();
+
+        let individualSlides = [];
+
+        data.forEach(e => {
+            const eventDate = parseDate(e.Date);
+            if (eventDate && eventDate < now) {
+                const imgLinks = (e.Images || "").split("|").map(s => s.trim()).filter(s => s !== "");
+                imgLinks.forEach(link => {
+                    individualSlides.push({
+                        name: e.Event_Name || 'Department Event',
+                        date: e.Date || '',
+                        imgUrl: getDriveImg(link)
+                    });
+                });
+            }
+        });
+
+        individualSlides.reverse();
+        track.innerHTML = "";
+
+        if(individualSlides.length === 0) {
+            track.innerHTML = `<div class="loading">No gallery images found in the archive.</div>`;
+            return;
+        }
+
+        slideCount = individualSlides.length;
+
+        individualSlides.forEach((item) => {
+            const slide = document.createElement("div");
+            slide.className = "slide";
+            slide.innerHTML = `
+                <div class="card">
+                    <div class="gallery-img-box">
+                        <img src="${item.imgUrl}" class="bg-blur">
+                        <img src="${item.imgUrl}" class="gallery-img" onerror="this.src='https://via.placeholder.com/600x350?text=AZ+BT'">
+                        
+                        <div class="image-overlay-info">
+                            <span class="overlay-title" title="${item.name}">${item.name}</span>
+                            <span class="overlay-date"><i class="fa-solid fa-calendar"></i> ${item.date}</span>
+                        </div>
+                    </div>
+                </div>
+            `;
+            track.appendChild(slide);
+        });
+
+        initSliderLogic();
+        initTouchSwipe();
+
+    } catch(err) { 
+        console.error(err);
+        document.getElementById("track").innerHTML = `<div class="loading">Error loading gallery archive.</div>`;
+    }
+}
+
+function initSliderLogic() {
+    if(slideCount === 0) return;
+    const frame = document.getElementById("slider-frame");
+
+    function updateWidth() { 
+        slideWidth = frame.offsetWidth; 
+        moveToIndex(currentIndex); 
+    }
+    window.addEventListener('resize', updateWidth);
+    updateWidth();
+
+    autoPlayInterval = setInterval(() => { 
+        if(!manualOverride) {
+            currentIndex = (currentIndex + 1) % slideCount; 
+            moveToIndex(currentIndex);
+        }
+    }, 5000);
+}
+
+function moveToIndex(idx) {
+    const track = document.getElementById("track");
+    track.style.transform = `translateX(${-idx * slideWidth}px)`;
+}
+
+function manualMove(dir) {
+    manualOverride = true;
+    currentIndex = (currentIndex + dir + slideCount) % slideCount;
+    moveToIndex(currentIndex);
+    
+    setTimeout(() => { manualOverride = false; }, 15000);
+}
+
+function initTouchSwipe() {
+    const frame = document.getElementById("slider-frame");
+    let startX = 0;
+
+    frame.addEventListener('touchstart', e => {
+        startX = e.touches[0].clientX;
+        manualOverride = true;
+    }, {passive: true});
+
+    frame.addEventListener('touchend', e => {
+        let endX = e.changedTouches[0].clientX;
+        let diff = startX - endX;
+
+        if (Math.abs(diff) > 50) {
+            if (diff > 0) {
+                manualMove(1);
+            } else {
+                manualMove(-1);
+            }
+        }
+        setTimeout(() => { manualOverride = false; }, 15000);
+    }, {passive: true});
+}
+
+loadGallery();
+</script>
+
+</body>
+</html>
