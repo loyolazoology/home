@@ -146,6 +146,19 @@ body{
 }
 .date-card .dfield{flex:1;min-width:130px;}
 
+/* DATE NAV (previous / next day) */
+.dnav{display:flex;align-items:center;gap:6px;}
+.dnav .form-ctrl{flex:1;min-width:0;}
+.dnbtn{
+  width:38px;height:38px;flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;
+  background:var(--white);color:var(--blue);
+  border:1.5px solid var(--border);border-radius:var(--r-sm);
+  font-size:13px;cursor:pointer;transition:all var(--ease);
+}
+.dnbtn:hover{background:var(--blue);color:var(--white);border-color:var(--blue);box-shadow:var(--sh-sm);}
+.dnbtn:active{transform:scale(0.95);}
+
 /* INFO GRID */
 .igrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:11px;}
 .icard{
@@ -428,7 +441,11 @@ tbody tr.sp-holiday td{color:#9B1C2C;}
       <div class="dicon"><i class="fas fa-calendar-alt"></i></div>
       <div class="dfield">
         <label class="flabel" for="dp">Select Date</label>
-        <input type="date" id="dp" class="form-ctrl">
+        <div class="dnav">
+          <button type="button" class="dnbtn" id="prevDay" title="Previous day" aria-label="Previous day"><i class="fas fa-chevron-left"></i></button>
+          <input type="date" id="dp" class="form-ctrl">
+          <button type="button" class="dnbtn" id="nextDay" title="Next day" aria-label="Next day"><i class="fas fa-chevron-right"></i></button>
+        </div>
       </div>
     </div>
     <div id="dayMeta">
@@ -511,10 +528,11 @@ const CSV = {
 const EXAM_LINK = "https://loyolazoology.wixsite.com/az-bt/exam-timetable";
 const HOURS = ["1st Hour","2nd Hour","3rd Hour","4th Hour","5th Hour"];
 const YEARS = ["1st UG","2nd UG","3rd UG","1st PG","2nd PG"];
+const TABS  = ["dayinfo","timetable","search"];
 
 /* STATE */
 let DI=[], TT={}, TS={}, SP={}, SUBJ={};
-let todayUTC, selDate="", curYear="1st UG";
+let todayUTC, selDate="", curYear="1st UG", curTab="dayinfo";
 let dataReady=false;
 
 /* ============================
@@ -610,6 +628,60 @@ function toast(msg,type='',dur=3000){
 }
 
 /* ============================
+   URL PARAMETERS (date / class / tab)
+   Keeps the same view after refresh or when the link is shared
+   ============================ */
+function updateURL(){
+  try{
+    const p=new URLSearchParams();
+    const dv=$('dp').value;
+    if(dv) p.set('date',dv);
+    p.set('class',curYear);
+    p.set('tab',curTab);
+    history.replaceState(null,'',location.pathname+'?'+p.toString()+location.hash);
+  }catch(e){ /* ignore (e.g. sandboxed frames) */ }
+}
+
+function validYMD(s){
+  if(!s||!/^\d{4}-\d{2}-\d{2}$/.test(s))return false;
+  const[y,m,d]=s.split('-').map(Number);
+  const dt=new Date(Date.UTC(y,m-1,d));
+  return dt.getUTCFullYear()===y&&dt.getUTCMonth()===m-1&&dt.getUTCDate()===d;
+}
+
+function setTab(name){
+  if(!TABS.includes(name))name="dayinfo";
+  curTab=name;
+  document.querySelectorAll('#nav .nav-btn').forEach(x=>x.classList.toggle('active',x.dataset.tab===name));
+  document.querySelectorAll('.tab').forEach(x=>x.classList.toggle('active',x.id===name));
+  if(name==='search')runSearch();
+  updateURL();
+}
+
+function setYear(yr){
+  if(!YEARS.includes(yr))yr="1st UG";
+  curYear=yr;
+  document.querySelectorAll('#ytabs .ybtn').forEach(x=>x.classList.toggle('active',x.dataset.year===yr));
+}
+
+/* ============================
+   DATE NAV (previous / next day)
+   ============================ */
+function shiftDate(n){
+  const dp=$('dp');
+  const base=validYMD(dp.value)?dp.value:toIST();
+  const[y,m,d]=base.split('-').map(Number);
+  const dt=new Date(Date.UTC(y,m-1,d+n));
+  const ny=dt.getUTCFullYear();
+  const nm=String(dt.getUTCMonth()+1).padStart(2,'0');
+  const nd=String(dt.getUTCDate()).padStart(2,'0');
+  dp.value=`${ny}-${nm}-${nd}`;
+  selDate=ymd2dmy(dp.value);
+  updateURL();
+  if(dataReady){ renderDayInfo(); }
+}
+
+/* ============================
    INIT
    ============================ */
 async function init(){
@@ -617,35 +689,48 @@ async function init(){
   setInterval(tickClock,1000);
   tickClock();
 
+  /* Read URL parameters */
+  const qp=new URLSearchParams(location.search);
+  const pDate=qp.get('date');
+  const pClass=qp.get('class');
+  const pTab=qp.get('tab');
+
   /* Tab switching */
   document.querySelectorAll('#nav .nav-btn').forEach(b=>{
-    b.addEventListener('click',()=>{
-      document.querySelectorAll('#nav .nav-btn').forEach(x=>x.classList.remove('active'));
-      document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));
-      b.classList.add('active');
-      $(b.dataset.tab).classList.add('active');
-      if(b.dataset.tab==='search')runSearch();
-    });
+    b.addEventListener('click',()=>setTab(b.dataset.tab));
   });
 
   /* Year tabs */
   document.querySelectorAll('#ytabs .ybtn').forEach(b=>{
     b.addEventListener('click',()=>{
-      document.querySelectorAll('#ytabs .ybtn').forEach(x=>x.classList.remove('active'));
-      b.classList.add('active');
-      curYear=b.dataset.year;
+      setYear(b.dataset.year);
+      updateURL();
       renderTT();
     });
   });
 
-  /* Date picker — set today */
+  /* Date picker — from URL if valid, otherwise today */
   const dp=$('dp');
-  dp.value=toIST();
+  dp.value=validYMD(pDate)?pDate:toIST();
   selDate=ymd2dmy(dp.value);
   dp.addEventListener('change',e=>{
+    if(!validYMD(e.target.value))return;
     selDate=ymd2dmy(e.target.value);
+    updateURL();
     if(dataReady){ renderDayInfo(); }
   });
+
+  /* Previous / Next day buttons */
+  $('prevDay').addEventListener('click',()=>shiftDate(-1));
+  $('nextDay').addEventListener('click',()=>shiftDate(1));
+
+  /* Restore class + tab from URL (search tab is rendered after data loads) */
+  if(pClass) setYear(pClass);
+  if(pTab && TABS.includes(pTab)){
+    curTab=pTab;
+    document.querySelectorAll('#nav .nav-btn').forEach(x=>x.classList.toggle('active',x.dataset.tab===curTab));
+    document.querySelectorAll('.tab').forEach(x=>x.classList.toggle('active',x.id===curTab));
+  }
 
   /* Action buttons */
   $('printBtn').addEventListener('click',doPrint);
@@ -696,6 +781,7 @@ async function init(){
   dataReady=true;
 
   renderDayInfo();
+  if(curTab==='search') runSearch();
   toast('Portal loaded!','ok',2500);
 }
 
@@ -910,15 +996,13 @@ function renderTT(){
    ============================ */
 function runSearch(){
   const out=$('srOut');
+  if(!dataReady)return; /* wait until data is loaded; init() re-runs search */
+
   const q=$('sStaff').value.trim().toLowerCase();
   const sy=$('sYear').value;
   const ss=$('sSub').value.toLowerCase();
 
-  /* Need at least one filter active */
-  if(q.length<2&&!ss&&!sy){
-    out.innerHTML='<div class="empty"><div class="ei"><i class="fas fa-search"></i></div>Use the filters above to find classes.</div>';
-    return;
-  }
+  /* No filter guard: with "All Classes" and no other filter, the full list is shown */
 
   const results=[];
 
