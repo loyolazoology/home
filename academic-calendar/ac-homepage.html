@@ -140,8 +140,35 @@
     const CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSBA1zJDyWulg0WVRTPqwcY7DrxWoQ39MrNsEzOqm1e2T3k6y8MWlhagwVS_81bX__GhXHXkf06MQPI/pub?gid=1169802535&single=true&output=csv";
     
     let db = [];
-    let curDate = new Date();
     const today = new Date();
+
+    /* ---------- Month/Year as URL parameters ----------
+       Usage:  page.html?month=11&year=2026
+       - month = 1-12, year = 4 digits
+       - Missing/invalid values fall back to the current month/year
+       - Navigating with the arrows updates the URL, so a refresh
+         (or a shared link) shows the same month.
+    ------------------------------------------------- */
+    function readParams() {
+        const p = new URLSearchParams(window.location.search);
+        let m = parseInt(p.get('month'), 10);
+        let y = parseInt(p.get('year'), 10);
+        if (!(m >= 1 && m <= 12)) m = today.getMonth() + 1;
+        if (!(y >= 1900 && y <= 2100)) y = today.getFullYear();
+        return { m, y };
+    }
+
+    function writeParams() {
+        try {
+            const p = new URLSearchParams(window.location.search);
+            p.set('month', curDate.getMonth() + 1);
+            p.set('year', curDate.getFullYear());
+            history.replaceState(null, '', '?' + p.toString() + window.location.hash);
+        } catch (e) { /* URL update not allowed in this context; ignore */ }
+    }
+
+    const initial = readParams();
+    let curDate = new Date(initial.y, initial.m - 1, 1);
 
     async function load() {
         try {
@@ -165,6 +192,7 @@
     function render() {
         const m = curDate.getMonth(), y = curDate.getFullYear();
         document.getElementById('monthLabel').innerText = curDate.toLocaleString('default', { month: 'long', year: 'numeric' });
+        document.getElementById('detailArea').innerHTML = '';
         renderGrid(m, y);
         renderList(m, y);
     }
@@ -268,8 +296,16 @@
         }
     }
 
-    function moveMonth(dir) { curDate.setMonth(curDate.getMonth() + dir); render(); }
+    function moveMonth(dir) {
+        curDate = new Date(curDate.getFullYear(), curDate.getMonth() + dir, 1);
+        writeParams();
+        render();
+        autoHighlightToday();
+    }
 
+    // Keep the URL in sync on first load too (e.g. adds ?month=..&year=.. if missing)
+    writeParams();
     load();
 </script>
 </body>
+</html>
