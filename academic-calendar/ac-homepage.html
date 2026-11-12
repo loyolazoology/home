@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AZ-BT| Academic Calendar</title>
+    <title>AZ-BT | Academic Calendar</title>
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
@@ -187,7 +187,7 @@
             cell.className = `cell ${isToday ? 'today' : ''} ${isHol ? 'holiday' : ''}`;
             cell.id = `cell-${dStr}`;
             
-            let doHtml = info?.order ? `<div class="cell-do-tag"><i class="fa-solid fa-clock-rotate-left"></i> Order: ${info.order}</div>` : '';
+            let doHtml = info?.order ? `<div class="cell-do-tag"><i class="fa-solid fa-clock-rotate-left"></i> ${info.order}</div>` : '';
             
             cell.innerHTML = `
                 <span class="date-num">${d}</span>
@@ -242,7 +242,7 @@
                     <div class="list-event">${eventText}</div>
                     ${info?.event && info?.reason ? `<div class="list-sub">${info.reason}</div>` : ''}
                 </div>
-                ${info?.order ? `<div class="badge order-badge"><span class="o-lbl">ORDER</span><span class="o-val">${info.order}</span></div>` : '<div></div>'}
+                ${info?.order ? `<div class="badge order-badge"><span class="o-lbl"></span><span class="o-val">${info.order}</span></div>` : '<div></div>'}
             `;
             cont.appendChild(row);
         }
