@@ -7,7 +7,6 @@
 <title>Zoology Timetable Editor</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
 <style>
-/* Layout: header + four tabs (Day Info, Subjects, General Timetable, Staff Timetable). Spreadsheet-style tables; slot editing happens in dialogs. */
 :root{
   --bg:#f3f5f8; --surface:#ffffff; --ink:#18212c; --muted:#5b6978; --line:#dbe1e8;
   --accent:#8a1d2e; --accent-ink:#ffffff; --accent-soft:#f7e7ea;
@@ -16,14 +15,12 @@
   --mono:"IBM Plex Mono",ui-monospace,Menlo,Consolas,monospace;
   color-scheme:light;
 }
-
 *{box-sizing:border-box}
 body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.45 var(--font);padding:20px 16px 56px}
 .wrap{max-width:1320px;margin:0 auto}
 button,input,select,textarea{font:inherit;color:inherit}
 button{cursor:pointer}
 :focus-visible{outline:2px solid var(--accent);outline-offset:1px}
-
 header{display:flex;flex-wrap:wrap;align-items:center;gap:12px 20px;justify-content:space-between;margin-bottom:16px}
 h1{margin:0;font-size:22px;font-weight:600;letter-spacing:-.01em}
 .sub{margin:2px 0 0;color:var(--muted);font-size:13px}
@@ -35,11 +32,9 @@ h1{margin:0;font-size:22px;font-weight:600;letter-spacing:-.01em}
 .btn.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
 .btn.danger{color:var(--bad)}
 .btn.sm{padding:4px 9px;font-size:12px}
-
 nav.tabs{display:flex;gap:2px;border-bottom:1px solid var(--line);margin-bottom:16px;overflow-x:auto}
 nav.tabs button{background:none;border:0;border-bottom:2px solid transparent;padding:10px 16px;font-weight:500;color:var(--muted);white-space:nowrap;margin-bottom:-1px}
 nav.tabs button[aria-selected="true"]{color:var(--ink);border-bottom-color:var(--accent)}
-
 .bar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:10px}
 .bar .grow{flex:1 1 180px;min-width:0}
 .field{border:1px solid var(--line);background:var(--surface);border-radius:6px;padding:7px 10px;min-width:0}
@@ -48,7 +43,6 @@ nav.tabs button[aria-selected="true"]{color:var(--ink);border-bottom-color:var(-
 .chip{border:1px solid var(--line);background:var(--surface);border-radius:99px;padding:6px 13px;font-size:13px;font-weight:500}
 .chip[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
 .chip small{opacity:.7;font-weight:400;margin-left:4px}
-
 .tablewrap{overflow:auto;border:1px solid var(--line);border-radius:8px;background:var(--surface);max-height:72vh}
 table{border-collapse:separate;border-spacing:0;width:100%}
 th,td{border-bottom:1px solid var(--line);border-right:1px solid var(--line);padding:0;vertical-align:top;text-align:left}
@@ -68,16 +62,13 @@ select.work.yes{color:var(--ok);font-weight:600} select.work.no{color:var(--mute
 .tag{display:inline-block;margin-left:6px;font-size:11px;font-weight:600;color:var(--accent);border:1px solid var(--accent);border-radius:99px;padding:0 6px}
 .x{border:0;background:none;color:var(--muted);padding:8px 10px;font-size:12px;white-space:nowrap}
 .x:hover{color:var(--bad)} .x.armed{color:var(--bad);font-weight:600}
-
 #daysTbl{min-width:1020px} td.event{min-width:300px} td.reason{min-width:170px}
-#subjTbl{min-width:1080px} #subjTbl td.nm{min-width:260px} #subjTbl td.cd{min-width:130px}
-
+#subjTbl{min-width:1280px} #subjTbl td.nm{min-width:260px} #subjTbl td.cd{min-width:130px}
 .sc{display:flex;flex-wrap:wrap;gap:4px;align-items:center;padding:6px 8px;min-height:38px;width:100%;background:none;border:1px solid transparent;text-align:left}
 .sc:hover{border-color:var(--line)}
 .sc .none{color:var(--muted);font-size:12.5px}
 .ini{font-family:var(--mono);font-size:12px;font-weight:500;background:var(--accent-soft);color:var(--accent);border-radius:4px;padding:1px 6px}
-
-/* general / staff grids */
+.ext{display:block;font-size:11.5px;color:var(--warn);margin-top:2px;line-height:1.3}
 #genTbl,#staffTbl{min-width:960px;table-layout:fixed}
 #genTbl td,#staffTbl td{height:112px}
 .slot{width:100%;height:100%;min-height:112px;border:0;background:transparent;text-align:left;padding:8px 10px;display:flex;flex-direction:column;gap:4px;align-items:flex-start;border-radius:0;overflow:hidden}
@@ -85,7 +76,7 @@ select.work.yes{color:var(--ok);font-weight:600} select.work.no{color:var(--mute
 .slot.free{color:var(--muted);font-size:12.5px;justify-content:center;align-items:center;opacity:.5}
 .slot.free:hover{opacity:1}
 .it{display:block;font-size:12.5px;line-height:1.3;width:100%}
-.it b{font-family:var(--mono);font-size:12px;font-weight:500;display:block}
+.it b{font-family:var(--mono);font-size:12px;font-weight:500;display:block;word-break:break-all}
 .it .who{display:block;margin-top:2px}
 .sl{color:var(--muted);font-weight:600;font-size:12px}
 .slot .cls{font-size:11px;font-weight:600;color:var(--accent);background:var(--accent-soft);padding:1px 7px;border-radius:99px;white-space:nowrap}
@@ -96,7 +87,6 @@ select.work.yes{color:var(--ok);font-weight:600} select.work.no{color:var(--mute
 .staffhead h2{margin:0;font-size:17px;font-weight:600}
 .staffhead span{color:var(--muted);font-size:13px}
 .note{margin-top:14px;color:var(--muted);font-size:12.5px;max-width:76ch}
-
 dialog{border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:10px;padding:0;width:min(760px,calc(100vw - 24px));max-height:calc(100vh - 24px)}
 dialog.narrow{width:min(440px,calc(100vw - 24px))}
 dialog::backdrop{background:rgba(10,14,20,.5)}
@@ -132,13 +122,16 @@ dialog label .field{font-weight:400;color:var(--ink);font-size:14px;width:100%}
 .login label{display:grid;gap:4px;font-size:12px;font-weight:600;color:var(--muted)}
 .login .field{font-size:15px;font-weight:400;color:var(--ink);width:100%}
 .login .err{color:var(--bad);font-size:13px;min-height:1.3em;margin:0}
+.printbox{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:16px;display:grid;gap:12px;max-width:760px}
+.printbox label{display:grid;gap:4px;font-size:12px;font-weight:600;color:var(--muted)}
+.printbox .field{width:100%;font-weight:400;color:var(--ink);font-size:14px}
 [hidden]{display:none!important}
 </style>
 </head>
 <body>
 <div class="login" id="login" hidden>
   <form id="loginForm">
-    <h2>PG & Research Department of Adv. Zoology Timetable Editor</h2>
+    <h2>Zoology Timetable Editor</h2>
     <label>Password<input class="field" id="pw" type="password" autocomplete="current-password" autofocus></label>
     <p class="err" id="loginErr" role="alert"></p>
     <button class="btn primary" type="submit" id="loginBtn">Sign in</button>
@@ -147,7 +140,7 @@ dialog label .field{font-weight:400;color:var(--ink);font-size:14px;width:100%}
 <div class="wrap">
   <header>
     <div>
-      <h1>Adv. Zoology Timetable Editor</h1>
+      <h1>Zoology Timetable Editor</h1>
       <p class="sub">Changes save to your Timetable sheet by themselves.</p>
     </div>
     <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
@@ -162,6 +155,7 @@ dialog label .field{font-weight:400;color:var(--ink);font-size:14px;width:100%}
     <button role="tab" data-tab="subjects" aria-selected="false">Subjects</button>
     <button role="tab" data-tab="general" aria-selected="false">General Timetable</button>
     <button role="tab" data-tab="staff" aria-selected="false">Staff Timetable</button>
+    <button role="tab" data-tab="print" aria-selected="false">Print / PDF</button>
   </nav>
 
   <div id="loading" class="empty">Reading your sheet…</div>
@@ -189,7 +183,7 @@ dialog label .field{font-weight:400;color:var(--ink);font-size:14px;width:100%}
     </div>
     <p class="summary" id="subjSummary"></p>
     <div class="tablewrap"><table id="subjTbl"></table></div>
-    <p class="note">This is the list the General Timetable picks from. Staff set here are pre-selected when you pick the subject, and you can still change them in a slot. Courses from other departments can be added here or straight from a General Timetable slot. Changing a subject here does not change slots you have already filled.</p>
+    <p class="note">This is the list the General Timetable picks from. “Staff” are our own department staff (initials). “Other-dept staff” is for people from other departments: type their names, separated by a semicolon (;). They need not be in the staff list. For a common course such as UTL/SN/HN/FR4GL01, add one subject and type the Tamil, Sanskrit, Hindi and French staff there. Changing a subject here does not change slots you have already filled.</p>
   </section>
 
   <!-- GENERAL -->
@@ -197,7 +191,7 @@ dialog label .field{font-weight:400;color:var(--ink);font-size:14px;width:100%}
     <div class="chips" id="yearChips"></div>
     <div class="bar"><label for="gSem" style="color:var(--muted);font-size:13px">Semester</label><select class="field" id="gSem"></select><span class="summary" id="gSummary" style="margin:0"></span></div>
     <div class="tablewrap"><table id="genTbl"></table></div>
-    <p class="note">Select a slot to choose subjects and staff. Put two subjects in one hour for electives (shown with a /). A lab can be repeated over 2 to 5 hours from the same dialog. Saving also rewrites the GeneralTimeTable text sheet and the StaffTT sheet.</p>
+    <p class="note">Select a slot to choose subjects and staff. Put two subjects in one hour for electives (shown with a /). A lab can be repeated over 2 to 5 hours from the same dialog. Other-department courses and staff, and the common language course, can be added from the same dialog. Saving also rewrites the GeneralTimeTable text sheet and the StaffTT sheet.</p>
   </section>
 
   <!-- STAFF -->
@@ -208,6 +202,30 @@ dialog label .field{font-weight:400;color:var(--ink);font-size:14px;width:100%}
     <div class="bar" style="margin-top:12px">
       <button class="btn" id="rebuildBtn" type="button">Rebuild all from General Timetable</button>
       <span class="summary" id="rebuildNote" style="margin:0">Slots filled from the General Timetable update by themselves. Slots you change here are kept and marked “edited”.</span>
+    </div>
+  </section>
+
+  <!-- PRINT -->
+  <section id="p-print" hidden>
+    <div class="printbox">
+      <label>What to print
+        <select class="field" id="pType">
+          <option value="class-one">Class timetable: one class</option>
+          <option value="class-ug">Class timetables: all UG (1st, 2nd, 3rd)</option>
+          <option value="class-pg">Class timetables: all PG (1st, 2nd)</option>
+          <option value="class-all">Class timetables: overall (all five classes)</option>
+          <option value="staff-one">Staff timetable: one staff member</option>
+          <option value="staff-all">Staff timetables: all staff</option>
+        </select>
+      </label>
+      <label id="pTargetWrap">Choose<select class="field" id="pTarget"></select></label>
+      <div class="row2">
+        <label>Semester term (class timetables)<select class="field" id="pTerm"><option value="1">Odd semester</option><option value="2">Even semester</option></select></label>
+        <label>Academic year<input class="field" id="pYear"></label>
+      </div>
+      <label>Effective from (optional)<input class="field" id="pFrom" placeholder="e.g. 02-12-2026"></label>
+      <div><button class="btn primary" id="pGo" type="button">Open print view</button></div>
+      <p class="summary" style="margin:0">A new window opens with the timetables laid out on A4 landscape, one per page, with the Loyola College header. In the print dialog choose “Save as PDF” as the printer and turn off “Headers and footers”. Allow pop-ups for this site if nothing opens.</p>
     </div>
   </section>
 </div>
@@ -231,7 +249,10 @@ dialog label .field{font-weight:400;color:var(--ink);font-size:14px;width:100%}
       <label class="chk"><input type="checkbox" id="slotAll"> All semesters and classes</label>
     </div>
     <div class="plist" id="slotList"></div>
-    <div style="margin-top:8px"><button class="btn" id="slotOther" type="button">Add a subject that is not in the list</button></div>
+    <div style="margin-top:8px;display:flex;gap:8px;flex-wrap:wrap">
+      <button class="btn" id="slotOther" type="button">Add a subject that is not in the list</button>
+      <button class="btn" id="slotLang" type="button">Add common language course (Tamil / Sanskrit / Hindi / French)</button>
+    </div>
   </div>
   <div class="warn" id="slotWarn" hidden></div>
   <label>Repeat in the following hours (for labs)
@@ -266,9 +287,12 @@ const $=(s,r=document)=>r.querySelector(s);
 const esc=s=>String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const CLS=['1st UG','2nd UG','3rd UG','1st PG','2nd PG'];
 const SEMS={'1st UG':[1,2],'2nd UG':[3,4],'3rd UG':[5,6],'1st PG':[1,2],'2nd PG':[3,4]};
-const TYPES=['Theory','Lab','Elective','Cross Disciplinary','Other'];
+const TYPES=['Theory','Lab','Elective','Cross Disciplinary','General Language','Other'];
 const WD=['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
 const MON=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+const ROMAN=['','I','II','III','IV','V','VI'];
+/* Header text used on the printed timetables. Edit here if needed. */
+const COLLEGE='LOYOLA COLLEGE (AUTONOMOUS)', COLLEGE2='Chennai – 600 034', DEPT='PG and Research Department of Advanced Zoology and Biotechnology';
 const wdOf=iso=>WD[new Date(iso+'T00:00:00Z').getUTCDay()];
 const addDays=(iso,n)=>{const d=new Date(iso+'T00:00:00Z');d.setUTCDate(d.getUTCDate()+n);return d.toISOString().slice(0,10)};
 const monLabel=k=>MON[+k.slice(5,7)-1]+' '+k.slice(0,4);
@@ -276,13 +300,13 @@ const nd=new Date(); const TODAY=nd.getFullYear()+'-'+String(nd.getMonth()+1).pa
 const key=(c,d,h)=>c+'|'+d+'|'+h;
 const clone=o=>JSON.parse(JSON.stringify(o));
 const ord=n=>['','1st','2nd','3rd','4th','5th','6th'][n]||n+'th';
+const splitExt=v=>String(v||'').split(';').map(x=>x.trim()).filter(Boolean);
 
 const S={days:[],subjects:[],slots:{},stt:{},staff:[],periods:[],batch:{},tab:'days',cls:CLS[0],sem:2,who:null,month:'all',work:'all',q:'',sClass:'all',sSem:'all',sQ:''};
 let uid=1, errMsg='', pending=0; const timers={}, dirty=new Set(); let chain=Promise.resolve();
 /* Paste your Apps Script web app URL (ends in /exec) between the quotes. */
-const API_URL='https://script.google.com/macros/s/AKfycbzar0Q1yKHKddmlaY2p7OtxC0bMf4_3dqZ5zsmcHoYRbRYouUjNmRaWJp14SGJb8WID/exec';
+const API_URL='PASTE_YOUR_WEB_APP_URL_HERE';
 let PW=''; try{PW=sessionStorage.getItem('tt-pw')||'';}catch(_){}
-/* Talks to Apps Script through a hidden form + iframe and postMessage. Unlike fetch(), this is not blocked by CORS. */
 function call(fn,...args){
   return new Promise((resolve,reject)=>{
     const id=Math.random().toString(36).slice(2)+Date.now().toString(36);
@@ -339,13 +363,13 @@ const saveStaff=()=>enqueue(()=>call('saveStaffTT',{entries:Object.values(S.stt)
 /* ---------- load ---------- */
 function load(){
   $('#loading').hidden=false; $('#loading').textContent='Reading your sheet…';
-  ['days','subjects','general','staff'].forEach(t=>$('#p-'+t).hidden=true);
+  ['days','subjects','general','staff','print'].forEach(t=>$('#p-'+t).hidden=true);
   call('getAll').then(d=>{
     $('#login').hidden=true;
     S.staff=d.staff; S.periods=d.periods; S.batch=d.batch||{};
     S.days=d.days.map(r=>({...r,uid:uid++}));
-    S.subjects=d.subjects.map(r=>({...r,uid:uid++}));
-    S.slots={}; d.slots.forEach(s=>{S.slots[key(s.cls,s.day,s.hour)]=s.items;});
+    S.subjects=d.subjects.map(r=>({...r,ext:r.ext||[],uid:uid++}));
+    S.slots={}; d.slots.forEach(s=>{S.slots[key(s.cls,s.day,s.hour)]=s.items.map(it=>({...it,ext:it.ext||[]}));});
     S.stt={}; d.stafftt.forEach(r=>{S.stt[r.i+'|'+r.d+'|'+r.h]=r;});
     if(!S.who&&S.staff.length)S.who=S.staff[0].i;
     $('#loading').hidden=true; showTab(S.tab); setStatus();
@@ -354,13 +378,13 @@ function load(){
 $('#reloadBtn').addEventListener('click',()=>{ if(pending||dirty.size){errMsg='Wait for saving to finish, then reload.';setStatus();return;} errMsg='';setStatus();load(); });
 
 /* ---------- tabs ---------- */
-const TABS=['days','subjects','general','staff'];
+const TABS=['days','subjects','general','staff','print'];
 function showTab(t){
   if(!TABS.includes(t))t='days'; S.tab=t;
   document.querySelectorAll('nav.tabs button').forEach(b=>b.setAttribute('aria-selected',String(b.dataset.tab===t)));
   if(!$('#loading').hidden)return;
   TABS.forEach(x=>$('#p-'+x).hidden=(x!==t));
-  ({days:renderDays,subjects:renderSubjects,general:renderGen,staff:renderStaff})[t]();
+  ({days:renderDays,subjects:renderSubjects,general:renderGen,staff:renderStaff,print:renderPrint})[t]();
 }
 $('nav.tabs').addEventListener('click',e=>{const b=e.target.closest('button[data-tab]');if(b)showTab(b.dataset.tab);});
 
@@ -447,8 +471,9 @@ function subjRow(r){
   <td><select class="cell" data-f="sem" aria-label="Semester">${[1,2,3,4,5,6].map(n=>`<option value="${n}"${+r.sem===n?' selected':''}>${n}</option>`).join('')}${r.sem?'':'<option value="" selected>—</option>'}</select></td>
   <td class="cd"><input class="cell mono" data-f="code" value="${esc(r.code)}" aria-label="Code"></td>
   <td class="nm"><textarea class="cell" rows="1" data-f="name" aria-label="Subject name">${esc(r.name)}</textarea></td>
-  <td><select class="cell" data-f="type" aria-label="Type">${TYPES.map(t=>`<option${t===r.type?' selected':''}>${t}</option>`).join('')}</select></td>
+  <td><select class="cell" data-f="type" aria-label="Type">${TYPES.map(t=>`<option${t===r.type?' selected':''}>${t}</option>`).join('')}${TYPES.includes(r.type)||!r.type?'':`<option selected>${esc(r.type)}</option>`}</select></td>
   <td><button class="sc" type="button" data-act="staff" aria-label="Choose staff">${r.staff&&r.staff.length?iniChips(r.staff):'<span class="none">Add staff</span>'}</button></td>
+  <td><input class="cell" style="width:200px" data-f="ext" value="${esc((r.ext||[]).join('; '))}" placeholder="Name; Name" aria-label="Other-department staff"></td>
   <td><input class="cell mono" style="width:90px" data-f="room" value="${esc(r.room)}" aria-label="Room"></td>
   <td><input class="cell" style="width:110px" data-f="dept" value="${esc(r.dept)}" aria-label="Department"></td>
   <td><button class="x" type="button" data-act="del">Delete</button></td></tr>`;
@@ -458,7 +483,7 @@ function renderSubjects(){
   $('#sSem').innerHTML='<option value="all">All semesters</option>'+semOptionsFor(S.sClass).map(n=>`<option value="${n}"${String(n)===String(S.sSem)?' selected':''}>Semester ${n}</option>`).join('');
   const rows=filteredSubjects();
   $('#subjSummary').textContent=`${rows.length} subjects shown of ${S.subjects.length}`;
-  $('#subjTbl').innerHTML=`<thead><tr><th>Class</th><th>Sem</th><th>Code</th><th>Subject name</th><th>Type</th><th>Staff</th><th>Room</th><th>Dept</th><th></th></tr></thead><tbody>${rows.map(subjRow).join('')||'<tr><td colspan="9" class="empty">No subjects here yet. Use “Add a subject”.</td></tr>'}</tbody>`;
+  $('#subjTbl').innerHTML=`<thead><tr><th>Class</th><th>Sem</th><th>Code</th><th>Subject name</th><th>Type</th><th>Staff</th><th>Other-dept staff</th><th>Room</th><th>Dept</th><th></th></tr></thead><tbody>${rows.map(subjRow).join('')||'<tr><td colspan="10" class="empty">No subjects here yet. Use “Add a subject”.</td></tr>'}</tbody>`;
   autosizeAll($('#subjTbl'));
 }
 $('#sClass').addEventListener('change',e=>{S.sClass=e.target.value;S.sSem='all';renderSubjects();});
@@ -466,7 +491,7 @@ $('#sSem').addEventListener('change',e=>{S.sSem=e.target.value;renderSubjects();
 $('#sQ').addEventListener('input',e=>{S.sQ=e.target.value;renderSubjects();});
 $('#addSubj').addEventListener('click',()=>{
   const cls=S.sClass==='all'?S.cls:S.sClass, sem=S.sSem==='all'?(SEMS[cls]||[1,2])[1]:+S.sSem;
-  const r={uid:uid++,cls,sem,code:'',name:'',type:'Theory',staff:[],room:'',dept:'Zoology'};
+  const r={uid:uid++,cls,sem,code:'',name:'',type:'Theory',staff:[],ext:[],room:'',dept:'Zoology'};
   S.subjects.push(r); S.sClass=cls;S.sSem=String(sem);S.sQ='';$('#sQ').value=''; renderSubjects();
   const tr=$(`#subjTbl tr[data-u="${r.uid}"]`); if(tr){tr.scrollIntoView({block:'center'});tr.querySelector('[data-f="code"]').focus();}
 });
@@ -475,7 +500,8 @@ st.addEventListener('input',e=>{if(e.target.tagName==='TEXTAREA')autosize(e.targ
 st.addEventListener('change',e=>{
   const f=e.target.dataset.f; if(!f)return;
   const r=S.subjects.find(x=>x.uid==e.target.closest('tr').dataset.u); if(!r)return;
-  r[f]=f==='sem'?+e.target.value:e.target.value.trim(); saveSubjects();
+  if(f==='ext')r.ext=splitExt(e.target.value); else r[f]=f==='sem'?+e.target.value:e.target.value.trim();
+  saveSubjects();
   if(f==='cls'||f==='sem')renderSubjects();
 });
 st.addEventListener('click',e=>{
@@ -489,8 +515,8 @@ st.addEventListener('click',e=>{
 
 /* ---------- General timetable ---------- */
 function slotCell(items){
-  if(!items||!items.length)return '<button type="button" class="slot free">Add</button>';
-  return items.map(it=>`<span class="it"><b>${esc(it.code)}</b>${esc(it.name)}<span class="who">${iniChips(it.staff)}</span></span>`).join('<span class="sl">/</span>');
+  if(!items||!items.length)return '';
+  return items.map(it=>`<span class="it"><b>${esc(it.code)}</b>${esc(it.name)}<span class="who">${iniChips(it.staff)}</span>${it.ext&&it.ext.length?`<span class="ext">${esc(it.ext.join(', '))}</span>`:''}</span>`).join('<span class="sl">/</span>');
 }
 function renderGen(){
   $('#yearChips').innerHTML=CLS.map(c=>{const n=Object.keys(S.slots).filter(k=>k.startsWith(c+'|')&&S.slots[k].length).length;return `<button class="chip" type="button" data-c="${c}" aria-pressed="${c===S.cls}">${c}<small>${n} filled</small></button>`;}).join('');
@@ -534,8 +560,9 @@ function drawCards(){
     <div class="row3"><label>Code<input class="field mono" data-k="code" value="${esc(it.code)}"></label><label>Subject name<input class="field" data-k="name" value="${esc(it.name)}"></label></div>
     <div class="row3"><label>Room<input class="field mono" data-k="room" value="${esc(it.room)}"></label>
       <label>Type<select class="field" data-k="type">${TYPES.map(t=>`<option${t===it.type?' selected':''}>${t}</option>`).join('')}${it.type&&!TYPES.includes(it.type)?`<option selected>${esc(it.type)}</option>`:(it.type?'':'<option value="" selected>—</option>')}</select></label></div>
-    <div><div class="sec" style="margin-bottom:4px">Staff (optional)</div><button class="sc" type="button" data-a="staff" style="border-color:var(--line);border-radius:6px">${it.staff&&it.staff.length?iniChips(it.staff)+'<span class="none" style="margin-left:4px">'+esc(it.staff.map(staffName).join(', '))+'</span>':'<span class="none">Click to choose staff</span>'}</button></div>
-    ${it._manual?`<label class="chk"><input type="checkbox" data-k="_save" ${it._save!==false?'checked':''}> Also add to the Subjects list (${esc(ctx.cls)}, semester ${S.sem}, other department)</label>`:''}
+    <div><div class="sec" style="margin-bottom:4px">Our department staff (optional)</div><button class="sc" type="button" data-a="staff" style="border-color:var(--line);border-radius:6px">${it.staff&&it.staff.length?iniChips(it.staff)+'<span class="none" style="margin-left:4px">'+esc(it.staff.map(staffName).join(', '))+'</span>':'<span class="none">Click to choose staff</span>'}</button></div>
+    <label>Staff from other departments (type names, separate with ;)<input class="field" data-k="ext" value="${esc((it.ext||[]).join('; '))}" placeholder="${it.type==='General Language'?'e.g. Dr. A (Tamil); Dr. B (Sanskrit); Dr. C (Hindi); Dr. D (French)':'e.g. Dr. A (Dept. of Physics); Dr. B (Chemistry)'}"></label>
+    ${it._manual?`<label class="chk"><input type="checkbox" data-k="_save" ${it._save!==false?'checked':''}> Also add to the Subjects list (${esc(ctx.cls)}, semester ${S.sem})</label>`:''}
   </div>`).join('')||'<div class="summary">Nothing in this hour yet. Pick a subject below.</div>';
   warnClashes();
 }
@@ -544,20 +571,24 @@ function drawList(){
   const rows=S.subjects.filter(r=>(all||(r.cls===ctx.cls&&+r.sem===S.sem))&&(!q||(r.code+' '+r.name).toLowerCase().includes(q)));
   $('#slotList').innerHTML=rows.map(r=>{
     const added=ctx.items.some(it=>sameSubj(it,r));
-    return `<button type="button" data-u="${r.uid}" ${added?'disabled':''}><span class="c">${esc(r.code)}</span><span>${esc(r.name)}${all?` <span class="s">${esc(r.cls)} · sem ${esc(r.sem)}</span>`:''}</span><span class="s">${r.staff&&r.staff.length?esc(r.staff.join(', ')):''}</span></button>`;
+    const who=[...(r.staff||[]),...(r.ext||[])].join(', ');
+    return `<button type="button" data-u="${r.uid}" ${added?'disabled':''}><span class="c">${esc(r.code)}</span><span>${esc(r.name)}${all?` <span class="s">${esc(r.cls)} · sem ${esc(r.sem)}</span>`:''}</span><span class="s">${esc(who)}</span></button>`;
   }).join('')||`<div class="summary" style="padding:10px">No subjects for ${esc(ctx.cls)} semester ${S.sem}. Add them in the Subjects tab, or use “not in the list” below.</div>`;
 }
 $('#slotQ').addEventListener('input',drawList); $('#slotAll').addEventListener('change',drawList);
 $('#slotList').addEventListener('click',e=>{
   const b=e.target.closest('[data-u]'); if(!b||b.disabled)return;
   const r=S.subjects.find(x=>x.uid==b.dataset.u); if(!r)return;
-  ctx.items.push({code:r.code,name:r.name,staff:(r.staff||[]).slice(),room:r.room||'',type:r.type||'Theory',batch:S.batch[ctx.cls]||''});
+  ctx.items.push({code:r.code,name:r.name,staff:(r.staff||[]).slice(),ext:(r.ext||[]).slice(),room:r.room||'',type:r.type||'Theory',batch:S.batch[ctx.cls]||''});
   drawCards(); drawList();
 });
-$('#slotOther').addEventListener('click',()=>{ctx.items.push({code:'',name:'',staff:[],room:'',type:'Theory',batch:S.batch[ctx.cls]||'',_manual:true,_save:true});drawCards();drawList();const c=$('#slotCards').lastElementChild;if(c)c.querySelector('[data-k="code"]').focus();});
+function focusLast(sel){const c=$('#slotCards').lastElementChild;const el=c&&c.querySelector(sel);if(el)el.focus();}
+$('#slotOther').addEventListener('click',()=>{ctx.items.push({code:'',name:'',staff:[],ext:[],room:'',type:'Theory',batch:S.batch[ctx.cls]||'',_manual:true,_save:true});drawCards();drawList();focusLast('[data-k="code"]');});
+/* Common course offered by Tamil, Sanskrit, Hindi and French, e.g. UTL/SN/HN/FR4GL01 */
+$('#slotLang').addEventListener('click',()=>{ctx.items.push({code:'UTL/SN/HN/FR'+S.sem+'GL01',name:'General Language',staff:[],ext:[],room:'',type:'General Language',batch:S.batch[ctx.cls]||'',_manual:true,_save:true});drawCards();drawList();focusLast('[data-k="ext"]');});
 const cardsEl=$('#slotCards');
-cardsEl.addEventListener('input',e=>{const k=e.target.dataset.k;if(!k||e.target.type==='checkbox')return;const i=+e.target.closest('.card').dataset.i;ctx.items[i][k]=e.target.value;if(k==='room')warnClashes();if(k==='code'||k==='name')drawList();});
-cardsEl.addEventListener('change',e=>{const k=e.target.dataset.k;if(!k)return;const i=+e.target.closest('.card').dataset.i;if(e.target.type==='checkbox')ctx.items[i][k]=e.target.checked;else ctx.items[i][k]=e.target.value;});
+cardsEl.addEventListener('input',e=>{const k=e.target.dataset.k;if(!k||e.target.type==='checkbox')return;const i=+e.target.closest('.card').dataset.i;if(k==='ext'){ctx.items[i].ext=splitExt(e.target.value);return;}ctx.items[i][k]=e.target.value;if(k==='room')warnClashes();if(k==='code'||k==='name')drawList();});
+cardsEl.addEventListener('change',e=>{const k=e.target.dataset.k;if(!k||k==='ext')return;const i=+e.target.closest('.card').dataset.i;if(e.target.type==='checkbox')ctx.items[i][k]=e.target.checked;else{ctx.items[i][k]=e.target.value;if(k==='type')drawCards();}});
 cardsEl.addEventListener('click',e=>{
   const card=e.target.closest('.card'); if(!card)return; const i=+card.dataset.i;
   if(e.target.closest('[data-a="rm"]')){ctx.items.splice(i,1);drawCards();drawList();return;}
@@ -577,8 +608,8 @@ $('#slotSave').addEventListener('click',()=>{
   const items=ctx.items.filter(it=>(it.code||'').trim()||(it.name||'').trim());
   const span=+$('#slotSpan').value||1;
   const newSubs=items.filter(it=>it._manual&&it._save!==false&&!S.subjects.some(s=>s.cls===ctx.cls&&sameSubj(s,it)))
-    .map(it=>({uid:uid++,cls:ctx.cls,sem:S.sem,code:(it.code||'').trim(),name:(it.name||'').trim(),type:it.type||'Theory',staff:(it.staff||[]).slice(),room:it.room||'',dept:'Other'}));
-  const clean=items.map(it=>({code:(it.code||'').trim(),name:(it.name||'').trim(),staff:it.staff||[],room:(it.room||'').trim(),type:it.type||'',batch:it.batch||S.batch[ctx.cls]||''}));
+    .map(it=>({uid:uid++,cls:ctx.cls,sem:S.sem,code:(it.code||'').trim(),name:(it.name||'').trim(),type:it.type||'Theory',staff:(it.staff||[]).slice(),ext:(it.ext||[]).slice(),room:it.room||'',dept:it.type==='General Language'?'Languages':'Other'}));
+  const clean=items.map(it=>({code:(it.code||'').trim(),name:(it.name||'').trim(),staff:it.staff||[],ext:it.ext||[],room:(it.room||'').trim(),type:it.type||'',batch:it.batch||S.batch[ctx.cls]||''}));
   for(let k=0;k<span;k++){ const kk=key(ctx.cls,ctx.day,ctx.hour+k); if(clean.length)S.slots[kk]=clone(clean); else delete S.slots[kk]; }
   if(newSubs.length){S.subjects.push(...newSubs);saveSubjects();}
   $('#dlgSlot').close(); renderGen(); saveSlots();
@@ -594,8 +625,8 @@ function renderStaff(){
   for(let d=1;d<=6;d++){
     h+=`<tr><th scope="row">Day ${d}</th>`;
     for(let k=1;k<=NH();k++){
-      const c=S.stt[me.i+'|'+d+'|'+k], filled=c&&(c.cls||c.code||c.subject||c.room);
-      h+=`<td><button type="button" class="slot${filled?'':' free'}" data-d="${d}" data-h="${k}">`+(filled?`<span class="cls">${esc(c.cls||'—')}</span><span class="subj">${esc(c.subject||c.code)}</span><span class="meta">${esc([c.code,c.room].filter(Boolean).join(' · '))}</span>${c.source==='Manual'?'<span class="hand">edited</span>':''}`:(c&&c.source==='Manual'?'Free <span class="hand">edited</span>':'Free'))+`</button></td>`;
+      const c=S.stt[me.i+'|'+d+'|'+k], fl=c&&(c.cls||c.code||c.subject||c.room);
+      h+=`<td><button type="button" class="slot${fl?'':' free'}" data-d="${d}" data-h="${k}">`+(fl?`<span class="cls">${esc(c.cls||'—')}</span><span class="subj">${esc(c.subject||c.code)}</span><span class="meta">${esc([c.code,c.room].filter(Boolean).join(' · '))}</span>${c.source==='Manual'?'<span class="hand">edited</span>':''}`:(c&&c.source==='Manual'?'Free <span class="hand">edited</span>':'Free'))+`</button></td>`;
     }
     h+='</tr>';
   }
@@ -604,6 +635,7 @@ function renderStaff(){
 $('#staffChips').addEventListener('click',e=>{const b=e.target.closest('[data-who]');if(!b)return;S.who=b.dataset.who;renderStaff();});
 let sctx=null;
 $('#stCls').innerHTML='<option value="">—</option>'+CLS.map(c=>`<option>${c}</option>`).join('');
+const filled=c=>c&&(c.cls||c.code||c.subject||c.room);
 $('#staffTbl').addEventListener('click',e=>{
   const b=e.target.closest('.slot'); if(!b)return;
   const d=+b.dataset.d,h=+b.dataset.h, k=S.who+'|'+d+'|'+h, c=S.stt[k]||{};
@@ -617,7 +649,6 @@ $('#staffTbl').addEventListener('click',e=>{
   $('#stNote').textContent=c.source==='Manual'?'This slot was edited by hand and will not change when the General Timetable changes.':(filled(c)?'Filled from the General Timetable. Saving a change here marks it as edited by hand.':'Free. Anything you add here is kept as an edit.');
   $('#dlgStaffSlot').showModal();
 });
-const filled=c=>c&&(c.cls||c.code||c.subject||c.room);
 $('#stPick').addEventListener('change',e=>{
   const r=S.subjects.find(x=>x.uid==e.target.value); if(!r)return;
   $('#stCls').value=r.cls; $('#stBatch').value=S.batch[r.cls]||''; $('#stCode').value=r.code; $('#stSubject').value=r.name; $('#stRoom').value=r.room||$('#stRoom').value;
@@ -638,6 +669,123 @@ $('#rebuildBtn').addEventListener('click',e=>{
   enqueue(()=>call('rebuildStaffTT').then(r=>applyStaffTT(r.stafftt)));
 });
 
+/* ---------- Print / PDF ---------- */
+const PRINT_CSS=`
+@page{size:A4 landscape;margin:9mm}
+*{box-sizing:border-box}
+body{margin:0;font:10pt/1.25 Arial,Helvetica,sans-serif;color:#000;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.pg{page-break-after:always}.pg:last-child{page-break-after:auto}
+.hd{text-align:center;margin-bottom:3mm}
+.c1{font-size:19pt;font-weight:700;letter-spacing:.05em}
+.c2{font-size:10pt}
+.c3{font-size:12.5pt;font-weight:700;margin-top:1mm}
+.c4{display:inline-block;margin-top:2.5mm;font-size:12pt;font-weight:700;letter-spacing:.14em;border-top:1px solid #000;border-bottom:1px solid #000;padding:1mm 7mm}
+.meta{display:flex;justify-content:space-between;gap:6mm;margin:3mm 0;font-size:10.5pt;border:1px solid #000;padding:1.6mm 3mm}
+table{width:100%;border-collapse:collapse;table-layout:fixed}
+th,td{border:1px solid #000;text-align:center;vertical-align:middle;padding:1.2mm}
+th{background:#e4e4e4;font-size:9.5pt}
+th span{display:block;font-weight:400;font-size:8pt}
+th.d{width:21mm}
+.tt td{height:17mm;font-size:8.8pt}
+.tt .br{width:8mm;background:#efefef;padding:0}
+.tt th.br{writing-mode:vertical-rl;font-size:8pt;letter-spacing:.25em}
+.it b{display:block;font-size:9pt;word-break:break-all}
+.it i{display:block;font-size:8pt;font-style:normal}
+.it u{display:block;font-size:7.5pt;text-decoration:none}
+.sep{font-weight:700;margin:.4mm 0}
+.lgt{margin:4mm 0 1.5mm;font-size:10pt;font-weight:700}
+.lg td,.lg th{font-size:8.8pt;text-align:left;padding:1mm 1.8mm}
+.lg th{font-size:8.8pt}
+.sig{display:flex;justify-content:space-between;margin-top:13mm;font-size:10pt;page-break-inside:avoid}
+.sig div{border-top:1px solid #000;padding-top:1mm;min-width:58mm;text-align:center}
+tr{page-break-inside:avoid}
+`;
+function termDefaults(){
+  const m=nd.getMonth()+1,y=nd.getFullYear();
+  $('#pYear').value=(m>=6?y+' – '+(y+1):(y-1)+' – '+y);
+  $('#pTerm').value=(m>=6&&m<=10)?'1':'2';
+}
+let printInit=false;
+function renderPrint(){
+  if(!printInit){termDefaults();printInit=true;}
+  const t=$('#pType').value, one=t==='class-one'||t==='staff-one';
+  $('#pTargetWrap').hidden=!one;
+  const cur=$('#pTarget').value;
+  $('#pTarget').innerHTML=t==='class-one'?CLS.map(c=>`<option>${c}</option>`).join(''):S.staff.map(s=>`<option value="${esc(s.i)}">${esc(s.i)} · ${esc(s.n)}</option>`).join('');
+  if([...$('#pTarget').options].some(o=>o.value===cur||o.text===cur))$('#pTarget').value=cur;
+}
+$('#pType').addEventListener('change',renderPrint);
+function breakAfter(k){
+  const a=S.periods[k-1],b=S.periods[k]; if(!a||!b)return false;
+  const e=String(a.time).split(/\s*[–—-]\s*/)[1], s=String(b.time).split(/\s*[–—-]\s*/)[0];
+  return !!e&&!!s&&e.trim()!==s.trim();
+}
+function gridHTML(cellFn){
+  let h='<table class="tt"><thead><tr><th class="d">Day Order</th>';
+  for(let k=1;k<=NH();k++){
+    const p=S.periods[k-1]||{hour:ord(k)+' Hour',time:''};
+    h+=`<th>${esc(p.hour)}<span>${esc(p.time)}</span></th>`;
+    if(breakAfter(k))h+='<th class="br">BREAK</th>';
+  }
+  h+='</tr></thead><tbody>';
+  for(let d=1;d<=6;d++){
+    h+=`<tr><th class="d">Day ${d}</th>`;
+    for(let k=1;k<=NH();k++){
+      h+=`<td>${cellFn(d,k)}</td>`;
+      if(breakAfter(k))h+=d===1?'<td class="br" rowspan="6"></td>':'';
+    }
+    h+='</tr>';
+  }
+  return h+'</tbody></table>';
+}
+function pageShell(title,metaItems,body){
+  return `<div class="hd"><div class="c1">${esc(COLLEGE)}</div><div class="c2">${esc(COLLEGE2)}</div><div class="c3">${esc(DEPT)}</div><div class="c4">${esc(title)}</div></div>
+  <div class="meta">${metaItems.map(m=>`<span>${m}</span>`).join('')}</div>${body}
+  <div class="sig"><div>Time Table In-charge</div><div>Head of the Department</div></div>`;
+}
+const whoText=it=>[...(it.staff||[]).map(staffName),...(it.ext||[])].join(', ');
+function classPage(cls,meta){
+  const sem=SEMS[cls][+$('#pTerm').value-1];
+  const legend=[], seen={};
+  const grid=gridHTML((d,k)=>{
+    const items=S.slots[key(cls,d,k)]||[];
+    items.forEach(it=>{const kk=(it.code||'')+'|'+(it.name||'');if(!seen[kk]){seen[kk]=1;legend.push(it);}});
+    return items.map(it=>`<div class="it"><b>${esc(it.code)}</b>${esc(it.name)}${whoText(it)?`<i>${esc(whoText(it))}</i>`:''}${it.room?`<u>Room: ${esc(it.room)}</u>`:''}</div>`).join('<div class="sep">/</div>');
+  });
+  const lg=legend.length?`<div class="lgt">Subjects and staff</div><table class="lg"><thead><tr><th style="width:34mm">Code</th><th>Subject</th><th style="width:34%">Staff</th><th style="width:22mm">Room</th></tr></thead><tbody>${legend.map(it=>`<tr><td>${esc(it.code)}</td><td>${esc(it.name)}</td><td>${esc(whoText(it))}</td><td>${esc(it.room)}</td></tr>`).join('')}</tbody></table>`:'';
+  const b=S.batch[cls]?` (${esc(S.batch[cls])})`:'';
+  return pageShell('CLASS TIME TABLE',[`<b>Class:</b> ${esc(cls)}${b}`,`<b>Semester:</b> ${ROMAN[sem]}`,`<b>Academic year:</b> ${esc(meta.year)}`,...(meta.from?[`<b>Effective from:</b> ${esc(meta.from)}`]:[])],grid+lg);
+}
+function staffPage(me,meta){
+  let n=0;
+  const grid=gridHTML((d,k)=>{
+    const c=S.stt[me.i+'|'+d+'|'+k]; if(!c||!(c.cls||c.code||c.subject||c.room))return '';
+    n++;
+    return `<div class="it"><b>${esc(c.cls)}</b>${esc(c.subject||c.code)}<i>${esc([c.subject?c.code:'',c.room].filter(Boolean).join(' · '))}</i></div>`;
+  });
+  return {n,html:pageShell('STAFF TIME TABLE',[`<b>Name:</b> ${esc(me.n)} (${esc(me.i)})`,...(me.d?[`<b>Designation:</b> ${esc(me.d)}`]:[]),`<b>Academic year:</b> ${esc(meta.year)}`,`<b>Hours allotted:</b> ${n} of ${6*NH()}`,...(meta.from?[`<b>Effective from:</b> ${esc(meta.from)}`]:[])],grid)};
+}
+function openPrint(pages,title){
+  if(!pages.length){alert('Nothing to print.');return;}
+  const w=window.open('','_blank');
+  if(!w){alert('The print window was blocked. Allow pop-ups for this site and try again.');return;}
+  w.document.write(`<!DOCTYPE html><html><head><meta charset="utf-8"><title>${esc(title)}</title><style>${PRINT_CSS}</style></head><body>${pages.map(p=>`<section class="pg">${p}</section>`).join('')}<script>window.onload=function(){setTimeout(function(){window.print()},500)}<\/script></body></html>`);
+  w.document.close();
+}
+$('#pGo').addEventListener('click',()=>{
+  const t=$('#pType').value, meta={year:$('#pYear').value.trim(),from:$('#pFrom').value.trim()};
+  let pages=[], title='Timetable';
+  if(t.startsWith('class')){
+    const list=t==='class-one'?[$('#pTarget').value]:t==='class-ug'?CLS.slice(0,3):t==='class-pg'?CLS.slice(3):CLS;
+    pages=list.map(c=>classPage(c,meta)); title=t==='class-one'?'Timetable '+list[0]:'Class timetables';
+  }else{
+    const list=t==='staff-one'?S.staff.filter(s=>s.i===$('#pTarget').value):S.staff;
+    list.forEach(s=>{const r=staffPage(s,meta); if(t==='staff-one'||r.n>0)pages.push(r.html);});
+    title=t==='staff-one'&&list[0]?'Timetable '+list[0].n:'Staff timetables';
+  }
+  openPrint(pages,title);
+});
+
 /* ---------- start ---------- */
 setStatus();
 $('#loginForm').addEventListener('submit',e=>{
@@ -646,7 +794,7 @@ $('#loginForm').addEventListener('submit',e=>{
   call('getAll').then(()=>{ try{sessionStorage.setItem('tt-pw',PW);}catch(_){} $('#loginBtn').disabled=false; load(); })
     .catch(er=>{ $('#loginBtn').disabled=false; $('#loginErr').textContent=er&&er.code==='auth'?'Wrong password.':'Could not reach the sheet: '+((er&&er.message)||er); $('#pw').value=''; });
 });
-$('#signOut').addEventListener('click',()=>{ try{sessionStorage.removeItem('tt-pw');}catch(_){} PW=''; S.days=[];S.subjects=[];S.slots={};S.stt={}; ['days','subjects','general','staff'].forEach(t=>$('#p-'+t).hidden=true); $('#loading').hidden=false; $('#loading').textContent=''; showLogin(''); });
+$('#signOut').addEventListener('click',()=>{ try{sessionStorage.removeItem('tt-pw');}catch(_){} PW=''; S.days=[];S.subjects=[];S.slots={};S.stt={}; ['days','subjects','general','staff','print'].forEach(t=>$('#p-'+t).hidden=true); $('#loading').hidden=false; $('#loading').textContent=''; showLogin(''); });
 if(API_URL.indexOf('PASTE_')===0){ $('#loading').textContent='Set API_URL at the top of the script in index.html to your Apps Script web app URL.'; }
 else if(PW)load(); else { $('#loading').textContent=''; showLogin(''); }
 })();
