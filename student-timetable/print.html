@@ -1,0 +1,475 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Timetable Print</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=Inter:wght@400;500;600;700&family=Poppins:wght@400;500;600;700&family=Roboto:wght@400;500;700&family=Merriweather:wght@400;700&family=Lora:wght@400;500;600;700&family=Nunito:wght@400;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: left controls panel + grey preview of real-size sheets. Printing hides the panel and prints only the sheets. */
+:root{--bg:#e9ecf1;--surface:#fff;--ink:#18212c;--muted:#5b6978;--line:#dbe1e8;--accent:#8a1d2e;--accent-ink:#fff;--bad:#b3261e;color-scheme:light;
+  --font:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",sans-serif}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--bg);color:var(--ink);font:14px/1.45 var(--font)}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+.app{display:grid;grid-template-columns:360px minmax(0,1fr);min-height:100vh}
+.panel{background:var(--surface);border-right:1px solid var(--line);height:100vh;overflow:auto;position:sticky;top:0;padding:16px 16px 40px}
+.panel h1{margin:0 0 2px;font-size:18px;font-weight:600}
+.panel .sub{margin:0 0 12px;color:var(--muted);font-size:12.5px}
+.top{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px}
+.btn{border:1px solid var(--line);background:var(--surface);padding:8px 12px;border-radius:6px;font-weight:500;font-size:13px}
+.btn:hover{border-color:var(--muted)}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.btn.full{grid-column:1/-1}
+details{border-top:1px solid var(--line);padding:2px 0}
+summary{cursor:pointer;font-weight:600;padding:10px 0;font-size:13.5px;list-style:none;display:flex;justify-content:space-between}
+summary::after{content:"+";color:var(--muted)} details[open] summary::after{content:"–"}
+summary::-webkit-details-marker{display:none}
+.fields{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:2px 0 14px}
+.fields .wide{grid-column:1/-1}
+.f{display:grid;gap:3px;font-size:12px;color:var(--muted);font-weight:500;min-width:0}
+.f input[type=text],.f input[type=number],.f select,.f textarea{border:1px solid var(--line);background:var(--surface);border-radius:6px;padding:6px 8px;font-size:13px;color:var(--ink);width:100%;min-width:0}
+.f input[type=color]{width:100%;height:32px;border:1px solid var(--line);border-radius:6px;padding:2px;background:var(--surface)}
+.f input[type=range]{width:100%;accent-color:var(--accent)}
+.f.chk{display:flex;align-items:center;gap:8px;color:var(--ink);font-size:13px;font-weight:400}
+.f .row{display:flex;gap:6px;align-items:center}
+.f .row .btn{padding:5px 9px;font-size:12px}
+.f .thumb{height:34px;max-width:100px;object-fit:contain;border:1px solid var(--line);border-radius:4px;background:#fff}
+.list{display:grid;gap:4px}
+.list label{display:flex;align-items:center;gap:8px;font-size:13px}
+.list select{margin-left:auto;border:1px solid var(--line);border-radius:6px;padding:3px 6px;background:var(--surface)}
+.hint{font-size:12px;color:var(--muted);margin:0}
+
+.stage{padding:20px 16px 60px;overflow:auto;min-width:0}
+.bar{display:flex;gap:12px;align-items:center;margin-bottom:12px;color:var(--muted);font-size:13px;flex-wrap:wrap}
+.bar input[type=range]{width:160px;accent-color:var(--accent)}
+#pages{display:flex;flex-direction:column;align-items:center;gap:18px;transform-origin:top center}
+.msg{padding:60px 16px;text-align:center;color:var(--muted)}
+
+/* ---- the printed sheet ---- */
+.sheet{background:#fff;color:#111;position:relative;box-shadow:0 2px 14px rgba(0,0,0,.18);overflow:hidden;flex:none;break-after:page;page-break-after:always}
+.sheet:last-child{break-after:auto;page-break-after:auto}
+.inner{position:relative;z-index:1;height:100%;display:flex;flex-direction:column;gap:3mm}
+.wm{position:absolute;inset:0;z-index:0;display:grid;place-items:center;pointer-events:none;overflow:hidden}
+.wm span{white-space:nowrap;font-weight:700;line-height:1}
+.hdr{display:flex;align-items:center;gap:4mm;flex:none}
+.hdr .logo{flex:none;display:grid;place-items:center}
+.hdr .logo img{max-width:100%;max-height:100%;object-fit:contain}
+.hdr .txt{flex:1;min-width:0}
+.hdr .txt div{line-height:1.2}
+.grid{flex:1;min-height:0;display:grid;gap:3mm}
+.box{display:flex;flex-direction:column;min-height:0;min-width:0;overflow:hidden}
+.bt{flex:none;padding:1mm 2.5mm;font-weight:600}
+.tt{flex:1;min-height:0;display:grid}
+.c{position:relative;overflow:hidden;min-width:0;min-height:0}
+.c .ci{position:absolute;inset:0;display:flex;flex-direction:column;overflow:hidden}
+.hc{display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:.8mm 1mm;overflow:hidden}
+.hc small{font-weight:400;opacity:.85;display:block}
+.bk{display:grid;place-items:center;overflow:hidden}
+.bk span{writing-mode:vertical-rl;transform:rotate(180deg);letter-spacing:.2em;font-weight:600}
+.sep{opacity:.55;line-height:1}
+.pill{font-weight:600;opacity:.8}
+.ftr{flex:none;display:flex;justify-content:space-between;gap:6mm;padding-top:7mm}
+.ftr div{flex:1;text-align:center;border-top:1px solid #333;padding-top:1mm}
+.ftr div:empty{visibility:hidden}
+.note{flex:none;text-align:center}
+
+/* ---- login ---- */
+.login{position:fixed;inset:0;z-index:50;background:var(--bg);display:grid;place-items:center;padding:16px}
+.login form{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:24px;width:min(360px,100%);display:grid;gap:14px}
+.login h2{margin:0;font-size:19px}
+.login label{display:grid;gap:4px;font-size:12px;font-weight:600;color:var(--muted)}
+.login input{border:1px solid var(--line);border-radius:6px;padding:8px 10px;font-size:15px;width:100%}
+.login .err{color:var(--bad);font-size:13px;min-height:1.3em;margin:0}
+[hidden]{display:none!important}
+
+@media (max-width:900px){.app{grid-template-columns:1fr}.panel{position:static;height:auto;border-right:0;border-bottom:1px solid var(--line)}}
+@media print{
+  html,body{background:#fff!important}
+  .panel,.bar,.login,.msg{display:none!important}
+  .app{display:block}.stage{padding:0;overflow:visible}
+  #pages{display:block;zoom:1!important;transform:none!important;gap:0}
+  .sheet{box-shadow:none;margin:0}
+  *{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+}
+</style>
+<style id="pageStyle"></style>
+</head>
+<body>
+<div class="login" id="login" hidden>
+  <form id="loginForm">
+    <h2>Timetable Print</h2>
+    <label>Password<input id="pw" type="password" autocomplete="current-password"></label>
+    <p class="err" id="loginErr" role="alert"></p>
+    <button class="btn primary" type="submit" id="loginBtn">Sign in</button>
+  </form>
+</div>
+
+<div class="app">
+  <aside class="panel" id="panel">
+    <h1>Timetable Print</h1>
+    <p class="sub" id="loadNote">Reading your sheet…</p>
+    <div class="top">
+      <button class="btn primary full" id="printBtn" type="button">Print / Save as PDF</button>
+      <button class="btn" id="exportBtn" type="button">Save settings</button>
+      <button class="btn" id="importBtn" type="button">Load settings</button>
+      <button class="btn" id="resetBtn" type="button">Reset design</button>
+      <button class="btn" id="refreshBtn" type="button">Refresh data</button>
+      <input type="file" id="importFile" accept="application/json" hidden>
+    </div>
+    <p class="hint" style="margin-bottom:10px">In the print dialog choose margins “None” and leave “Background graphics” on. Your choices are remembered on this device.</p>
+    <div id="controls"></div>
+  </aside>
+  <main class="stage">
+    <div class="bar">
+      <label>Preview size <input type="range" id="zoom" min="30" max="150" value="100"></label>
+      <label style="display:flex;gap:6px;align-items:center"><input type="checkbox" id="zoomAuto" checked> Fit to screen</label>
+      <span id="pageCount"></span>
+    </div>
+    <div id="pages"></div>
+    <div class="msg" id="msg" hidden></div>
+  </main>
+</div>
+
+<script>
+(function(){
+/* Your Apps Script web app (the same one index.html uses). */
+const API_URL='https://script.google.com/macros/s/AKfycbzar0Q1yKHKddmlaY2p7OtxC0bMf4_3dqZ5zsmcHoYRbRYouUjNmRaWJp14SGJb8WID/exec';
+
+const $=(s,r=document)=>r.querySelector(s);
+const esc=s=>String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const CLS=['1st UG','2nd UG','3rd UG','1st PG','2nd PG'];
+const DEF_SEM={'1st UG':2,'2nd UG':4,'3rd UG':6,'1st PG':2,'2nd PG':4};
+const ROMAN=['','I','II','III','IV','V','VI','VII','VIII'];
+const ORD=['','1st','2nd','3rd','4th','5th','6th','7th','8th'];
+const PAPER={A4:[210,297],A3:[297,420],A5:[148,210],Letter:[215.9,279.4],Legal:[215.9,355.6]};
+
+/* ================= data from the sheet ================= */
+let PW=''; try{PW=sessionStorage.getItem('tt-pw')||'';}catch(_){}
+function call(fn,...args){
+  return new Promise((resolve,reject)=>{
+    const id=Math.random().toString(36).slice(2)+Date.now().toString(36);
+    const frame=document.createElement('iframe'); frame.name='api-'+id; frame.hidden=true;
+    const form=document.createElement('form'); form.method='POST'; form.action=API_URL; form.target=frame.name; form.hidden=true;
+    const inp=document.createElement('input'); inp.type='hidden'; inp.name='payload';
+    inp.value=JSON.stringify({fn,args,password:PW,id,origin:location.origin}); form.appendChild(inp);
+    let apiOrigin=''; try{apiOrigin=new URL(API_URL).origin;}catch(_){}
+    const done=()=>{clearTimeout(timer);window.removeEventListener('message',onMsg);frame.remove();form.remove();};
+    const onMsg=ev=>{const d=ev.data; if(!d||d.id!==id)return;
+      if(!(ev.origin===apiOrigin||/\.googleusercontent\.com$/.test(ev.origin)||/\.google\.com$/.test(ev.origin)))return;
+      done(); if(d.ok)resolve(d.result); else{const e=new Error(d.error||'Request failed');e.code=d.code;reject(e);} };
+    const timer=setTimeout(()=>{done();reject(new Error('No answer from Apps Script.'));},60000);
+    window.addEventListener('message',onMsg); document.body.append(frame,form); form.submit();
+  });
+}
+const D={staff:[],periods:[],slots:{},stt:{}};
+function load(){
+  $('#loadNote').textContent='Reading your sheet…';
+  return call('getAll').then(d=>{
+    D.staff=d.staff; D.periods=d.periods; D.slots={}; d.slots.forEach(s=>{D.slots[s.cls+'|'+s.day+'|'+s.hour]=s.items;});
+    D.stt={}; d.stafftt.forEach(r=>{D.stt[r.i+'|'+r.d+'|'+r.h]=r;});
+    $('#login').hidden=true; $('#loadNote').textContent='Data loaded from your sheet.';
+    buildLists(); render();
+  }).catch(e=>{
+    if(e&&e.code==='auth'){try{sessionStorage.removeItem('tt-pw');}catch(_){} PW=''; $('#login').hidden=false; setTimeout(()=>$('#pw').focus(),0); return;}
+    $('#loadNote').textContent='Could not read the sheet: '+((e&&e.message)||e);
+  });
+}
+$('#loginForm').addEventListener('submit',e=>{
+  e.preventDefault(); PW=$('#pw').value; if(!PW)return; $('#loginBtn').disabled=true; $('#loginErr').textContent='';
+  call('getAll').then(()=>{try{sessionStorage.setItem('tt-pw',PW);}catch(_){} $('#loginBtn').disabled=false; load();})
+   .catch(er=>{$('#loginBtn').disabled=false;$('#pw').value='';$('#loginErr').textContent=er&&er.code==='auth'?'Wrong password.':'Could not reach the sheet: '+((er&&er.message)||er);});
+});
+$('#refreshBtn').addEventListener('click',()=>load());
+
+/* ================= settings ================= */
+const DEFAULTS={
+  mode:'general', paper:'A4', orient:'landscape', margin:8, layout:'1x1', gap:4,
+  classOn:{'1st UG':true,'2nd UG':true,'3rd UG':true,'1st PG':true,'2nd PG':true}, sems:Object.assign({},DEF_SEM), staffOff:{},
+  h1:'LOYOLA COLLEGE (AUTONOMOUS)', h2:'Department of Zoology', h3:'Time Table · Even Semester 2026–27',
+  h1Size:18, h2Size:13, h3Size:11, hColor:'#18212c', hAlign:'center', hBold:true, hLine:true, hLineColor:'#8a1d2e',
+  logoL:'', logoLSize:20, logoR:'', logoRSize:20,
+  wmType:'text', wmText:'DEPARTMENT OF ZOOLOGY', wmImg:'', wmOpacity:7, wmSize:46, wmRotate:-30, wmColor:'#8a1d2e',
+  font:'IBM Plex Sans', cellSize:9, lineHeight:1.15, align:'center', valign:'middle', autoFit:true, minSize:4.5,
+  showCode:true, showName:true, showStaff:'initials', showRoom:false, showClass:true, combine:true, codeBold:true, codeMono:false, nameStyle:'normal',
+  titleTpl:'{class} — Semester {sem}', titleTplStaff:'{name} ({designation})', boxTitleSize:12, boxTitleBg:'#8a1d2e', boxTitleFg:'#ffffff', boxTitleAlign:'left', boxBorder:true,
+  cornerLabel:'Day Order', dayLabel:'Day {n}', hourLabel:'ord', showTimes:true, shortTimes:true, dayW:16, breakAfter:3, breakLabel:'INTERVAL', breakW:7, weights:'1,1,1,1,1', days:6,
+  headFill:'#f1f3f6', headColor:'#18212c', headSize:9, headBold:true, dayFill:'#f1f3f6', dayColor:'#18212c', daySize:10, zebra:false, zebraFill:'#f8f9fb', cellFill:'#ffffff', cellFillOn:false,
+  borderColor:'#333333', borderW:1, outerW:1.5,
+  stretch:true, rowH:14,
+  footer:true, f1:'Class Advisor', f2:'Head of the Department', f3:'Principal', fSize:10, footNote:'', noteSize:9,
+  zoomAuto:true, zoom:100
+};
+const KEY='tt-print-v1';
+let O=clone(DEFAULTS);
+function clone(o){return JSON.parse(JSON.stringify(o));}
+function loadSettings(){try{const s=JSON.parse(localStorage.getItem(KEY)||'null');if(s)O=Object.assign(clone(DEFAULTS),s);}catch(_){}}
+let saveT; function saveSettings(){clearTimeout(saveT);saveT=setTimeout(()=>{try{localStorage.setItem(KEY,JSON.stringify(O));}catch(_){ }},300);}
+
+/* ================= controls (generated from a schema) ================= */
+const FONTS=['IBM Plex Sans','Inter','Poppins','Roboto','Nunito','Merriweather','Lora','Arial','Calibri','Georgia','Times New Roman','Courier New'];
+const SCHEMA=[
+ {sec:'What to print',open:true,f:[
+  {k:'mode',t:'select',l:'Print',o:[['general','Class timetables'],['staff','Staff timetables']],wide:1},
+  {t:'classes',wide:1},{t:'staffs',wide:1}]},
+ {sec:'Page and layout',open:true,f:[
+  {k:'paper',t:'select',l:'Paper',o:Object.keys(PAPER).map(x=>[x,x])},
+  {k:'orient',t:'select',l:'Orientation',o:[['landscape','Landscape'],['portrait','Portrait']]},
+  {k:'layout',t:'select',l:'Boxes on each page',o:[['1x1','1 box (fills the page)'],['1x2','2 boxes, stacked'],['2x1','2 boxes, side by side'],['1x3','3 boxes, stacked'],['2x2','4 boxes (2 × 2)'],['2x3','6 boxes (2 across × 3 down)'],['3x2','6 boxes (3 across × 2 down)']],wide:1},
+  {k:'margin',t:'number',l:'Page margin (mm)',min:0,max:30,step:1},
+  {k:'gap',t:'number',l:'Space between boxes (mm)',min:0,max:20,step:1}]},
+ {sec:'Heading',f:[
+  {k:'h1',t:'text',l:'Line 1 (college)',wide:1},{k:'h2',t:'text',l:'Line 2 (department)',wide:1},{k:'h3',t:'text',l:'Line 3 (title)',wide:1},
+  {k:'h1Size',t:'number',l:'Line 1 size (pt)',min:6,max:48,step:.5},{k:'h2Size',t:'number',l:'Line 2 size (pt)',min:6,max:40,step:.5},
+  {k:'h3Size',t:'number',l:'Line 3 size (pt)',min:6,max:40,step:.5},{k:'hColor',t:'color',l:'Text colour'},
+  {k:'hAlign',t:'select',l:'Alignment',o:[['center','Centre'],['left','Left'],['right','Right']]},
+  {k:'hBold',t:'check',l:'Bold heading'},{k:'hLine',t:'check',l:'Line under heading'},{k:'hLineColor',t:'color',l:'Line colour'}]},
+ {sec:'Logos',f:[
+  {k:'logoL',t:'image',l:'Left logo',wide:1},{k:'logoLSize',t:'number',l:'Left logo height (mm)',min:6,max:50,step:1},
+  {k:'logoR',t:'image',l:'Right logo',wide:1},{k:'logoRSize',t:'number',l:'Right logo height (mm)',min:6,max:50,step:1}]},
+ {sec:'Watermark',f:[
+  {k:'wmType',t:'select',l:'Type',o:[['none','None'],['text','Text'],['image','Image']],wide:1},
+  {k:'wmText',t:'text',l:'Watermark text',wide:1},{k:'wmImg',t:'image',l:'Watermark image',wide:1},
+  {k:'wmOpacity',t:'range',l:'Strength (%)',min:1,max:40,step:1},{k:'wmSize',t:'range',l:'Size (% of page width)',min:10,max:100,step:1},
+  {k:'wmRotate',t:'range',l:'Angle (degrees)',min:-90,max:90,step:1},{k:'wmColor',t:'color',l:'Text colour'}]},
+ {sec:'Box and title',f:[
+  {k:'titleTpl',t:'text',l:'Class box title  ({class}, {sem}, {semRoman})',wide:1},
+  {k:'titleTplStaff',t:'text',l:'Staff box title  ({name}, {initial}, {designation})',wide:1},
+  {k:'boxTitleSize',t:'number',l:'Title size (pt)',min:6,max:30,step:.5},{k:'boxTitleAlign',t:'select',l:'Title alignment',o:[['left','Left'],['center','Centre'],['right','Right']]},
+  {k:'boxTitleBg',t:'color',l:'Title background'},{k:'boxTitleFg',t:'color',l:'Title text'},
+  {k:'boxBorder',t:'check',l:'Draw a frame around each box',wide:1}]},
+ {sec:'Table columns and rows',f:[
+  {k:'dayW',t:'number',l:'First column width (mm)',min:6,max:40,step:1},{k:'weights',t:'text',l:'Hour column widths (ratio)'},
+  {k:'breakAfter',t:'number',l:'Interval after hour (0 = none)',min:0,max:8,step:1},{k:'breakW',t:'number',l:'Interval width (mm)',min:3,max:20,step:1},
+  {k:'breakLabel',t:'text',l:'Interval text'},{k:'days',t:'number',l:'Number of day orders',min:1,max:8,step:1},
+  {k:'stretch',t:'check',l:'Stretch rows to fill the box',wide:1},{k:'rowH',t:'number',l:'Row height (mm) when not stretched',min:6,max:60,step:1},
+  {k:'cornerLabel',t:'text',l:'Top-left cell text'},{k:'dayLabel',t:'select',l:'Day order style',o:[['Day {n}','Day 1'],['{n}','1'],['{r}','I'],['Day {r}','Day I'],['D{n}','D1']]},
+  {k:'hourLabel',t:'select',l:'Hour heading style',o:[['ord','1st Hour'],['num','1'],['roman','I'],['hour','Hour 1'],['sheet','As in sheet']]},
+  {k:'showTimes',t:'check',l:'Show clock times'},{k:'shortTimes',t:'check',l:'Shorten times (8:15–9:10)'}]},
+ {sec:'Text in the cells',f:[
+  {k:'font',t:'select',l:'Font',o:FONTS.map(x=>[x,x]),wide:1},
+  {k:'cellSize',t:'number',l:'Cell text size (pt)',min:4,max:24,step:.5},{k:'lineHeight',t:'number',l:'Line spacing',min:.9,max:2,step:.05},
+  {k:'autoFit',t:'check',l:'Shrink text so it always fits its cell',wide:1},{k:'minSize',t:'number',l:'Smallest size when shrinking (pt)',min:3,max:10,step:.5},
+  {k:'align',t:'select',l:'Horizontal',o:[['center','Centre'],['left','Left'],['right','Right']]},{k:'valign',t:'select',l:'Vertical',o:[['middle','Middle'],['top','Top'],['bottom','Bottom']]},
+  {k:'showCode',t:'check',l:'Subject code'},{k:'showName',t:'check',l:'Subject name'},
+  {k:'showStaff',t:'select',l:'Staff',o:[['initials','Initials'],['names','Full names'],['none','Hide']]},{k:'nameStyle',t:'select',l:'Subject name style',o:[['normal','Normal'],['italic','Italic'],['upper','CAPITALS'],['small','Smaller']]},
+  {k:'showRoom',t:'check',l:'Room'},{k:'showClass',t:'check',l:'Class (staff sheets)'},
+  {k:'combine',t:'check',l:'Join electives on one line with /',wide:1},{k:'codeBold',t:'check',l:'Bold code'},{k:'codeMono',t:'check',l:'Code in monospace'}]},
+ {sec:'Colours and lines',f:[
+  {k:'headFill',t:'color',l:'Hour heading fill'},{k:'headColor',t:'color',l:'Hour heading text'},
+  {k:'headSize',t:'number',l:'Heading size (pt)',min:5,max:20,step:.5},{k:'headBold',t:'check',l:'Bold headings'},
+  {k:'dayFill',t:'color',l:'First column fill'},{k:'dayColor',t:'color',l:'First column text'},{k:'daySize',t:'number',l:'First column size (pt)',min:5,max:24,step:.5},
+  {k:'cellFillOn',t:'check',l:'Colour the cells'},{k:'cellFill',t:'color',l:'Cell fill'},
+  {k:'zebra',t:'check',l:'Alternate row shading'},{k:'zebraFill',t:'color',l:'Shading colour'},
+  {k:'borderColor',t:'color',l:'Line colour'},{k:'borderW',t:'number',l:'Inner line (px)',min:0,max:4,step:.25},{k:'outerW',t:'number',l:'Outer line (px)',min:0,max:6,step:.25}]},
+ {sec:'Footer',f:[
+  {k:'footer',t:'check',l:'Signature lines',wide:1},{k:'f1',t:'text',l:'Left'},{k:'f2',t:'text',l:'Centre'},{k:'f3',t:'text',l:'Right'},
+  {k:'fSize',t:'number',l:'Size (pt)',min:6,max:20,step:.5},{k:'footNote',t:'text',l:'Note under the boxes',wide:1},{k:'noteSize',t:'number',l:'Note size (pt)',min:6,max:16,step:.5}]}
+];
+function buildControls(){
+  $('#controls').innerHTML=SCHEMA.map(s=>`<details${s.open?' open':''}><summary>${esc(s.sec)}</summary><div class="fields">${s.f.map(fieldHtml).join('')}</div></details>`).join('');
+  document.querySelectorAll('[data-k]').forEach(el=>{
+    const k=el.dataset.k;
+    if(el.type==='checkbox')el.checked=!!O[k]; else if(el.type!=='file')el.value=O[k];
+    const h=()=>{ O[k]=el.type==='checkbox'?el.checked:(el.type==='number'||el.type==='range')?(el.value===''?0:+el.value):el.value; saveSettings(); render(); };
+    el.addEventListener(el.tagName==='SELECT'||el.type==='checkbox'||el.type==='color'?'change':'input',h);
+  });
+  document.querySelectorAll('[data-img]').forEach(el=>el.addEventListener('change',()=>pickImage(el)));
+  document.querySelectorAll('[data-clear]').forEach(b=>b.addEventListener('click',()=>{O[b.dataset.clear]='';saveSettings();buildControls();buildLists();render();}));
+}
+function fieldHtml(f){
+  const w=f.wide?' wide':'';
+  if(f.t==='classes')return `<div class="f wide" id="classBox"></div>`;
+  if(f.t==='staffs')return `<div class="f wide" id="staffBox"></div>`;
+  if(f.t==='check')return `<label class="f chk${w}"><input type="checkbox" data-k="${f.k}"> ${esc(f.l)}</label>`;
+  if(f.t==='select')return `<label class="f${w}">${esc(f.l)}<select data-k="${f.k}">${f.o.map(o=>`<option value="${esc(o[0])}">${esc(o[1])}</option>`).join('')}</select></label>`;
+  if(f.t==='image')return `<div class="f${w}">${esc(f.l)}<div class="row">${O[f.k]?`<img class="thumb" src="${O[f.k]}" alt=""><button class="btn" type="button" data-clear="${f.k}">Remove</button>`:''}<input type="file" accept="image/*" data-img="${f.k}"></div></div>`;
+  if(f.t==='range')return `<label class="f${w}">${esc(f.l)}<input type="range" data-k="${f.k}" min="${f.min}" max="${f.max}" step="${f.step}"></label>`;
+  if(f.t==='number')return `<label class="f${w}">${esc(f.l)}<input type="number" data-k="${f.k}" min="${f.min}" max="${f.max}" step="${f.step}"></label>`;
+  if(f.t==='color')return `<label class="f${w}">${esc(f.l)}<input type="color" data-k="${f.k}"></label>`;
+  return `<label class="f${w}">${esc(f.l)}<input type="text" data-k="${f.k}"></label>`;
+}
+function pickImage(el){
+  const f=el.files&&el.files[0]; if(!f)return; const k=el.dataset.img;
+  const r=new FileReader();
+  r.onload=()=>{const im=new Image(); im.onload=()=>{
+    const m=600,s=Math.min(1,m/Math.max(im.width,im.height)),c=document.createElement('canvas'); c.width=Math.round(im.width*s); c.height=Math.round(im.height*s);
+    c.getContext('2d').drawImage(im,0,0,c.width,c.height); O[k]=c.toDataURL('image/png'); saveSettings(); buildControls(); buildLists(); render();
+  }; im.src=r.result;}; r.readAsDataURL(f);
+}
+function buildLists(){
+  const cb=$('#classBox'); if(cb){
+    cb.innerHTML='Classes and semester<div class="list">'+CLS.map(c=>`<label><input type="checkbox" data-cls="${c}" ${O.classOn[c]?'checked':''}> ${c}<select data-sem="${c}">${(c.endsWith('UG')?[1,2,3,4,5,6]:[1,2,3,4]).map(n=>`<option value="${n}"${+O.sems[c]===n?' selected':''}>Semester ${n}</option>`).join('')}</select></label>`).join('')+'</div>';
+    cb.querySelectorAll('[data-cls]').forEach(e=>e.addEventListener('change',()=>{O.classOn[e.dataset.cls]=e.checked;saveSettings();render();}));
+    cb.querySelectorAll('[data-sem]').forEach(e=>e.addEventListener('change',()=>{O.sems[e.dataset.sem]=+e.value;saveSettings();render();}));
+  }
+  const sb=$('#staffBox'); if(sb){
+    sb.innerHTML='Staff (for staff timetables)<div class="list">'+D.staff.map(s=>`<label><input type="checkbox" data-st="${esc(s.i)}" ${O.staffOff[s.i]?'':'checked'}> <b style="font-family:var(--mono,monospace);font-weight:500">${esc(s.i)}</b> ${esc(s.n)}</label>`).join('')+'</div>';
+    sb.querySelectorAll('[data-st]').forEach(e=>e.addEventListener('change',()=>{if(e.checked)delete O.staffOff[e.dataset.st];else O.staffOff[e.dataset.st]=true;saveSettings();render();}));
+  }
+  const m=$('[data-k="mode"]'); if(m){ const show=O.mode;}
+}
+
+/* ================= rendering ================= */
+const NH=()=>D.periods.length||5;
+function mm(n){return n+'mm';}
+function paperMM(){const p=PAPER[O.paper]||PAPER.A4; return O.orient==='landscape'?[p[1],p[0]]:[p[0],p[1]];}
+function hourHead(i){
+  const p=D.periods[i-1]||{hour:ORD[i]+' Hour',time:''}; let a;
+  switch(O.hourLabel){case 'num':a=String(i);break;case 'roman':a=ROMAN[i];break;case 'hour':a='Hour '+i;break;case 'sheet':a=p.hour;break;default:a=(ORD[i]||i+'th')+' Hour';}
+  let t=p.time||''; if(O.shortTimes)t=t.replace(/\s*(AM|PM)/gi,'').replace(/\s*[–-]\s*/,'–').replace(/\b0(\d:)/g,'$1');
+  return `${esc(a)}${O.showTimes&&t?`<small>${esc(t)}</small>`:''}`;
+}
+function dayLabel(n){return O.dayLabel.replace('{n}',n).replace('{r}',ROMAN[n]||n);}
+const staffNameOf=i=>{const s=D.staff.find(x=>x.i===i);return s?s.n:i;};
+function staffTxt(list){ if(!list||!list.length||O.showStaff==='none')return ''; return list.map(i=>O.showStaff==='names'?staffNameOf(i):i).join(', '); }
+function nameCls(){return O.nameStyle==='italic'?'font-style:italic;':O.nameStyle==='upper'?'text-transform:uppercase;':O.nameStyle==='small'?'font-size:.85em;':'';}
+const stOf=i=>O.showStaff==='none'?'':(staffTxt(i.staff)||i.stText||'');
+function itemLines(items){
+  const rows=[]; const code=(c)=>`<div style="${O.codeBold?'font-weight:700;':''}${O.codeMono?'font-family:\'IBM Plex Mono\',monospace;':''}">${esc(c)}</div>`;
+  /* A cell typed as one line of text ("CODE - Subject name - Staff") is split back into its three parts. */
+  const useItems=items.map(i=>{
+    let c=(i.code||'').trim(), n=i.name||'', st=i.staff||[], stText='';
+    if(!c&&n.indexOf(' - ')>0){
+      const p=n.split(' - ').map(x=>x.trim()), first=p[0];
+      if(first.length<=32&&first===first.toUpperCase()&&/^[A-Z]/.test(first)){ c=first; n=p[1]||''; stText=p.slice(2).join(' - '); }
+    }
+    return {code:c,name:n,staff:st,stText,room:i.room||'',hasCode:!!c};
+  });
+  const vis=i=>{ // what to show for one item
+    let showCode=O.showCode&&i.code, showName=O.showName&&i.name;
+    if(!i.hasCode&&i.name)showName=true;                       // plain-text subjects always show their text
+    if(!showCode&&!showName){ if(i.code)showCode=true; else showName=!!i.name; }
+    return {showCode,showName};
+  };
+  if(O.combine&&useItems.length>1){
+    const codes=useItems.filter(i=>vis(i).showCode).map(i=>i.code).join(' / ');
+    const names=useItems.filter(i=>vis(i).showName).map(i=>i.name).join(' / ');
+    const st=useItems.map(i=>stOf(i)).filter(Boolean).join(' / ');
+    const rm=[...new Set(useItems.map(i=>i.room).filter(Boolean))].join(' / ');
+    if(codes)rows.push(code(codes)); if(names)rows.push(`<div style="${nameCls()}">${esc(names)}</div>`);
+    if(st)rows.push(`<div>${esc(st)}</div>`); if(O.showRoom&&rm)rows.push(`<div>${esc(rm)}</div>`);
+  }else{
+    useItems.forEach((i,n)=>{
+      const v=vis(i); if(n)rows.push('<div class="sep">/</div>');
+      if(v.showCode)rows.push(code(i.code)); if(v.showName)rows.push(`<div style="${nameCls()}">${esc(i.name)}</div>`);
+      const st=stOf(i); if(st)rows.push(`<div>${esc(st)}</div>`); if(O.showRoom&&i.room)rows.push(`<div>${esc(i.room)}</div>`);
+    });
+  }
+  return rows.join('');
+}
+function staffCell(c){
+  if(!c||!(c.cls||c.code||c.subject||c.room))return '';
+  const rows=[]; if(O.showClass&&c.cls)rows.push(`<div class="pill">${esc(c.cls)}</div>`);
+  let sc=O.showCode&&c.code, sn=O.showName&&c.subject; if(!sc&&!sn){if(c.code)sc=true;else sn=!!c.subject;}
+  if(sc)rows.push(`<div style="${O.codeBold?'font-weight:700;':''}${O.codeMono?'font-family:\'IBM Plex Mono\',monospace;':''}">${esc(c.code)}</div>`);
+  if(sn)rows.push(`<div style="${nameCls()}">${esc(c.subject)}</div>`);
+  if(O.showRoom&&c.room)rows.push(`<div>${esc(c.room)}</div>`);
+  return rows.join('');
+}
+function gridHtml(cellFn){
+  const N=NH(), days=Math.max(1,Math.min(8,+O.days||6)), ba=+O.breakAfter||0;
+  const w=String(O.weights).split(/[,\s]+/).map(Number).filter(x=>x>0);
+  const cols=[mm(O.dayW)], colOf={}; let ci=2;
+  for(let h=1;h<=N;h++){ cols.push(`minmax(0,${w[h-1]||1}fr)`); colOf[h]=ci++; if(ba===h&&h<N){cols.push(mm(O.breakW));ci++;} }
+  const totalCols=cols.length, breakCol=(ba>0&&ba<N)?colOf[ba]+1:0;
+  const rowsDef=['auto'].concat(Array.from({length:days},()=>O.stretch?'minmax(0,1fr)':mm(O.rowH)));
+  const bc=O.borderColor, bw=O.borderW+'px';
+  const edge=(col,row)=>`border-right:${col===totalCols?0:bw+' solid '+bc};border-bottom:${row===days+1?0:bw+' solid '+bc};`;
+  let h=`<div class="tt" style="grid-template-columns:${cols.join(' ')};grid-template-rows:${rowsDef.join(' ')};${O.outerW>0?`border:${O.outerW}px solid ${bc};`:''}">`;
+  const hs=`background:${O.headFill};color:${O.headColor};font-size:${O.headSize}pt;font-weight:${O.headBold?700:500};`;
+  h+=`<div class="hc" style="grid-column:1;grid-row:1;${hs}${edge(1,1)}">${esc(O.cornerLabel)}</div>`;
+  for(let k=1;k<=N;k++)h+=`<div class="hc" style="grid-column:${colOf[k]};grid-row:1;${hs}${edge(colOf[k],1)}">${hourHead(k)}</div>`;
+  if(breakCol)h+=`<div class="hc" style="grid-column:${breakCol};grid-row:1;${hs}${edge(breakCol,1)}"></div>`;
+  for(let d=1;d<=days;d++){
+    const row=d+1, z=O.zebra&&d%2===0?O.zebraFill:(O.cellFillOn?O.cellFill:'transparent');
+    h+=`<div class="hc" style="grid-column:1;grid-row:${row};background:${O.dayFill};color:${O.dayColor};font-size:${O.daySize}pt;font-weight:700;${edge(1,row)}">${esc(dayLabel(d))}</div>`;
+    for(let k=1;k<=N;k++){
+      const jc=O.align==='left'?'flex-start':O.align==='right'?'flex-end':'center';
+      const jv=O.valign==='top'?'flex-start':O.valign==='bottom'?'flex-end':'center';
+      h+=`<div class="c" style="grid-column:${colOf[k]};grid-row:${row};background:${z};${edge(colOf[k],row)}"><div class="ci" data-fit style="justify-content:${jv};align-items:${jc};text-align:${O.align};padding:.8mm 1mm;font-size:${O.cellSize}pt;line-height:${O.lineHeight}">${cellFn(d,k)}</div></div>`;
+    }
+  }
+  if(breakCol)h+=`<div class="bk" style="grid-column:${breakCol};grid-row:2 / span ${days};background:${O.headFill};color:${O.headColor};font-size:${O.headSize}pt;${edge(breakCol,days+1)}"><span>${esc(O.breakLabel)}</span></div>`;
+  return h+'</div>';
+}
+function boxes(){
+  if(O.mode==='staff'){
+    return D.staff.filter(s=>!O.staffOff[s.i]).map(s=>({
+      title:O.titleTplStaff.replace('{name}',s.n).replace('{initial}',s.i).replace('{designation}',s.d).replace(/\(\s*\)/,'').trim(),
+      cell:(d,h)=>staffCell(D.stt[s.i+'|'+d+'|'+h])}));
+  }
+  return CLS.filter(c=>O.classOn[c]).map(c=>({
+    title:O.titleTpl.replace('{class}',c).replace('{semRoman}',ROMAN[O.sems[c]]||O.sems[c]).replace('{sem}',O.sems[c]),
+    cell:(d,h)=>itemLines(D.slots[c+'|'+d+'|'+h]||[])}));
+}
+function render(){
+  const list=boxes(), [W,H]=paperMM(), [cols,rows]=O.layout.split('x').map(Number), per=cols*rows;
+  $('#pageStyle').textContent=`@page{size:${W}mm ${H}mm;margin:0}`;
+  const msg=$('#msg');
+  if(!D.staff.length&&!Object.keys(D.slots).length){ $('#pages').innerHTML=''; msg.hidden=false; msg.textContent='Waiting for data from your sheet…'; return; }
+  if(!list.length){ $('#pages').innerHTML=''; msg.hidden=false; msg.textContent='Nothing selected. Tick at least one class or staff member on the left.'; $('#pageCount').textContent=''; return; }
+  msg.hidden=true;
+  const pages=[]; for(let i=0;i<list.length;i+=per)pages.push(list.slice(i,i+per));
+  const hAl=O.hAlign, jc=hAl==='left'?'flex-start':hAl==='right'?'flex-end':'center';
+  const logo=(src,h,side)=>src?`<div class="logo" style="height:${h}mm;width:${h}mm"><img src="${src}" alt=""></div>`:(side&&(O.logoL||O.logoR)&&hAl==='center'?`<div class="logo" style="width:${side}mm"></div>`:'');
+  const hdrTxt=`<div class="txt" style="text-align:${hAl};color:${O.hColor};font-weight:${O.hBold?700:500}">${O.h1?`<div style="font-size:${O.h1Size}pt">${esc(O.h1)}</div>`:''}${O.h2?`<div style="font-size:${O.h2Size}pt">${esc(O.h2)}</div>`:''}${O.h3?`<div style="font-size:${O.h3Size}pt;font-weight:500">${esc(O.h3)}</div>`:''}</div>`;
+  const hasHdr=O.h1||O.h2||O.h3||O.logoL||O.logoR;
+  const wm=O.wmType==='text'&&O.wmText?`<div class="wm"><span style="transform:rotate(${O.wmRotate}deg);color:${O.wmColor};opacity:${O.wmOpacity/100};font-size:${(O.wmSize/100*W)/Math.max(6,O.wmText.length*0.62)*2.83}pt">${esc(O.wmText)}</span></div>`
+    :(O.wmType==='image'&&O.wmImg?`<div class="wm"><img src="${O.wmImg}" alt="" style="width:${O.wmSize}%;opacity:${O.wmOpacity/100};transform:rotate(${O.wmRotate}deg)"></div>`:'');
+  $('#pages').innerHTML=pages.map(pg=>`<section class="sheet" style="width:${W}mm;height:${H}mm;padding:${O.margin}mm;font-family:'${O.font}',sans-serif">${wm}<div class="inner">
+    ${hasHdr?`<div class="hdr" style="${O.hLine?`padding-bottom:2mm;border-bottom:1.2px solid ${O.hLineColor};`:''}">${logo(O.logoL,O.logoLSize,O.logoRSize)}${hdrTxt}${logo(O.logoR,O.logoRSize,O.logoLSize)}</div>`:''}
+    <div class="grid" style="grid-template-columns:repeat(${cols},minmax(0,1fr));grid-template-rows:repeat(${rows},minmax(0,1fr));gap:${O.gap}mm">
+      ${pg.map(b=>`<div class="box" style="${O.boxBorder?`border:${O.outerW}px solid ${O.borderColor};`:''}"><div class="bt" style="background:${O.boxTitleBg};color:${O.boxTitleFg};font-size:${O.boxTitleSize}pt;text-align:${O.boxTitleAlign}">${esc(b.title)}</div>${gridHtml(b.cell)}</div>`).join('')}
+    </div>
+    ${O.footNote?`<div class="note" style="font-size:${O.noteSize}pt">${esc(O.footNote)}</div>`:''}
+    ${O.footer&&(O.f1||O.f2||O.f3)?`<div class="ftr" style="font-size:${O.fSize}pt"><div>${esc(O.f1)}</div><div>${esc(O.f2)}</div><div>${esc(O.f3)}</div></div>`:''}
+  </div></section>`).join('');
+  $('#pageCount').textContent=`${list.length} box${list.length>1?'es':''} on ${pages.length} page${pages.length>1?'s':''}`;
+  applyZoom(); fitAll();
+}
+/* shrink text until it fits inside its cell */
+function fitAll(){
+  const go=()=>document.querySelectorAll('.ci[data-fit]').forEach(el=>{
+    el.style.fontSize=O.cellSize+'pt'; if(!O.autoFit)return;
+    let s=O.cellSize; const min=Math.min(O.minSize,O.cellSize);
+    while(s>min&&(el.scrollHeight>el.clientHeight+1||el.scrollWidth>el.clientWidth+1)){s=Math.max(min,s-.25);el.style.fontSize=s+'pt';}
+  });
+  go(); if(document.fonts&&document.fonts.ready)document.fonts.ready.then(go);
+}
+window.addEventListener('beforeprint',()=>{document.getElementById('pages').style.zoom=1;fitAll();});
+window.addEventListener('afterprint',applyZoom);
+
+/* ================= preview zoom ================= */
+function applyZoom(){
+  const [W]=paperMM(), px=W*96/25.4, avail=Math.max(200,$('.stage').clientWidth-32);
+  const z=$('#zoomAuto').checked?Math.min(1,avail/px):($('#zoom').value/100);
+  $('#pages').style.zoom=z; if($('#zoomAuto').checked)$('#zoom').value=Math.round(z*100);
+}
+$('#zoom').addEventListener('input',()=>{$('#zoomAuto').checked=false;applyZoom();});
+$('#zoomAuto').addEventListener('change',applyZoom);
+window.addEventListener('resize',applyZoom);
+
+/* ================= buttons ================= */
+$('#printBtn').addEventListener('click',()=>{fitAll();window.print();});
+$('#resetBtn').addEventListener('click',()=>{O=clone(DEFAULTS);saveSettings();buildControls();buildLists();render();});
+$('#exportBtn').addEventListener('click',()=>{
+  const a=document.createElement('a'); a.href=URL.createObjectURL(new Blob([JSON.stringify(O,null,1)],{type:'application/json'})); a.download='print-settings.json'; document.body.append(a); a.click(); a.remove();
+});
+$('#importBtn').addEventListener('click',()=>$('#importFile').click());
+$('#importFile').addEventListener('change',e=>{
+  const f=e.target.files[0]; if(!f)return; const r=new FileReader();
+  r.onload=()=>{try{O=Object.assign(clone(DEFAULTS),JSON.parse(r.result));saveSettings();buildControls();buildLists();render();}catch(_){$('#loadNote').textContent='That file is not a settings file.';}};
+  r.readAsText(f); e.target.value='';
+});
+
+/* ================= start ================= */
+loadSettings(); buildControls(); buildLists();
+if(PW)load(); else{ $('#loadNote').textContent='Sign in to load your timetable.'; $('#login').hidden=false; setTimeout(()=>$('#pw').focus(),0); }
+})();
+</script>
+</body>
+</html>
