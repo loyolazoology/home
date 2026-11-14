@@ -138,7 +138,7 @@ dialog label .field{font-weight:400;color:var(--ink);font-size:14px;width:100%}
 <body>
 <div class="login" id="login" hidden>
   <form id="loginForm">
-    <h2>Zoology Timetable Editor</h2>
+    <h2>PG & Research Department of Adv. Zoology Timetable Editor</h2>
     <label>Password<input class="field" id="pw" type="password" autocomplete="current-password" autofocus></label>
     <p class="err" id="loginErr" role="alert"></p>
     <button class="btn primary" type="submit" id="loginBtn">Sign in</button>
@@ -147,7 +147,7 @@ dialog label .field{font-weight:400;color:var(--ink);font-size:14px;width:100%}
 <div class="wrap">
   <header>
     <div>
-      <h1>Zoology Timetable Editor</h1>
+      <h1>Adv. Zoology Timetable Editor</h1>
       <p class="sub">Changes save to your Timetable sheet by themselves.</p>
     </div>
     <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
@@ -280,10 +280,30 @@ const ord=n=>['','1st','2nd','3rd','4th','5th','6th'][n]||n+'th';
 const S={days:[],subjects:[],slots:{},stt:{},staff:[],periods:[],batch:{},tab:'days',cls:CLS[0],sem:2,who:null,month:'all',work:'all',q:'',sClass:'all',sSem:'all',sQ:''};
 let uid=1, errMsg='', pending=0; const timers={}, dirty=new Set(); let chain=Promise.resolve();
 /* Paste your Apps Script web app URL (ends in /exec) between the quotes. */
-const API_URL='https://script.google.com/macros/s/AKfycbzar0Q1yKHKddmlaY2p7OtxC0bMf4_3dqZ5zsmcHoYRbRYouUjNmRaWJp14SGJb8WID/exec';
+const API_URL='PASTE_YOUR_WEB_APP_URL_HERE';
 let PW=''; try{PW=sessionStorage.getItem('tt-pw')||'';}catch(_){}
-const call=(fn,...args)=>fetch(API_URL,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({fn,args,password:PW})})
-  .then(r=>r.json()).then(j=>{ if(!j.ok){const e=new Error(j.error||'Request failed');e.code=j.code;throw e;} return j.result; });
+/* Talks to Apps Script through a hidden form + iframe and postMessage. Unlike fetch(), this is not blocked by CORS. */
+function call(fn,...args){
+  return new Promise((resolve,reject)=>{
+    const id=Math.random().toString(36).slice(2)+Date.now().toString(36);
+    const frame=document.createElement('iframe'); frame.name='api-'+id; frame.hidden=true; frame.setAttribute('aria-hidden','true');
+    const form=document.createElement('form'); form.method='POST'; form.action=API_URL; form.target=frame.name; form.hidden=true;
+    const inp=document.createElement('input'); inp.type='hidden'; inp.name='payload';
+    inp.value=JSON.stringify({fn,args,password:PW,id,origin:location.origin});
+    form.appendChild(inp);
+    let apiOrigin=''; try{apiOrigin=new URL(API_URL).origin;}catch(_){}
+    const done=()=>{clearTimeout(timer);window.removeEventListener('message',onMsg);frame.remove();form.remove();};
+    const onMsg=ev=>{
+      const d=ev.data; if(!d||d.id!==id)return;
+      if(!(ev.origin===apiOrigin||/\.googleusercontent\.com$/.test(ev.origin)||/\.google\.com$/.test(ev.origin)))return;
+      done();
+      if(d.ok)resolve(d.result); else{const e=new Error(d.error||'Request failed');e.code=d.code;reject(e);}
+    };
+    const timer=setTimeout(()=>{done();reject(new Error('No answer from Apps Script. Check that the web app is deployed for "Anyone" and that you approved access by running setup once.'));},60000);
+    window.addEventListener('message',onMsg);
+    document.body.append(frame,form); form.submit();
+  });
+}
 function showLogin(msg){ $('#login').hidden=false; $('#loginErr').textContent=msg||''; $('#pw').value=''; setTimeout(()=>$('#pw').focus(),0); }
 const staffName=i=>{const s=S.staff.find(x=>x.i===i);return s?s.n:i;};
 const NH=()=>S.periods.length||5;
