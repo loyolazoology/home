@@ -96,6 +96,19 @@ body{
 .date-card .dicon{width:38px;height:38px;background:var(--blue);border-radius:var(--r-sm);display:flex;align-items:center;justify-content:center;color:white;font-size:15px;flex-shrink:0;}
 .date-card .dfield{flex:1;min-width:130px;}
 
+/* DATE NAV (previous / next day) */
+.dnav{display:flex;align-items:center;gap:6px;}
+.dnav .form-ctrl{flex:1;min-width:0;}
+.dnbtn{
+  width:38px;height:38px;flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;
+  background:var(--white);color:var(--blue);
+  border:1.5px solid var(--border);border-radius:var(--r-sm);
+  font-size:13px;cursor:pointer;transition:all var(--ease);
+}
+.dnbtn:hover{background:var(--blue);color:var(--white);border-color:var(--blue);box-shadow:var(--sh-sm);}
+.dnbtn:active{transform:scale(0.95);}
+
 /* INFO GRID — student style */
 .igrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:11px;}
 .icard{background:var(--white);border:1px solid var(--border);border-radius:var(--r-md);padding:13px 15px;border-left:4px solid var(--gold);box-shadow:var(--sh-sm);transition:transform var(--ease),box-shadow var(--ease);animation:popIn 0.28s ease both;}
@@ -375,7 +388,11 @@ tbody tr.row-sp-holiday td{color:#9B1C2C;}
       <div class="dicon"><i class="fas fa-calendar-alt"></i></div>
       <div class="dfield">
         <label class="flabel" for="dp">Select Date</label>
-        <input type="date" id="dp" class="form-ctrl">
+        <div class="dnav">
+          <button type="button" class="dnbtn" id="prevDay" title="Previous day" aria-label="Previous day"><i class="fas fa-chevron-left"></i></button>
+          <input type="date" id="dp" class="form-ctrl">
+          <button type="button" class="dnbtn" id="nextDay" title="Next day" aria-label="Next day"><i class="fas fa-chevron-right"></i></button>
+        </div>
       </div>
     </div>
     <div id="dayMeta">
@@ -473,6 +490,7 @@ const HOD_DESIG   = "Head of the Department";
 const HOURS       = ["1","2","3","4","5"];
 const HOUR_LABELS = {"1":"1st Hour","2":"2nd Hour","3":"3rd Hour","4":"4th Hour","5":"5th Hour"};
 const HOUR_DISPLAY= {"1":"1st Hour","2":"2nd Hour","3":"3rd Hour","4":"4th Hour","5":"5th Hour"};
+const TABS        = ["dayinfo","timetable","search"];
 
 /* Session persistence */
 const SESSION_KEY     = "azbt_session";
@@ -485,6 +503,7 @@ const SESSION_ALIVE_KEY = "azbt_tab_alive";
 let DI=[], STAFF=[], TT=[], TS={}, SP={};
 let loggedIn=null, pending=null, viewStaff=null;
 let todayISO="", dataReady=false;
+let curTab="dayinfo";
 
 /* ════════════════════════════
    HELPERS
@@ -562,6 +581,49 @@ function parseHourNum(h){
 }
 
 /* ════════════════════════════
+   URL PARAMETERS (date / tab)
+   Keeps the same view after refresh or when the link is shared
+════════════════════════════ */
+function updateURL(){
+  try{
+    const p=new URLSearchParams();
+    const dv=$('dp').value;
+    if(dv) p.set('date',dv);
+    p.set('tab',curTab);
+    history.replaceState(null,'',location.pathname+'?'+p.toString()+location.hash);
+  }catch(e){ /* ignore (e.g. sandboxed frames) */ }
+}
+
+function validYMD(s){
+  if(!s||!/^\d{4}-\d{2}-\d{2}$/.test(s))return false;
+  const[y,m,d]=s.split('-').map(Number);
+  const dt=new Date(Date.UTC(y,m-1,d));
+  return dt.getUTCFullYear()===y&&dt.getUTCMonth()===m-1&&dt.getUTCDate()===d;
+}
+
+function showTab(name){
+  curTab=name;
+  document.querySelectorAll('#mainNav .nav-btn').forEach(x=>x.classList.toggle('active',x.dataset.tab===name));
+  document.querySelectorAll('.tab').forEach(x=>x.classList.toggle('active',x.id===name));
+}
+
+/* ════════════════════════════
+   DATE NAV (previous / next day)
+════════════════════════════ */
+function shiftDate(n){
+  const dp=$('dp');
+  const base=validYMD(dp.value)?dp.value:toIST();
+  const[y,m,d]=base.split('-').map(Number);
+  const dt=new Date(Date.UTC(y,m-1,d+n));
+  const ny=dt.getUTCFullYear();
+  const nm=String(dt.getUTCMonth()+1).padStart(2,'0');
+  const nd=String(dt.getUTCDate()).padStart(2,'0');
+  dp.value=`${ny}-${nm}-${nd}`;
+  updateURL();
+  if(dataReady){ renderDayMeta(); if(loggedIn)renderTT(); }
+}
+
+/* ════════════════════════════
    SESSION PERSISTENCE
 ════════════════════════════ */
 function saveSession(initial){
@@ -619,19 +681,37 @@ async function init(){
   todayISO=toIST();
   setInterval(tickClock,1000);tickClock();
 
+  /* Read URL parameters */
+  const qp=new URLSearchParams(location.search);
+  const pDate=qp.get('date');
+  const pTab=qp.get('tab');
+
   /* Nav switching */
   document.querySelectorAll('#mainNav .nav-btn').forEach(b=>{
     b.addEventListener('click',()=>{
       if(b.disabled)return;
-      document.querySelectorAll('#mainNav .nav-btn').forEach(x=>x.classList.remove('active'));
-      document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));
-      b.classList.add('active');$(b.dataset.tab).classList.add('active');
+      showTab(b.dataset.tab);
+      updateURL();
       if(b.dataset.tab==='search'&&loggedIn)runSearch();
     });
   });
 
-  const dp=$('dp');dp.value=todayISO;
-  dp.addEventListener('change',()=>{ renderDayMeta(); if(loggedIn)renderTT(); });
+  /* Date picker — from URL if valid, otherwise today */
+  const dp=$('dp');dp.value=validYMD(pDate)?pDate:todayISO;
+  dp.addEventListener('change',()=>{
+    if(!validYMD(dp.value))return;
+    updateURL();
+    renderDayMeta(); if(loggedIn)renderTT();
+  });
+
+  /* Previous / Next day buttons */
+  $('prevDay').addEventListener('click',()=>shiftDate(-1));
+  $('nextDay').addEventListener('click',()=>shiftDate(1));
+
+  /* Restore tab from URL.
+     "search" needs a login, so it is applied after the session is restored below. */
+  const wantedTab=TABS.includes(pTab)?pTab:'dayinfo';
+  if(wantedTab==='timetable')showTab('timetable');
 
   $('pwInput').addEventListener('keydown',e=>{ if(e.key==='Enter')submitPw(); });
   $('pwOverlay').addEventListener('click',e=>{ if(e.target===$('pwOverlay'))closePw(); });
@@ -710,15 +790,22 @@ async function init(){
 
   /* Attempt session restore */
   const savedInitial=getStoredSession();
+  let restored=false;
   if(savedInitial){
     const savedStaff=STAFF.find(s=>s._initial===savedInitial);
     if(savedStaff){
       loggedIn=savedStaff;
       touchSession();
-      afterLogin(true);
+      afterLogin(true,wantedTab);
+      restored=true;
     }else{
       clearSession();
     }
+  }
+  if(!restored&&wantedTab==='search'){
+    /* Search needs a login — fall back to Day Info */
+    showTab('dayinfo');
+    updateURL();
   }
 }
 
@@ -856,14 +943,18 @@ function submitPw(){
 
 /* ════════════════════════════
    AFTER LOGIN
+   On a fresh login the Timetable tab opens (as before).
+   On a session restore, the tab from the URL (timetable / search) is kept.
 ════════════════════════════ */
-function afterLogin(isRestore){
+function afterLogin(isRestore,wantedTab){
   viewStaff=loggedIn;
 
+  const openTab=(isRestore&&(wantedTab==='timetable'||wantedTab==='search'))?wantedTab:'timetable';
   document.querySelectorAll('#mainNav .nav-btn').forEach(x=>x.classList.remove('active'));
   document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));
-  document.querySelector('[data-tab="timetable"]').classList.add('active');
-  $('timetable').classList.add('active');
+  document.querySelector('[data-tab="'+openTab+'"]').classList.add('active');
+  $(openTab).classList.add('active');
+  curTab=openTab;
 
   $('staffLanding').style.display='none';
   $('profileView').style.display='block';
@@ -882,6 +973,8 @@ function afterLogin(isRestore){
   buildProfileHeader(viewStaff,isRestore);
   renderTT();
   populateSearchFilters();
+  if(openTab==='search')runSearch();
+  updateURL();
 }
 
 function hodPickStaff(initial){
@@ -930,6 +1023,8 @@ function doLogout(){
   document.querySelectorAll('#mainNav .nav-btn').forEach(x=>x.classList.remove('active'));
   document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));
   document.querySelector('[data-tab="dayinfo"]').classList.add('active');$('dayinfo').classList.add('active');
+  curTab='dayinfo';
+  updateURL();
   toast('Logged out.','',2000);
 }
 
@@ -1142,11 +1237,7 @@ function runSearch(){
   const subj=$('sSub').value;
   const out=$('searchRes');
 
-  if(!cls&&!subj){
-    out.innerHTML='<div class="empty"><div class="ei"><i class="fas fa-filter"></i></div>Select a class or subject to search.</div>';
-    $('searchSummary').style.display='none';
-    return;
-  }
+  /* No filter guard: with "All Classes" and "All Subjects" the full list is shown */
 
   const init=viewStaff._initial.toUpperCase();
 
