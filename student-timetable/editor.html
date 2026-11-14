@@ -1,0 +1,635 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<base target="_top">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Zoology Timetable Editor</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+/* Layout: header + four tabs (Day Info, Subjects, General Timetable, Staff Timetable). Spreadsheet-style tables; slot editing happens in dialogs. */
+:root{
+  --bg:#f3f5f8; --surface:#ffffff; --ink:#18212c; --muted:#5b6978; --line:#dbe1e8;
+  --accent:#8a1d2e; --accent-ink:#ffffff; --accent-soft:#f7e7ea;
+  --off:#eef1f5; --ok:#1d7a4b; --warn:#a15c00; --warn-soft:#fbeed6; --bad:#b3261e;
+  --font:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,Menlo,Consolas,monospace;
+  color-scheme:light;
+}
+
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.45 var(--font);padding:20px 16px 56px}
+.wrap{max-width:1320px;margin:0 auto}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+
+header{display:flex;flex-wrap:wrap;align-items:center;gap:12px 20px;justify-content:space-between;margin-bottom:16px}
+h1{margin:0;font-size:22px;font-weight:600;letter-spacing:-.01em}
+.sub{margin:2px 0 0;color:var(--muted);font-size:13px}
+.status{display:inline-flex;align-items:center;gap:7px;font-size:12.5px;color:var(--muted);padding:5px 10px;border:1px solid var(--line);border-radius:99px;background:var(--surface)}
+.status i{width:8px;height:8px;border-radius:50%;background:var(--ok);display:block}
+.status.saving i{background:var(--warn)} .status.error i{background:var(--bad)} .status.error{color:var(--bad)}
+.btn{border:1px solid var(--line);background:var(--surface);padding:7px 12px;border-radius:6px;font-weight:500;font-size:13px}
+.btn:hover{border-color:var(--muted)}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.btn.danger{color:var(--bad)}
+.btn.sm{padding:4px 9px;font-size:12px}
+
+nav.tabs{display:flex;gap:2px;border-bottom:1px solid var(--line);margin-bottom:16px;overflow-x:auto}
+nav.tabs button{background:none;border:0;border-bottom:2px solid transparent;padding:10px 16px;font-weight:500;color:var(--muted);white-space:nowrap;margin-bottom:-1px}
+nav.tabs button[aria-selected="true"]{color:var(--ink);border-bottom-color:var(--accent)}
+
+.bar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:10px}
+.bar .grow{flex:1 1 180px;min-width:0}
+.field{border:1px solid var(--line);background:var(--surface);border-radius:6px;padding:7px 10px;min-width:0}
+.summary{color:var(--muted);font-size:13px;margin:0 0 10px}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px}
+.chip{border:1px solid var(--line);background:var(--surface);border-radius:99px;padding:6px 13px;font-size:13px;font-weight:500}
+.chip[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.chip small{opacity:.7;font-weight:400;margin-left:4px}
+
+.tablewrap{overflow:auto;border:1px solid var(--line);border-radius:8px;background:var(--surface);max-height:72vh}
+table{border-collapse:separate;border-spacing:0;width:100%}
+th,td{border-bottom:1px solid var(--line);border-right:1px solid var(--line);padding:0;vertical-align:top;text-align:left}
+th:last-child,td:last-child{border-right:0}
+tbody tr:last-child td,tbody tr:last-child th{border-bottom:0}
+thead th{position:sticky;top:0;z-index:3;background:var(--surface);padding:9px 10px;font-size:12px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;white-space:nowrap;border-bottom:1px solid var(--muted)}
+tbody th{position:sticky;left:0;z-index:2;background:var(--surface);padding:9px 10px;font-weight:600;white-space:nowrap}
+thead th:first-child{left:0;z-index:4}
+.cell{width:100%;border:1px solid transparent;background:transparent;padding:8px 10px;border-radius:0;resize:none;display:block;overflow:hidden}
+.cell:hover{border-color:var(--line)}
+.cell:focus{border-color:var(--accent);background:var(--surface);outline:0;position:relative;z-index:1}
+.mono{font-family:var(--mono);font-size:13px}
+td.pad{padding:9px 10px}
+tr.off td,tr.off th{background:var(--off)}
+tr.today td,tr.today th{background:var(--accent-soft)}
+select.work.yes{color:var(--ok);font-weight:600} select.work.no{color:var(--muted);font-weight:600}
+.tag{display:inline-block;margin-left:6px;font-size:11px;font-weight:600;color:var(--accent);border:1px solid var(--accent);border-radius:99px;padding:0 6px}
+.x{border:0;background:none;color:var(--muted);padding:8px 10px;font-size:12px;white-space:nowrap}
+.x:hover{color:var(--bad)} .x.armed{color:var(--bad);font-weight:600}
+
+#daysTbl{min-width:1020px} td.event{min-width:300px} td.reason{min-width:170px}
+#subjTbl{min-width:1080px} #subjTbl td.nm{min-width:260px} #subjTbl td.cd{min-width:130px}
+
+.sc{display:flex;flex-wrap:wrap;gap:4px;align-items:center;padding:6px 8px;min-height:38px;width:100%;background:none;border:1px solid transparent;text-align:left}
+.sc:hover{border-color:var(--line)}
+.sc .none{color:var(--muted);font-size:12.5px}
+.ini{font-family:var(--mono);font-size:12px;font-weight:500;background:var(--accent-soft);color:var(--accent);border-radius:4px;padding:1px 6px}
+
+/* general / staff grids */
+#genTbl,#staffTbl{min-width:960px;table-layout:fixed}
+#genTbl td,#staffTbl td{height:112px}
+.slot{width:100%;height:100%;min-height:112px;border:0;background:transparent;text-align:left;padding:8px 10px;display:flex;flex-direction:column;gap:4px;align-items:flex-start;border-radius:0;overflow:hidden}
+.slot:hover{background:var(--off)}
+.slot.free{color:var(--muted);font-size:12.5px;justify-content:center;align-items:center;opacity:.5}
+.slot.free:hover{opacity:1}
+.it{display:block;font-size:12.5px;line-height:1.3;width:100%}
+.it b{font-family:var(--mono);font-size:12px;font-weight:500;display:block}
+.it .who{display:block;margin-top:2px}
+.sl{color:var(--muted);font-weight:600;font-size:12px}
+.slot .cls{font-size:11px;font-weight:600;color:var(--accent);background:var(--accent-soft);padding:1px 7px;border-radius:99px;white-space:nowrap}
+.slot .subj{font-weight:600;font-size:13px;line-height:1.3}
+.slot .meta{font-family:var(--mono);font-size:12px;color:var(--muted)}
+.hand{font-size:11px;color:var(--warn);font-weight:600}
+.staffhead{display:flex;flex-wrap:wrap;align-items:baseline;gap:6px 14px;margin:0 0 10px}
+.staffhead h2{margin:0;font-size:17px;font-weight:600}
+.staffhead span{color:var(--muted);font-size:13px}
+.note{margin-top:14px;color:var(--muted);font-size:12.5px;max-width:76ch}
+
+dialog{border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:10px;padding:0;width:min(760px,calc(100vw - 24px));max-height:calc(100vh - 24px)}
+dialog.narrow{width:min(440px,calc(100vw - 24px))}
+dialog::backdrop{background:rgba(10,14,20,.5)}
+.dbody{padding:18px;display:grid;gap:14px}
+dialog h3{margin:0;font-size:16px;font-weight:600}
+dialog .when{color:var(--muted);font-size:13px;margin:-8px 0 0}
+dialog label{display:grid;gap:4px;font-size:12px;font-weight:600;color:var(--muted)}
+dialog label .field{font-weight:400;color:var(--ink);font-size:14px;width:100%}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:10px} .row3{display:grid;grid-template-columns:1fr 2fr;gap:10px}
+.actions{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end}
+.actions .spacer{flex:1}
+.warn{background:var(--warn-soft);color:var(--warn);border-radius:6px;padding:8px 10px;font-size:13px}
+.card{border:1px solid var(--line);border-radius:8px;padding:12px;display:grid;gap:10px}
+.card .head{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.card .head b{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em}
+.chk{display:flex!important;grid-auto-flow:column;gap:6px!important;align-items:center;font-weight:400!important;font-size:13px!important}
+.plist{border:1px solid var(--line);border-radius:8px;max-height:220px;overflow:auto}
+.plist button{display:flex;width:100%;gap:10px;align-items:baseline;text-align:left;border:0;border-bottom:1px solid var(--line);background:none;padding:8px 10px}
+.plist button:last-child{border-bottom:0}
+.plist button:hover:not(:disabled){background:var(--off)}
+.plist button:disabled{opacity:.45;cursor:default}
+.plist .c{font-family:var(--mono);font-size:12px;min-width:110px}
+.plist .s{margin-left:auto;font-size:12px;color:var(--muted)}
+.sec{font-size:12px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.05em}
+.picker{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:6px}
+.picker button{border:1px solid var(--line);background:var(--surface);border-radius:6px;padding:8px 10px;text-align:left;display:grid}
+.picker button[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.picker button small{opacity:.75;font-size:11.5px;line-height:1.25}
+.empty{padding:40px 16px;text-align:center;color:var(--muted)}
+.login{position:fixed;inset:0;z-index:50;background:var(--bg);display:grid;place-items:center;padding:16px}
+.login form{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:24px;width:min(360px,100%);display:grid;gap:14px}
+.login h2{margin:0;font-size:19px;font-weight:600}
+.login label{display:grid;gap:4px;font-size:12px;font-weight:600;color:var(--muted)}
+.login .field{font-size:15px;font-weight:400;color:var(--ink);width:100%}
+.login .err{color:var(--bad);font-size:13px;min-height:1.3em;margin:0}
+[hidden]{display:none!important}
+</style>
+</head>
+<body>
+<div class="login" id="login" hidden>
+  <form id="loginForm">
+    <h2>Zoology Timetable Editor</h2>
+    <label>Password<input class="field" id="pw" type="password" autocomplete="current-password" autofocus></label>
+    <p class="err" id="loginErr" role="alert"></p>
+    <button class="btn primary" type="submit" id="loginBtn">Sign in</button>
+  </form>
+</div>
+<div class="wrap">
+  <header>
+    <div>
+      <h1>Zoology Timetable Editor</h1>
+      <p class="sub">Changes save to your Timetable sheet by themselves.</p>
+    </div>
+    <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+      <span class="status" id="status" role="status"><i></i><span id="statusText">Loading…</span></span>
+      <button class="btn" id="reloadBtn" type="button">Reload from sheet</button>
+      <button class="btn" id="signOut" type="button">Sign out</button>
+    </div>
+  </header>
+
+  <nav class="tabs" role="tablist">
+    <button role="tab" data-tab="days" aria-selected="true">Day Info</button>
+    <button role="tab" data-tab="subjects" aria-selected="false">Subjects</button>
+    <button role="tab" data-tab="general" aria-selected="false">General Timetable</button>
+    <button role="tab" data-tab="staff" aria-selected="false">Staff Timetable</button>
+  </nav>
+
+  <div id="loading" class="empty">Reading your sheet…</div>
+
+  <!-- DAY INFO -->
+  <section id="p-days" hidden>
+    <div class="bar">
+      <input class="field grow" id="q" type="search" placeholder="Search event or reason" aria-label="Search events">
+      <select class="field" id="month" aria-label="Month"></select>
+      <select class="field" id="work" aria-label="Working filter"><option value="all">All days</option><option value="Yes">Working days</option><option value="No">Holidays</option></select>
+      <button class="btn" id="todayBtn" type="button">Jump to today</button>
+      <button class="btn primary" id="addDay" type="button">Add a date</button>
+    </div>
+    <p class="summary" id="daysSummary"></p>
+    <div class="tablewrap"><table id="daysTbl"></table></div>
+  </section>
+
+  <!-- SUBJECTS -->
+  <section id="p-subjects" hidden>
+    <div class="bar">
+      <select class="field" id="sClass" aria-label="Class"></select>
+      <select class="field" id="sSem" aria-label="Semester"></select>
+      <input class="field grow" id="sQ" type="search" placeholder="Search code or name" aria-label="Search subjects">
+      <button class="btn primary" id="addSubj" type="button">Add a subject</button>
+    </div>
+    <p class="summary" id="subjSummary"></p>
+    <div class="tablewrap"><table id="subjTbl"></table></div>
+    <p class="note">This is the list the General Timetable picks from. Staff set here are pre-selected when you pick the subject, and you can still change them in a slot. Courses from other departments can be added here or straight from a General Timetable slot. Changing a subject here does not change slots you have already filled.</p>
+  </section>
+
+  <!-- GENERAL -->
+  <section id="p-general" hidden>
+    <div class="chips" id="yearChips"></div>
+    <div class="bar"><label for="gSem" style="color:var(--muted);font-size:13px">Semester</label><select class="field" id="gSem"></select><span class="summary" id="gSummary" style="margin:0"></span></div>
+    <div class="tablewrap"><table id="genTbl"></table></div>
+    <p class="note">Select a slot to choose subjects and staff. Put two subjects in one hour for electives (shown with a /). A lab can be repeated over 2 to 5 hours from the same dialog. Saving also rewrites the GeneralTimeTable text sheet and the StaffTT sheet.</p>
+  </section>
+
+  <!-- STAFF -->
+  <section id="p-staff" hidden>
+    <div class="chips" id="staffChips"></div>
+    <div class="staffhead" id="staffHead"></div>
+    <div class="tablewrap"><table id="staffTbl"></table></div>
+    <div class="bar" style="margin-top:12px">
+      <button class="btn" id="rebuildBtn" type="button">Rebuild all from General Timetable</button>
+      <span class="summary" id="rebuildNote" style="margin:0">Slots filled from the General Timetable update by themselves. Slots you change here are kept and marked “edited”.</span>
+    </div>
+  </section>
+</div>
+
+<!-- Staff picker -->
+<dialog id="dlgPick" class="narrow"><div class="dbody">
+  <h3>Choose staff</h3>
+  <div class="picker" id="pickGrid"></div>
+  <div class="actions"><button class="btn" id="pickClear" type="button">Clear</button><span class="spacer"></span><button class="btn primary" id="pickDone" type="button">Done</button></div>
+</div></dialog>
+
+<!-- General slot -->
+<dialog id="dlgSlot"><div class="dbody">
+  <h3 id="slotTitle"></h3>
+  <p class="when" id="slotWhen"></p>
+  <div id="slotCards" style="display:grid;gap:10px"></div>
+  <div>
+    <div class="sec" style="margin-bottom:6px">Add from the subject list</div>
+    <div class="bar" style="margin-bottom:6px">
+      <input class="field grow" id="slotQ" type="search" placeholder="Search code or name" aria-label="Search subject list">
+      <label class="chk"><input type="checkbox" id="slotAll"> All semesters and classes</label>
+    </div>
+    <div class="plist" id="slotList"></div>
+    <div style="margin-top:8px"><button class="btn" id="slotOther" type="button">Add a subject that is not in the list</button></div>
+  </div>
+  <div class="warn" id="slotWarn" hidden></div>
+  <label>Repeat in the following hours (for labs)
+    <select class="field" id="slotSpan"></select>
+  </label>
+  <div class="actions"><button class="btn danger" id="slotClear" type="button">Clear this hour</button><span class="spacer"></span><button class="btn" id="slotCancel" type="button">Cancel</button><button class="btn primary" id="slotSave" type="button">Save slot</button></div>
+</div></dialog>
+
+<!-- Staff slot -->
+<dialog id="dlgStaffSlot" class="narrow"><form class="dbody" id="stForm">
+  <h3 id="stTitle"></h3>
+  <p class="when" id="stWhen"></p>
+  <label>Fill from the subject list
+    <select class="field" id="stPick"></select>
+  </label>
+  <div class="row2">
+    <label>Class<select class="field" id="stCls"></select></label>
+    <label>Room<input class="field" id="stRoom"></label>
+  </div>
+  <div class="row3">
+    <label>Batch<input class="field" id="stBatch"></label>
+    <label>Subject code<input class="field" id="stCode"></label>
+  </div>
+  <label>Subject<input class="field" id="stSubject"></label>
+  <p class="summary" id="stNote" style="margin:0"></p>
+  <div class="actions"><button class="btn danger" type="button" id="stClear">Leave free</button><button class="btn" type="button" id="stReset">Reset to auto</button><span class="spacer"></span><button class="btn" type="button" id="stCancel">Cancel</button><button class="btn primary" type="submit">Save slot</button></div>
+</form></dialog>
+
+<script>
+(function(){
+const $=(s,r=document)=>r.querySelector(s);
+const esc=s=>String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const CLS=['1st UG','2nd UG','3rd UG','1st PG','2nd PG'];
+const SEMS={'1st UG':[1,2],'2nd UG':[3,4],'3rd UG':[5,6],'1st PG':[1,2],'2nd PG':[3,4]};
+const TYPES=['Theory','Lab','Elective','Cross Disciplinary','Other'];
+const WD=['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+const MON=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+const wdOf=iso=>WD[new Date(iso+'T00:00:00Z').getUTCDay()];
+const addDays=(iso,n)=>{const d=new Date(iso+'T00:00:00Z');d.setUTCDate(d.getUTCDate()+n);return d.toISOString().slice(0,10)};
+const monLabel=k=>MON[+k.slice(5,7)-1]+' '+k.slice(0,4);
+const nd=new Date(); const TODAY=nd.getFullYear()+'-'+String(nd.getMonth()+1).padStart(2,'0')+'-'+String(nd.getDate()).padStart(2,'0');
+const key=(c,d,h)=>c+'|'+d+'|'+h;
+const clone=o=>JSON.parse(JSON.stringify(o));
+const ord=n=>['','1st','2nd','3rd','4th','5th','6th'][n]||n+'th';
+
+const S={days:[],subjects:[],slots:{},stt:{},staff:[],periods:[],batch:{},tab:'days',cls:CLS[0],sem:2,who:null,month:'all',work:'all',q:'',sClass:'all',sSem:'all',sQ:''};
+let uid=1, errMsg='', pending=0; const timers={}, dirty=new Set(); let chain=Promise.resolve();
+/* Paste your Apps Script web app URL (ends in /exec) between the quotes. */
+const API_URL='https://script.google.com/macros/s/AKfycbzar0Q1yKHKddmlaY2p7OtxC0bMf4_3dqZ5zsmcHoYRbRYouUjNmRaWJp14SGJb8WID/exec';
+let PW=''; try{PW=sessionStorage.getItem('tt-pw')||'';}catch(_){}
+const call=(fn,...args)=>fetch(API_URL,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({fn,args,password:PW})})
+  .then(r=>r.json()).then(j=>{ if(!j.ok){const e=new Error(j.error||'Request failed');e.code=j.code;throw e;} return j.result; });
+function showLogin(msg){ $('#login').hidden=false; $('#loginErr').textContent=msg||''; $('#pw').value=''; setTimeout(()=>$('#pw').focus(),0); }
+const staffName=i=>{const s=S.staff.find(x=>x.i===i);return s?s.n:i;};
+const NH=()=>S.periods.length||5;
+
+/* ---------- saving ---------- */
+function setStatus(){
+  const el=$('#status'),tx=$('#statusText'); el.classList.remove('saving','error');
+  if(errMsg){el.classList.add('error');tx.textContent=errMsg;}
+  else if(pending||dirty.size){el.classList.add('saving');tx.textContent='Saving to sheet…';}
+  else tx.textContent='All changes saved';
+}
+function enqueue(task){
+  pending++; setStatus();
+  chain=chain.then(task).then(()=>{errMsg='';},e=>{if(e&&e.code==='auth'){showLogin('Your session ended. Sign in again.');errMsg='Signed out';}else errMsg='Could not save: '+((e&&e.message)||'check your connection')+'. Edit again to retry.';}).then(()=>{pending--;setStatus();});
+  return chain;
+}
+function schedule(k,task,delay){
+  dirty.add(k); setStatus(); clearTimeout(timers[k]);
+  timers[k]=setTimeout(()=>{dirty.delete(k);enqueue(task);},delay);
+}
+const saveDays=()=>schedule('days',()=>call('saveDayInfo',S.days.map(({uid,...r})=>r)),1200);
+const saveSubjects=()=>schedule('subj',()=>call('saveSubjects',S.subjects.map(({uid,...r})=>r)),1200);
+function serializeSlots(){
+  return Object.keys(S.slots).filter(k=>S.slots[k].length).map(k=>{const [c,d,h]=k.split('|');return {cls:c,day:+d,hour:+h,items:S.slots[k]};});
+}
+function applyStaffTT(list){
+  S.stt={}; (list||[]).forEach(r=>{S.stt[r.i+'|'+r.d+'|'+r.h]=r;});
+  if(S.tab==='staff')renderStaff();
+}
+const saveSlots=()=>enqueue(()=>call('saveGeneral',{slots:serializeSlots()}).then(r=>applyStaffTT(r.stafftt)));
+const saveStaff=()=>enqueue(()=>call('saveStaffTT',{entries:Object.values(S.stt).filter(r=>r.source==='Manual')}).then(r=>applyStaffTT(r.stafftt)));
+
+/* ---------- load ---------- */
+function load(){
+  $('#loading').hidden=false; $('#loading').textContent='Reading your sheet…';
+  ['days','subjects','general','staff'].forEach(t=>$('#p-'+t).hidden=true);
+  call('getAll').then(d=>{
+    $('#login').hidden=true;
+    S.staff=d.staff; S.periods=d.periods; S.batch=d.batch||{};
+    S.days=d.days.map(r=>({...r,uid:uid++}));
+    S.subjects=d.subjects.map(r=>({...r,uid:uid++}));
+    S.slots={}; d.slots.forEach(s=>{S.slots[key(s.cls,s.day,s.hour)]=s.items;});
+    S.stt={}; d.stafftt.forEach(r=>{S.stt[r.i+'|'+r.d+'|'+r.h]=r;});
+    if(!S.who&&S.staff.length)S.who=S.staff[0].i;
+    $('#loading').hidden=true; showTab(S.tab); setStatus();
+  }).catch(e=>{ if(e&&e.code==='auth'){ try{sessionStorage.removeItem('tt-pw');}catch(_){} PW=''; $('#loading').textContent=''; showLogin(e.fromLogin?'Wrong password.':''); return; } $('#login').hidden=true; $('#loading').textContent='Could not read the sheet: '+((e&&e.message)||e); });
+}
+$('#reloadBtn').addEventListener('click',()=>{ if(pending||dirty.size){errMsg='Wait for saving to finish, then reload.';setStatus();return;} errMsg='';setStatus();load(); });
+
+/* ---------- tabs ---------- */
+const TABS=['days','subjects','general','staff'];
+function showTab(t){
+  if(!TABS.includes(t))t='days'; S.tab=t;
+  document.querySelectorAll('nav.tabs button').forEach(b=>b.setAttribute('aria-selected',String(b.dataset.tab===t)));
+  if(!$('#loading').hidden)return;
+  TABS.forEach(x=>$('#p-'+x).hidden=(x!==t));
+  ({days:renderDays,subjects:renderSubjects,general:renderGen,staff:renderStaff})[t]();
+}
+$('nav.tabs').addEventListener('click',e=>{const b=e.target.closest('button[data-tab]');if(b)showTab(b.dataset.tab);});
+
+/* ---------- Day Info ---------- */
+const ORDERS=['','Day - 1','Day - 2','Day - 3','Day - 4','Day - 5','Day - 6'];
+const ymd=iso=>iso.slice(0,7);
+function filteredDays(){
+  const q=S.q.trim().toLowerCase();
+  return S.days.filter(r=>(S.month==='all'||ymd(r.date)===S.month)&&(S.work==='all'||r.working===S.work)&&(!q||(r.event+' '+r.reason).toLowerCase().includes(q)));
+}
+function autosize(t){t.style.height='auto';t.style.height=t.scrollHeight+2+'px';}
+const autosizeAll=root=>root.querySelectorAll('textarea.cell').forEach(autosize);
+function dayRow(r){
+  const off=r.working!=='Yes';
+  return `<tr data-u="${r.uid}" class="${off?'off':''}${r.date===TODAY?' today':''}">
+  <th scope="row"><input class="cell mono" type="date" data-f="date" value="${esc(r.date)}" aria-label="Date" style="min-width:140px"></th>
+  <td class="pad" style="white-space:nowrap">${esc(r.day)}${r.date===TODAY?'<span class="tag">Today</span>':''}</td>
+  <td><select class="cell work ${off?'no':'yes'}" data-f="working" aria-label="Working"><option${!off?' selected':''}>Yes</option><option${off?' selected':''}>No</option></select></td>
+  <td><select class="cell" data-f="order" aria-label="Day order">${ORDERS.map(o=>`<option value="${o}"${o===r.order?' selected':''}>${o||'—'}</option>`).join('')}</select></td>
+  <td><input class="cell mono" style="width:92px" data-f="hours" value="${esc(r.hours)}" aria-label="Hours"></td>
+  <td class="event"><textarea class="cell" rows="1" data-f="event" aria-label="Event">${esc(r.event)}</textarea></td>
+  <td class="reason"><textarea class="cell" rows="1" data-f="reason" aria-label="Reason">${esc(r.reason)}</textarea></td>
+  <td><button class="x" type="button" data-act="del">Delete</button></td></tr>`;
+}
+function daysSummary(rows){const w=rows.filter(r=>r.working==='Yes').length;$('#daysSummary').textContent=`${rows.length} dates shown · ${w} working · ${rows.length-w} off`;}
+function renderDays(){
+  const ms=[...new Set(S.days.map(r=>ymd(r.date)))].sort(); if(S.month!=='all'&&!ms.includes(S.month))S.month='all';
+  $('#month').innerHTML='<option value="all">All months</option>'+ms.map(m=>`<option value="${m}"${m===S.month?' selected':''}>${monLabel(m)}</option>`).join('');
+  const rows=filteredDays();
+  $('#daysTbl').innerHTML=`<thead><tr><th>Date</th><th>Day</th><th>Working</th><th>Day order</th><th>Hours</th><th>Event</th><th>Reason</th><th></th></tr></thead><tbody>${rows.map(dayRow).join('')||'<tr><td colspan="8" class="empty">No dates match these filters.</td></tr>'}</tbody>`;
+  daysSummary(rows); autosizeAll($('#daysTbl'));
+}
+$('#q').addEventListener('input',e=>{S.q=e.target.value;renderDays();});
+$('#month').addEventListener('change',e=>{S.month=e.target.value;renderDays();});
+$('#work').addEventListener('change',e=>{S.work=e.target.value;renderDays();});
+$('#todayBtn').addEventListener('click',()=>{
+  S.month='all';S.work='all';S.q='';$('#q').value='';$('#work').value='all';renderDays();
+  const r=S.days.find(x=>x.date>=TODAY); const tr=r&&$(`#daysTbl tr[data-u="${r.uid}"]`); if(tr)tr.scrollIntoView({block:'center'});
+});
+$('#addDay').addEventListener('click',()=>{
+  const last=S.days.length?S.days[S.days.length-1].date:TODAY, date=addDays(last,1);
+  const r={uid:uid++,date,day:wdOf(date),working:'Yes',order:'',hours:'',event:'',reason:''};
+  S.days.push(r);S.month='all';S.work='all';S.q='';$('#q').value='';$('#work').value='all';renderDays();saveDays();
+  const tr=$(`#daysTbl tr[data-u="${r.uid}"]`); if(tr){tr.scrollIntoView({block:'center'});tr.querySelector('[data-f="event"]').focus();}
+});
+const dt=$('#daysTbl');
+dt.addEventListener('input',e=>{if(e.target.tagName==='TEXTAREA')autosize(e.target);});
+dt.addEventListener('change',e=>{
+  const f=e.target.dataset.f; if(!f)return;
+  const tr=e.target.closest('tr'), r=S.days.find(x=>x.uid==tr.dataset.u); if(!r)return;
+  if(f==='date'){ if(!e.target.value){e.target.value=r.date;return;} r.date=e.target.value;r.day=wdOf(r.date);S.days.sort((a,b)=>a.date<b.date?-1:1);saveDays();renderDays();return; }
+  r[f]=e.target.value.trim();
+  if(f==='working'){tr.classList.toggle('off',r.working!=='Yes');e.target.classList.toggle('yes',r.working==='Yes');e.target.classList.toggle('no',r.working!=='Yes');daysSummary(filteredDays());}
+  saveDays();
+});
+dt.addEventListener('click',e=>{
+  const b=e.target.closest('[data-act="del"]'); if(!b)return;
+  if(!b.classList.contains('armed')){b.classList.add('armed');b.textContent='Sure?';setTimeout(()=>{if(b.isConnected){b.classList.remove('armed');b.textContent='Delete';}},3000);return;}
+  const u=b.closest('tr').dataset.u; S.days=S.days.filter(x=>x.uid!=u); saveDays(); renderDays();
+});
+
+/* ---------- staff picker (shared) ---------- */
+let pickCb=null, pickSel=[];
+function openPicker(selected,cb){
+  pickSel=selected.slice(); pickCb=cb; drawPicker(); $('#dlgPick').showModal();
+}
+function drawPicker(){
+  $('#pickGrid').innerHTML=S.staff.map(s=>`<button type="button" data-i="${esc(s.i)}" aria-pressed="${pickSel.includes(s.i)}"><b>${esc(s.i)}</b><small>${esc(s.n)}</small></button>`).join('');
+}
+$('#pickGrid').addEventListener('click',e=>{const b=e.target.closest('[data-i]');if(!b)return;const i=b.dataset.i;pickSel=pickSel.includes(i)?pickSel.filter(x=>x!==i):[...pickSel,i];drawPicker();});
+$('#pickClear').addEventListener('click',()=>{pickSel=[];drawPicker();});
+$('#pickDone').addEventListener('click',()=>{const cb=pickCb;pickCb=null;$('#dlgPick').close();if(cb)cb(pickSel);});
+const iniChips=a=>a&&a.length?a.map(i=>`<span class="ini" title="${esc(staffName(i))}">${esc(i)}</span>`).join(''):'';
+
+/* ---------- Subjects ---------- */
+function semOptionsFor(cls){return cls==='all'?[1,2,3,4,5,6]:SEMS[cls];}
+function filteredSubjects(){
+  const q=S.sQ.trim().toLowerCase();
+  return S.subjects.filter(r=>(S.sClass==='all'||r.cls===S.sClass)&&(S.sSem==='all'||String(r.sem)===String(S.sSem))&&(!q||(r.code+' '+r.name).toLowerCase().includes(q)));
+}
+function subjRow(r){
+  return `<tr data-u="${r.uid}">
+  <td><select class="cell" data-f="cls" aria-label="Class">${CLS.map(c=>`<option${c===r.cls?' selected':''}>${c}</option>`).join('')}${CLS.includes(r.cls)?'':`<option selected>${esc(r.cls)}</option>`}</select></td>
+  <td><select class="cell" data-f="sem" aria-label="Semester">${[1,2,3,4,5,6].map(n=>`<option value="${n}"${+r.sem===n?' selected':''}>${n}</option>`).join('')}${r.sem?'':'<option value="" selected>—</option>'}</select></td>
+  <td class="cd"><input class="cell mono" data-f="code" value="${esc(r.code)}" aria-label="Code"></td>
+  <td class="nm"><textarea class="cell" rows="1" data-f="name" aria-label="Subject name">${esc(r.name)}</textarea></td>
+  <td><select class="cell" data-f="type" aria-label="Type">${TYPES.map(t=>`<option${t===r.type?' selected':''}>${t}</option>`).join('')}</select></td>
+  <td><button class="sc" type="button" data-act="staff" aria-label="Choose staff">${r.staff&&r.staff.length?iniChips(r.staff):'<span class="none">Add staff</span>'}</button></td>
+  <td><input class="cell mono" style="width:90px" data-f="room" value="${esc(r.room)}" aria-label="Room"></td>
+  <td><input class="cell" style="width:110px" data-f="dept" value="${esc(r.dept)}" aria-label="Department"></td>
+  <td><button class="x" type="button" data-act="del">Delete</button></td></tr>`;
+}
+function renderSubjects(){
+  $('#sClass').innerHTML='<option value="all">All classes</option>'+CLS.map(c=>`<option${c===S.sClass?' selected':''}>${c}</option>`).join('');
+  $('#sSem').innerHTML='<option value="all">All semesters</option>'+semOptionsFor(S.sClass).map(n=>`<option value="${n}"${String(n)===String(S.sSem)?' selected':''}>Semester ${n}</option>`).join('');
+  const rows=filteredSubjects();
+  $('#subjSummary').textContent=`${rows.length} subjects shown of ${S.subjects.length}`;
+  $('#subjTbl').innerHTML=`<thead><tr><th>Class</th><th>Sem</th><th>Code</th><th>Subject name</th><th>Type</th><th>Staff</th><th>Room</th><th>Dept</th><th></th></tr></thead><tbody>${rows.map(subjRow).join('')||'<tr><td colspan="9" class="empty">No subjects here yet. Use “Add a subject”.</td></tr>'}</tbody>`;
+  autosizeAll($('#subjTbl'));
+}
+$('#sClass').addEventListener('change',e=>{S.sClass=e.target.value;S.sSem='all';renderSubjects();});
+$('#sSem').addEventListener('change',e=>{S.sSem=e.target.value;renderSubjects();});
+$('#sQ').addEventListener('input',e=>{S.sQ=e.target.value;renderSubjects();});
+$('#addSubj').addEventListener('click',()=>{
+  const cls=S.sClass==='all'?S.cls:S.sClass, sem=S.sSem==='all'?(SEMS[cls]||[1,2])[1]:+S.sSem;
+  const r={uid:uid++,cls,sem,code:'',name:'',type:'Theory',staff:[],room:'',dept:'Zoology'};
+  S.subjects.push(r); S.sClass=cls;S.sSem=String(sem);S.sQ='';$('#sQ').value=''; renderSubjects();
+  const tr=$(`#subjTbl tr[data-u="${r.uid}"]`); if(tr){tr.scrollIntoView({block:'center'});tr.querySelector('[data-f="code"]').focus();}
+});
+const st=$('#subjTbl');
+st.addEventListener('input',e=>{if(e.target.tagName==='TEXTAREA')autosize(e.target);});
+st.addEventListener('change',e=>{
+  const f=e.target.dataset.f; if(!f)return;
+  const r=S.subjects.find(x=>x.uid==e.target.closest('tr').dataset.u); if(!r)return;
+  r[f]=f==='sem'?+e.target.value:e.target.value.trim(); saveSubjects();
+  if(f==='cls'||f==='sem')renderSubjects();
+});
+st.addEventListener('click',e=>{
+  const tr=e.target.closest('tr'); if(!tr)return;
+  const r=S.subjects.find(x=>x.uid==tr.dataset.u); if(!r)return;
+  if(e.target.closest('[data-act="staff"]')){ openPicker(r.staff||[],sel=>{r.staff=sel;saveSubjects();renderSubjects();}); return; }
+  const b=e.target.closest('[data-act="del"]'); if(!b)return;
+  if(!b.classList.contains('armed')){b.classList.add('armed');b.textContent='Sure?';setTimeout(()=>{if(b.isConnected){b.classList.remove('armed');b.textContent='Delete';}},3000);return;}
+  S.subjects=S.subjects.filter(x=>x.uid!==r.uid); saveSubjects(); renderSubjects();
+});
+
+/* ---------- General timetable ---------- */
+function slotCell(items){
+  if(!items||!items.length)return '<button type="button" class="slot free">Add</button>';
+  return items.map(it=>`<span class="it"><b>${esc(it.code)}</b>${esc(it.name)}<span class="who">${iniChips(it.staff)}</span></span>`).join('<span class="sl">/</span>');
+}
+function renderGen(){
+  $('#yearChips').innerHTML=CLS.map(c=>{const n=Object.keys(S.slots).filter(k=>k.startsWith(c+'|')&&S.slots[k].length).length;return `<button class="chip" type="button" data-c="${c}" aria-pressed="${c===S.cls}">${c}<small>${n} filled</small></button>`;}).join('');
+  if(!SEMS[S.cls].includes(S.sem))S.sem=SEMS[S.cls][1];
+  $('#gSem').innerHTML=SEMS[S.cls].map(n=>`<option value="${n}"${n===S.sem?' selected':''}>Semester ${n}</option>`).join('');
+  const subs=S.subjects.filter(r=>r.cls===S.cls&&+r.sem===S.sem).length;
+  $('#gSummary').textContent=`${subs} subjects in the list for ${S.cls}, semester ${S.sem}`;
+  let h=`<thead><tr><th style="width:96px">Day order</th>${S.periods.map(p=>`<th>${esc(p.hour)}<br><span style="font-weight:400;text-transform:none;letter-spacing:0;font-family:var(--mono)">${esc(p.time)}</span></th>`).join('')}</tr></thead><tbody>`;
+  for(let d=1;d<=6;d++){
+    h+=`<tr><th scope="row">Day ${d}</th>`;
+    for(let k=1;k<=NH();k++){
+      const items=S.slots[key(S.cls,d,k)];
+      h+=`<td><button type="button" class="slot${items&&items.length?'':' free'}" data-d="${d}" data-h="${k}">${items&&items.length?slotCell(items):'Add'}</button></td>`;
+    }
+    h+='</tr>';
+  }
+  $('#genTbl').innerHTML=h+'</tbody>';
+}
+$('#yearChips').addEventListener('click',e=>{const b=e.target.closest('[data-c]');if(!b)return;S.cls=b.dataset.c;S.sem=SEMS[S.cls][1];renderGen();});
+$('#gSem').addEventListener('change',e=>{S.sem=+e.target.value;renderGen();});
+
+/* slot dialog */
+let ctx=null;
+function sameSubj(a,b){return (a.code||'').replace(/\s/g,'').toLowerCase()===(b.code||'').replace(/\s/g,'').toLowerCase()&&(a.name||'').toLowerCase()===(b.name||'').toLowerCase();}
+$('#genTbl').addEventListener('click',e=>{
+  const b=e.target.closest('.slot'); if(!b)return;
+  const d=+b.dataset.d,h=+b.dataset.h;
+  ctx={cls:S.cls,day:d,hour:h,items:clone(S.slots[key(S.cls,d,h)]||[])};
+  const p=S.periods[h-1];
+  $('#slotTitle').textContent=`${S.cls} · Day ${d} · ${ord(h)} hour`;
+  $('#slotWhen').textContent=p?p.time:'';
+  $('#slotQ').value=''; $('#slotAll').checked=false;
+  const left=NH()-h+1;
+  $('#slotSpan').innerHTML=Array.from({length:left},(_,i)=>`<option value="${i+1}">${i===0?'This hour only':`This hour and the next ${i} (${i+1} hours)`}</option>`).join('');
+  drawCards(); drawList(); $('#dlgSlot').showModal();
+});
+function drawCards(){
+  const box=$('#slotCards');
+  box.innerHTML=ctx.items.map((it,i)=>`<div class="card" data-i="${i}">
+    <div class="head"><b>${ctx.items.length>1?'Subject '+(i+1)+' (shown with /)':'Subject'}</b><button class="btn sm danger" type="button" data-a="rm">Remove</button></div>
+    <div class="row3"><label>Code<input class="field mono" data-k="code" value="${esc(it.code)}"></label><label>Subject name<input class="field" data-k="name" value="${esc(it.name)}"></label></div>
+    <div class="row3"><label>Room<input class="field mono" data-k="room" value="${esc(it.room)}"></label>
+      <label>Type<select class="field" data-k="type">${TYPES.map(t=>`<option${t===it.type?' selected':''}>${t}</option>`).join('')}${it.type&&!TYPES.includes(it.type)?`<option selected>${esc(it.type)}</option>`:(it.type?'':'<option value="" selected>—</option>')}</select></label></div>
+    <div><div class="sec" style="margin-bottom:4px">Staff (optional)</div><button class="sc" type="button" data-a="staff" style="border-color:var(--line);border-radius:6px">${it.staff&&it.staff.length?iniChips(it.staff)+'<span class="none" style="margin-left:4px">'+esc(it.staff.map(staffName).join(', '))+'</span>':'<span class="none">Click to choose staff</span>'}</button></div>
+    ${it._manual?`<label class="chk"><input type="checkbox" data-k="_save" ${it._save!==false?'checked':''}> Also add to the Subjects list (${esc(ctx.cls)}, semester ${S.sem}, other department)</label>`:''}
+  </div>`).join('')||'<div class="summary">Nothing in this hour yet. Pick a subject below.</div>';
+  warnClashes();
+}
+function drawList(){
+  const q=$('#slotQ').value.trim().toLowerCase(), all=$('#slotAll').checked;
+  const rows=S.subjects.filter(r=>(all||(r.cls===ctx.cls&&+r.sem===S.sem))&&(!q||(r.code+' '+r.name).toLowerCase().includes(q)));
+  $('#slotList').innerHTML=rows.map(r=>{
+    const added=ctx.items.some(it=>sameSubj(it,r));
+    return `<button type="button" data-u="${r.uid}" ${added?'disabled':''}><span class="c">${esc(r.code)}</span><span>${esc(r.name)}${all?` <span class="s">${esc(r.cls)} · sem ${esc(r.sem)}</span>`:''}</span><span class="s">${r.staff&&r.staff.length?esc(r.staff.join(', ')):''}</span></button>`;
+  }).join('')||`<div class="summary" style="padding:10px">No subjects for ${esc(ctx.cls)} semester ${S.sem}. Add them in the Subjects tab, or use “not in the list” below.</div>`;
+}
+$('#slotQ').addEventListener('input',drawList); $('#slotAll').addEventListener('change',drawList);
+$('#slotList').addEventListener('click',e=>{
+  const b=e.target.closest('[data-u]'); if(!b||b.disabled)return;
+  const r=S.subjects.find(x=>x.uid==b.dataset.u); if(!r)return;
+  ctx.items.push({code:r.code,name:r.name,staff:(r.staff||[]).slice(),room:r.room||'',type:r.type||'Theory',batch:S.batch[ctx.cls]||''});
+  drawCards(); drawList();
+});
+$('#slotOther').addEventListener('click',()=>{ctx.items.push({code:'',name:'',staff:[],room:'',type:'Theory',batch:S.batch[ctx.cls]||'',_manual:true,_save:true});drawCards();drawList();const c=$('#slotCards').lastElementChild;if(c)c.querySelector('[data-k="code"]').focus();});
+const cardsEl=$('#slotCards');
+cardsEl.addEventListener('input',e=>{const k=e.target.dataset.k;if(!k||e.target.type==='checkbox')return;const i=+e.target.closest('.card').dataset.i;ctx.items[i][k]=e.target.value;if(k==='room')warnClashes();if(k==='code'||k==='name')drawList();});
+cardsEl.addEventListener('change',e=>{const k=e.target.dataset.k;if(!k)return;const i=+e.target.closest('.card').dataset.i;if(e.target.type==='checkbox')ctx.items[i][k]=e.target.checked;else ctx.items[i][k]=e.target.value;});
+cardsEl.addEventListener('click',e=>{
+  const card=e.target.closest('.card'); if(!card)return; const i=+card.dataset.i;
+  if(e.target.closest('[data-a="rm"]')){ctx.items.splice(i,1);drawCards();drawList();return;}
+  if(e.target.closest('[data-a="staff"]')){openPicker(ctx.items[i].staff||[],sel=>{ctx.items[i].staff=sel;drawCards();});}
+});
+function warnClashes(){
+  const out=[];
+  ctx.items.forEach(it=>{
+    (it.staff||[]).forEach(s=>CLS.forEach(c=>{ if(c===ctx.cls)return; (S.slots[key(c,ctx.day,ctx.hour)]||[]).forEach(o=>{ if((o.staff||[]).includes(s))out.push(`${s} is also in ${c} at this hour (${o.code||o.name}).`); }); }));
+    if(it.room)CLS.forEach(c=>{ if(c===ctx.cls)return; (S.slots[key(c,ctx.day,ctx.hour)]||[]).forEach(o=>{ if((o.room||'').toLowerCase()===it.room.toLowerCase())out.push(`Room ${it.room} is also used by ${c} at this hour.`); }); });
+  });
+  const w=$('#slotWarn'); const u=[...new Set(out)]; w.hidden=!u.length; w.innerHTML=u.map(esc).join('<br>');
+}
+$('#slotCancel').addEventListener('click',()=>$('#dlgSlot').close());
+$('#slotClear').addEventListener('click',()=>{delete S.slots[key(ctx.cls,ctx.day,ctx.hour)];$('#dlgSlot').close();renderGen();saveSlots();});
+$('#slotSave').addEventListener('click',()=>{
+  const items=ctx.items.filter(it=>(it.code||'').trim()||(it.name||'').trim());
+  const span=+$('#slotSpan').value||1;
+  const newSubs=items.filter(it=>it._manual&&it._save!==false&&!S.subjects.some(s=>s.cls===ctx.cls&&sameSubj(s,it)))
+    .map(it=>({uid:uid++,cls:ctx.cls,sem:S.sem,code:(it.code||'').trim(),name:(it.name||'').trim(),type:it.type||'Theory',staff:(it.staff||[]).slice(),room:it.room||'',dept:'Other'}));
+  const clean=items.map(it=>({code:(it.code||'').trim(),name:(it.name||'').trim(),staff:it.staff||[],room:(it.room||'').trim(),type:it.type||'',batch:it.batch||S.batch[ctx.cls]||''}));
+  for(let k=0;k<span;k++){ const kk=key(ctx.cls,ctx.day,ctx.hour+k); if(clean.length)S.slots[kk]=clone(clean); else delete S.slots[kk]; }
+  if(newSubs.length){S.subjects.push(...newSubs);saveSubjects();}
+  $('#dlgSlot').close(); renderGen(); saveSlots();
+});
+
+/* ---------- Staff timetable ---------- */
+function renderStaff(){
+  $('#staffChips').innerHTML=S.staff.map(s=>{const n=Object.values(S.stt).filter(r=>r.i===s.i&&(r.cls||r.code||r.subject)).length;return `<button class="chip" type="button" data-who="${esc(s.i)}" aria-pressed="${s.i===S.who}">${esc(s.i)}<small>${n}</small></button>`;}).join('');
+  const me=S.staff.find(s=>s.i===S.who); if(!me){$('#staffTbl').innerHTML='';return;}
+  const n=Object.values(S.stt).filter(r=>r.i===me.i&&(r.cls||r.code||r.subject)).length;
+  $('#staffHead').innerHTML=`<h2>${esc(me.n)}</h2><span>${esc(me.d)} · ${n} of ${6*NH()} hours allotted</span>`;
+  let h=`<thead><tr><th style="width:96px">Day order</th>${S.periods.map(p=>`<th>${esc(p.hour)}<br><span style="font-weight:400;text-transform:none;letter-spacing:0;font-family:var(--mono)">${esc(p.time)}</span></th>`).join('')}</tr></thead><tbody>`;
+  for(let d=1;d<=6;d++){
+    h+=`<tr><th scope="row">Day ${d}</th>`;
+    for(let k=1;k<=NH();k++){
+      const c=S.stt[me.i+'|'+d+'|'+k], filled=c&&(c.cls||c.code||c.subject||c.room);
+      h+=`<td><button type="button" class="slot${filled?'':' free'}" data-d="${d}" data-h="${k}">`+(filled?`<span class="cls">${esc(c.cls||'—')}</span><span class="subj">${esc(c.subject||c.code)}</span><span class="meta">${esc([c.code,c.room].filter(Boolean).join(' · '))}</span>${c.source==='Manual'?'<span class="hand">edited</span>':''}`:(c&&c.source==='Manual'?'Free <span class="hand">edited</span>':'Free'))+`</button></td>`;
+    }
+    h+='</tr>';
+  }
+  $('#staffTbl').innerHTML=h+'</tbody>';
+}
+$('#staffChips').addEventListener('click',e=>{const b=e.target.closest('[data-who]');if(!b)return;S.who=b.dataset.who;renderStaff();});
+let sctx=null;
+$('#stCls').innerHTML='<option value="">—</option>'+CLS.map(c=>`<option>${c}</option>`).join('');
+$('#staffTbl').addEventListener('click',e=>{
+  const b=e.target.closest('.slot'); if(!b)return;
+  const d=+b.dataset.d,h=+b.dataset.h, k=S.who+'|'+d+'|'+h, c=S.stt[k]||{};
+  sctx={d,h,k};
+  const me=S.staff.find(s=>s.i===S.who), p=S.periods[h-1];
+  $('#stTitle').textContent=me.n; $('#stWhen').textContent=`Day ${d}, ${ord(h)} hour${p?' ('+p.time+')':''}`;
+  $('#stCls').value=c.cls||''; $('#stBatch').value=c.batch||''; $('#stCode').value=c.code||''; $('#stSubject').value=c.subject||''; $('#stRoom').value=c.room||'';
+  const mine=S.subjects.filter(r=>(r.staff||[]).includes(S.who)), others=S.subjects.filter(r=>!(r.staff||[]).includes(S.who));
+  const opt=r=>`<option value="${r.uid}">${esc(r.cls)} · ${esc(r.code)} · ${esc(r.name)}</option>`;
+  $('#stPick').innerHTML='<option value="">Choose a subject…</option>'+(mine.length?`<optgroup label="${esc(S.who)}'s subjects">${mine.map(opt).join('')}</optgroup>`:'')+`<optgroup label="All other subjects">${others.map(opt).join('')}</optgroup>`;
+  $('#stNote').textContent=c.source==='Manual'?'This slot was edited by hand and will not change when the General Timetable changes.':(filled(c)?'Filled from the General Timetable. Saving a change here marks it as edited by hand.':'Free. Anything you add here is kept as an edit.');
+  $('#dlgStaffSlot').showModal();
+});
+const filled=c=>c&&(c.cls||c.code||c.subject||c.room);
+$('#stPick').addEventListener('change',e=>{
+  const r=S.subjects.find(x=>x.uid==e.target.value); if(!r)return;
+  $('#stCls').value=r.cls; $('#stBatch').value=S.batch[r.cls]||''; $('#stCode').value=r.code; $('#stSubject').value=r.name; $('#stRoom').value=r.room||$('#stRoom').value;
+});
+$('#stCls').addEventListener('change',e=>{if(!$('#stBatch').value)$('#stBatch').value=S.batch[e.target.value]||'';});
+$('#stCancel').addEventListener('click',()=>$('#dlgStaffSlot').close());
+$('#stForm').addEventListener('submit',e=>{
+  e.preventDefault();
+  S.stt[sctx.k]={i:S.who,d:sctx.d,h:sctx.h,cls:$('#stCls').value,batch:$('#stBatch').value.trim(),code:$('#stCode').value.trim(),subject:$('#stSubject').value.trim(),room:$('#stRoom').value.trim(),source:'Manual'};
+  $('#dlgStaffSlot').close(); renderStaff(); saveStaff();
+});
+$('#stClear').addEventListener('click',()=>{S.stt[sctx.k]={i:S.who,d:sctx.d,h:sctx.h,cls:'',batch:'',code:'',subject:'',room:'',source:'Manual'};$('#dlgStaffSlot').close();renderStaff();saveStaff();});
+$('#stReset').addEventListener('click',()=>{delete S.stt[sctx.k];$('#dlgStaffSlot').close();saveStaff();});
+$('#rebuildBtn').addEventListener('click',e=>{
+  const b=e.target;
+  if(!b.dataset.armed){b.dataset.armed='1';b.textContent='Replace all hand edits? Click again';setTimeout(()=>{delete b.dataset.armed;b.textContent='Rebuild all from General Timetable';},4000);return;}
+  delete b.dataset.armed; b.textContent='Rebuild all from General Timetable';
+  enqueue(()=>call('rebuildStaffTT').then(r=>applyStaffTT(r.stafftt)));
+});
+
+/* ---------- start ---------- */
+setStatus();
+$('#loginForm').addEventListener('submit',e=>{
+  e.preventDefault(); PW=$('#pw').value; if(!PW)return;
+  $('#loginBtn').disabled=true; $('#loginErr').textContent='';
+  call('getAll').then(()=>{ try{sessionStorage.setItem('tt-pw',PW);}catch(_){} $('#loginBtn').disabled=false; load(); })
+    .catch(er=>{ $('#loginBtn').disabled=false; $('#loginErr').textContent=er&&er.code==='auth'?'Wrong password.':'Could not reach the sheet: '+((er&&er.message)||er); $('#pw').value=''; });
+});
+$('#signOut').addEventListener('click',()=>{ try{sessionStorage.removeItem('tt-pw');}catch(_){} PW=''; S.days=[];S.subjects=[];S.slots={};S.stt={}; ['days','subjects','general','staff'].forEach(t=>$('#p-'+t).hidden=true); $('#loading').hidden=false; $('#loading').textContent=''; showLogin(''); });
+if(API_URL.indexOf('PASTE_')===0){ $('#loading').textContent='Set API_URL at the top of the script in index.html to your Apps Script web app URL.'; }
+else if(PW)load(); else { $('#loading').textContent=''; showLogin(''); }
+})();
+</script>
+</body>
+</html>
