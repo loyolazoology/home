@@ -1,0 +1,1309 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>AZ-BT | Student Timetable Portal</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+<style>
+:root {
+  --blue:        #1E3A5F;
+  --blue-mid:    #2D5490;
+  --blue-light:  #EBF1FA;
+  --maroon:      #7B1D2E;
+  --maroon-light:#FDF0F2;
+  --gold:        #C9963A;
+  --teal:        #0E7490;
+  --teal-light:  #EFF9FB;
+  --green:       #047857;
+  --slate:       #64748B;
+  --slate-light: #F8FAFC;
+  --ink:         #1E293B;
+  --border:      #E2E8F0;
+  --white:       #FFFFFF;
+  --orange:      #F97316;
+  --orange-light:#FFF7ED;
+  --black:       #000000;
+  --sh-sm: 0 1px 3px rgba(0,0,0,0.08),0 1px 2px rgba(0,0,0,0.05);
+  --sh-md: 0 4px 16px rgba(30,58,95,0.10),0 2px 6px rgba(0,0,0,0.06);
+  --sh-lg: 0 12px 40px rgba(30,58,95,0.14),0 4px 12px rgba(0,0,0,0.08);
+  --r-sm:6px; --r-md:10px; --r-lg:16px; --r-xl:22px;
+  --ease:0.22s cubic-bezier(0.4,0,0.2,1);
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+html{-webkit-font-smoothing:antialiased;scroll-behavior:smooth;}
+body{
+  font-family:'Inter',sans-serif;
+  background:linear-gradient(135deg,#EBF1FA 0%,#F4F6F9 50%,#FDF0F2 100%);
+  min-height:100vh; color:var(--ink);
+  padding:14px 10px 28px;
+}
+
+/* WRAPPER */
+.wrap{
+  max-width:960px; margin:0 auto;
+  background:var(--white);
+  border-radius:var(--r-xl);
+  box-shadow:var(--sh-lg);
+  overflow:hidden;
+  display:flex; flex-direction:column;
+  min-height:calc(100vh - 56px);
+  position:relative;
+}
+
+/* HEADER */
+.hdr{
+  background:linear-gradient(135deg,var(--blue) 0%,var(--blue-mid) 55%,#1a4a7a 100%);
+  padding:16px 20px 0;
+  position:relative; overflow:hidden;
+}
+.hdr::before{content:'';position:absolute;top:-50px;right:-50px;width:200px;height:200px;background:rgba(255,255,255,0.04);border-radius:50%;}
+.hdr::after{content:'';position:absolute;bottom:-40px;left:-30px;width:150px;height:150px;background:rgba(201,150,58,0.10);border-radius:50%;}
+.hdr-inner{
+  display:flex;align-items:center;gap:12px;
+  position:relative;z-index:1;
+  flex-wrap:nowrap;
+  min-width:0;
+}
+.hdr-logo{flex-shrink:0;display:flex;align-items:center;}
+.hdr-logo img{
+  height:46px;width:auto;object-fit:contain;
+  filter:drop-shadow(0 2px 6px rgba(0,0,0,0.3));
+  display:block;
+}
+.hdr-text{flex:1;min-width:0;overflow:hidden;}
+.hdr-title{
+  font-family:'Playfair Display',serif;
+  font-size:clamp(0.85rem,2.6vw,1.35rem);
+  color:var(--white); font-weight:700;
+  line-height:1.25; letter-spacing:-0.01em;
+  white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+}
+.hdr-sub{
+  font-size:clamp(8px,1.8vw,10px);
+  color:rgba(255,255,255,0.6);font-weight:500;
+  margin-top:3px;letter-spacing:0.04em;text-transform:uppercase;
+  white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+}
+.hdr-clock{
+  display:flex;flex-direction:column;align-items:flex-end;
+  flex-shrink:0;min-width:0;
+}
+.clock-time{
+  font-family:'JetBrains Mono',monospace;
+  font-size:clamp(0.78rem,2.2vw,1.1rem);
+  color:var(--gold);font-weight:500;letter-spacing:0.02em;
+  white-space:nowrap;
+}
+.clock-date{font-size:9px;color:rgba(255,255,255,0.55);margin-top:2px;white-space:nowrap;}
+.hdr-bar{height:3px;background:linear-gradient(90deg,var(--gold) 0%,rgba(201,150,58,0.2) 100%);margin-top:14px;position:relative;z-index:1;}
+
+/* NAV */
+.nav{display:flex;gap:5px;background:var(--slate-light);border-bottom:1px solid var(--border);padding:8px 14px;}
+.nav-btn{
+  flex:1;padding:9px 8px;
+  background:transparent;border:1.5px solid transparent;
+  border-radius:var(--r-md);
+  font-family:'Inter',sans-serif;font-size:11.5px;font-weight:600;color:var(--slate);
+  cursor:pointer;transition:all var(--ease);
+  display:flex;align-items:center;justify-content:center;gap:6px;white-space:nowrap;
+}
+.nav-btn:hover{background:var(--white);color:var(--blue);border-color:var(--border);box-shadow:var(--sh-sm);}
+.nav-btn.active{background:var(--white);color:var(--blue);border-color:var(--blue);box-shadow:var(--sh-sm);}
+.nav-btn i{font-size:12px;}
+
+/* CONTENT */
+.tab{display:none;flex:1;padding:18px 20px;overflow-y:auto;max-height:calc(100vh - 220px);animation:fadeUp 0.22s ease both;}
+.tab.active{display:block;}
+@keyframes fadeUp{from{opacity:0;transform:translateY(7px);}to{opacity:1;transform:translateY(0);}}
+
+/* FORM */
+.form-ctrl{
+  width:100%;padding:9px 12px;
+  border:1.5px solid var(--border);border-radius:var(--r-sm);
+  font-family:'Inter',sans-serif;font-size:12.5px;color:var(--ink);
+  background:var(--slate-light);outline:none;transition:all var(--ease);
+  -webkit-appearance:none;appearance:none;
+}
+.form-ctrl:focus{border-color:var(--blue);background:var(--white);box-shadow:0 0 0 3px rgba(30,58,95,0.08);}
+.flabel{display:block;font-size:10px;font-weight:700;color:var(--blue);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:6px;}
+
+/* DATE PICKER CARD */
+.date-card{
+  background:var(--blue-light);border:1px solid #C8D8F0;
+  border-radius:var(--r-lg);padding:14px 18px;margin-bottom:16px;
+  display:flex;align-items:center;gap:12px;flex-wrap:wrap;
+}
+.date-card .dicon{
+  width:38px;height:38px;background:var(--blue);border-radius:var(--r-sm);
+  display:flex;align-items:center;justify-content:center;color:white;font-size:15px;flex-shrink:0;
+}
+.date-card .dfield{flex:1;min-width:130px;}
+
+/* DATE NAV (previous / next day) */
+.dnav{display:flex;align-items:center;gap:6px;}
+.dnav .form-ctrl{flex:1;min-width:0;}
+.dnbtn{
+  width:38px;height:38px;flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;
+  background:var(--white);color:var(--blue);
+  border:1.5px solid var(--border);border-radius:var(--r-sm);
+  font-size:13px;cursor:pointer;transition:all var(--ease);
+}
+.dnbtn:hover{background:var(--blue);color:var(--white);border-color:var(--blue);box-shadow:var(--sh-sm);}
+.dnbtn:active{transform:scale(0.95);}
+.tbtn{
+  height:38px;flex-shrink:0;padding:0 12px;
+  display:none;align-items:center;justify-content:center;gap:5px;
+  background:var(--gold);color:var(--blue);
+  border:1.5px solid var(--gold);border-radius:var(--r-sm);
+  font-family:'Inter',sans-serif;font-size:11.5px;font-weight:700;
+  cursor:pointer;transition:all var(--ease);white-space:nowrap;
+}
+.tbtn.show{display:flex;}
+.tbtn:hover{box-shadow:0 2px 8px rgba(201,150,58,0.35);transform:translateY(-1px);}
+.tbtn:active{transform:scale(0.96);}
+.today-badge{
+  display:none;margin-left:6px;vertical-align:middle;
+  background:#10B981;color:#fff;font-size:8px;font-weight:700;
+  padding:2px 7px;border-radius:50px;letter-spacing:0.05em;
+}
+.today-badge.show{display:inline-block;}
+
+/* INFO GRID */
+.igrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:11px;}
+.icard{
+  background:var(--white);border:1px solid var(--border);
+  border-radius:var(--r-md);padding:13px 15px;
+  border-left:4px solid var(--gold);
+  box-shadow:var(--sh-sm);transition:transform var(--ease),box-shadow var(--ease);
+  animation:popIn 0.28s ease both;
+}
+.icard:hover{transform:translateY(-2px);box-shadow:var(--sh-md);}
+@keyframes popIn{from{opacity:0;transform:scale(0.96) translateY(5px);}to{opacity:1;transform:scale(1) translateY(0);}}
+.icard.c-red{border-left-color:var(--maroon);background:var(--maroon-light);}
+.icard.c-teal{border-left-color:var(--teal);background:var(--teal-light);}
+.icard.c-blue{border-left-color:var(--blue);background:var(--blue-light);}
+.icard.c-orange{border-left-color:var(--orange);background:var(--orange-light);}
+.icard.full{grid-column:1/-1;}
+.ilabel{font-size:9.5px;font-weight:700;color:var(--slate);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:4px;}
+.ival{font-size:13px;font-weight:600;color:var(--ink);line-height:1.4;}
+.ival.red{color:var(--maroon);}
+
+/* YEAR TABS — centred, wrapping */
+.ytabs{
+  display:flex;gap:5px;margin-bottom:14px;
+  flex-wrap:wrap;justify-content:center;
+}
+.ybtn{
+  padding:7px 14px;background:var(--white);
+  border:1.5px solid var(--border);border-radius:var(--r-sm);
+  font-family:'Inter',sans-serif;font-size:11px;font-weight:600;color:var(--slate);
+  cursor:pointer;transition:all var(--ease);white-space:nowrap;
+}
+.ybtn:hover{border-color:var(--gold);color:var(--ink);}
+.ybtn.active{background:var(--gold);color:var(--blue);border-color:var(--gold);box-shadow:0 2px 8px rgba(201,150,58,0.3);}
+
+.tt-note{font-size:11px;color:var(--slate);font-style:italic;text-align:center;margin:10px 0 5px;}
+
+/* TABLE */
+.twrap{overflow-x:auto;border-radius:var(--r-md);border:1px solid var(--border);box-shadow:var(--sh-sm);}
+table{width:100%;min-width:520px;border-collapse:collapse;}
+thead tr{background:var(--blue);}
+th{padding:10px 11px;text-align:left;font-size:9.5px;font-weight:700;color:rgba(255,255,255,0.9);text-transform:uppercase;letter-spacing:0.07em;white-space:nowrap;}
+td{padding:10px 11px;font-size:12px;border-bottom:1px solid var(--border);vertical-align:top;line-height:1.45;}
+tr:last-child td{border-bottom:none;}
+tbody tr:nth-child(even){background:#FAFBFC;}
+tbody tr:hover{background:var(--blue-light);}
+tbody tr.noclass td{color:#94A3B8;font-style:italic;background:#FCFCFD;}
+tbody tr.noclass td:first-child{font-style:normal;font-weight:600;color:var(--slate);}
+tbody tr.sp-override{background:var(--orange-light)!important;}
+tbody tr.sp-override:hover{background:#FFF3E0!important;}
+tbody tr.sp-holiday{background:#FFF5F5!important;}
+tbody tr.sp-holiday td{color:#9B1C2C;}
+
+.scode{font-family:'IBM Plex Mono';font-size:12px;color:var(--black);font-weight:500;}
+.sname{font-weight:600;color:var(--blue);font-size:12px;}
+.sstaff{font-size:11px;color:var(--maroon);font-weight:600;display:block;margin-top:1px;}
+.htime{font: size 9px;px;color:var(--black);white-space:nowrap;}
+.spbadge{
+  display:inline-flex;align-items:center;gap:3px;
+  background:var(--orange);color:white;
+  font-size:8px;font-weight:700;padding:1px 6px;border-radius:50px;
+  margin-top:3px;letter-spacing:0.04em;
+}
+.spbadge.hol{background:var(--maroon);}
+
+/* EXAM / HOLIDAY BOXES */
+.exam-box{
+  text-align:center;padding:36px 20px;
+  background:var(--blue-light);border-radius:var(--r-lg);
+  border:1px solid #C8D8F0;animation:fadeUp 0.3s ease both;
+}
+.exam-box .ei{font-size:38px;color:var(--blue);margin-bottom:12px;}
+.exam-box h3{font-family:'Playfair Display',serif;font-size:1.25rem;color:var(--blue);margin-bottom:7px;}
+.exam-box p{color:var(--slate);font-size:12.5px;margin-bottom:18px;}
+.exam-btn{
+  display:inline-flex;align-items:center;gap:7px;
+  background:var(--maroon);color:white;padding:9px 20px;
+  border-radius:var(--r-md);font-weight:600;font-size:13px;
+  text-decoration:none;transition:all var(--ease);
+  box-shadow:0 4px 12px rgba(123,29,46,0.25);
+}
+.exam-btn:hover{background:#5C1520;transform:translateY(-2px);}
+.hol-box{
+  text-align:center;padding:24px 20px;
+  background:var(--maroon-light);border-radius:var(--r-lg);
+  border:1px solid #FCA5A5;color:var(--maroon);font-weight:600;font-size:13px;
+}
+
+/* ACTION BAR */
+.abar{display:flex;gap:9px;justify-content:center;margin-top:16px;flex-wrap:wrap;}
+.abtn{
+  display:inline-flex;align-items:center;gap:6px;padding:9px 20px;
+  border-radius:var(--r-md);font-family:'Inter',sans-serif;font-size:12px;font-weight:600;
+  cursor:pointer;border:none;transition:all var(--ease);
+}
+.abtn.prnt{background:var(--blue);color:white;box-shadow:0 4px 12px rgba(30,58,95,0.2);}
+.abtn.prnt:hover{background:var(--blue-mid);transform:translateY(-1px);box-shadow:0 6px 16px rgba(30,58,95,0.28);}
+.abtn.pdl{background:var(--maroon);color:white;box-shadow:0 4px 12px rgba(123,29,46,0.2);}
+.abtn.pdl:hover{background:#5C1520;transform:translateY(-1px);box-shadow:0 6px 16px rgba(123,29,46,0.28);}
+.abtn:disabled{opacity:0.55;cursor:not-allowed;transform:none!important;}
+.bspinner{display:none;width:12px;height:12px;border:2px solid rgba(255,255,255,0.3);border-top-color:white;border-radius:50%;animation:spin 0.7s linear infinite;}
+@keyframes spin{to{transform:rotate(360deg);}}
+
+/* SEARCH */
+.sfcard{background:var(--slate-light);border:1px solid var(--border);border-radius:var(--r-lg);padding:15px;margin-bottom:16px;}
+.fgrid{display:grid;grid-template-columns:1fr 1fr;gap:11px;}
+.fgrid .full{grid-column:1/-1;}
+.sinwrap{position:relative;}
+.sinwrap .si{position:absolute;left:10px;top:50%;transform:translateY(-50%);color:var(--slate);font-size:12px;pointer-events:none;}
+.sinwrap .form-ctrl{padding-left:28px;}
+
+.sec-title{
+  font-size:10.5px;font-weight:700;color:var(--blue);
+  text-transform:uppercase;letter-spacing:0.07em;
+  padding:6px 11px;background:var(--blue-light);
+  border-radius:var(--r-sm);margin:13px 0 7px;
+  display:flex;align-items:center;gap:7px;
+}
+.cbadge{background:var(--blue);color:white;font-size:9px;padding:1px 7px;border-radius:50px;}
+
+.rcard{
+  background:var(--white);border:1px solid var(--border);
+  border-radius:var(--r-md);padding:11px 14px;margin-bottom:7px;
+  display:flex;justify-content:space-between;align-items:flex-start;gap:9px;
+  box-shadow:var(--sh-sm);transition:all var(--ease);
+}
+.rcard:hover{border-color:#CBD5E1;transform:translateY(-1px);box-shadow:var(--sh-md);}
+.rcard .rsub{font-weight:700;font-size:12.5px;color:var(--blue);margin-bottom:2px;}
+.rcard .rcode{font-family:'JetBrains Mono',monospace;font-size:9.5px;color:var(--slate);}
+.rcard .rmeta{font-size:11px;color:#555;line-height:1.6;margin-top:3px;}
+.rcard .rstaff{color:var(--maroon);font-weight:600;}
+.stag{padding:3px 9px;border-radius:50px;font-size:9px;font-weight:700;text-transform:uppercase;color:white;letter-spacing:0.04em;white-space:nowrap;flex-shrink:0;}
+.t-today{background:#10B981;}.t-up{background:#3B82F6;}.t-past{background:var(--slate);}
+
+/* LOADING / EMPTY */
+.lstate{text-align:center;padding:38px 20px;color:var(--slate);font-size:13px;font-weight:500;}
+.ldot{width:28px;height:28px;border:3px solid #E2E8F0;border-top-color:var(--maroon);border-radius:50%;animation:spin 0.8s linear infinite;margin:0 auto 12px;}
+.empty{text-align:center;padding:34px 20px;color:var(--slate);font-size:13px;}
+.empty .ei{font-size:28px;margin-bottom:8px;opacity:0.35;}
+
+/* FOOTER */
+.foot{text-align:center;padding:11px;font-size:11px;font-weight:600;color:var(--slate);background:var(--slate-light);border-top:1px solid var(--border);}
+
+/* TOAST */
+.toast{
+  position:fixed;bottom:22px;right:20px;
+  background:var(--ink);color:white;padding:10px 16px;
+  border-radius:var(--r-md);font-size:12.5px;font-weight:500;
+  box-shadow:var(--sh-lg);z-index:9999;
+  display:flex;align-items:center;gap:7px;
+  transform:translateY(60px);opacity:0;
+  transition:all 0.28s cubic-bezier(0.4,0,0.2,1);
+  max-width:290px;
+}
+.toast.show{transform:translateY(0);opacity:1;}
+.toast.ok{background:var(--green);}
+.toast.err{background:var(--maroon);}
+
+/* PRINT HEADER / FOOTER hidden by default */
+#ph,#pf{display:none;}
+
+/* ==================== RESPONSIVE ==================== */
+@media(max-width:600px){
+  body{padding:7px 5px 22px;}
+  .hdr{padding:12px 13px 0;}
+  .hdr-logo img{height:38px;}
+  .hdr-title{font-size:clamp(0.78rem,4.5vw,1rem);}
+  .hdr-sub{font-size:8px;}
+  .clock-date{display:none;}
+  .clock-time{font-size:0.75rem;}
+  .nav-btn{font-size:10.5px;padding:8px 5px;gap:4px;}
+  .tab{padding:13px 11px;max-height:calc(100vh - 210px);}
+  .fgrid{grid-template-columns:1fr;}
+  .fgrid .full{grid-column:1;}
+  .ybtn{padding:6px 10px;font-size:10.5px;}
+  table{min-width:460px;}
+  th,td{padding:8px 8px;font-size:11px;}
+}
+@media(max-width:380px){
+  .nav-btn span.nl{display:none;}
+  .nav-btn i{font-size:14px;}
+  .hdr-title{font-size:0.75rem;}
+  .hdr-sub{display:none;}
+  .clock-time{font-size:0.7rem;}
+}
+@media(max-width:320px){
+  .hdr-logo img{height:32px;}
+  .hdr-clock{display:none;}
+}
+
+/* ==================== PRINT ==================== */
+@media print{
+  *,*::before,*::after{transition:none!important;animation:none!important;}
+  body{background:white!important;padding:0;-webkit-print-color-adjust:exact;print-color-adjust:exact;display:block;}
+
+  /* Hide UI chrome */
+  .nav,.hdr,.ytabs,.abar,.foot,.tt-note,.date-card,.toast,#dayinfo,#search{display:none!important;}
+
+  /* Show only timetable tab regardless of active state */
+  .wrap{box-shadow:none!important;border-radius:0!important;min-height:auto!important;overflow:visible!important;}
+  .tab{display:none!important;max-height:none!important;overflow:visible!important;padding:0!important;}
+  #timetable{display:block!important;padding:10px 0 0!important;}
+
+  .twrap{overflow:visible!important;border:none!important;box-shadow:none!important;}
+
+  /* Print header / footer */
+  #ph{display:block!important;text-align:center;margin-bottom:18px;}
+  #ph img{height:55px;margin-bottom:6px;}
+  #ph h1{font-size:12pt;color:#000;margin:4px 0 2px;font-family:'Playfair Display',serif;}
+  #ph h2{font-size:10pt;color:#7B1D2E;margin-bottom:4px;}
+  #ph .pmeta{font-size:9pt;color:#333;margin-top:7px;border-top:1px solid #ccc;padding-top:7px;line-height:1.7;}
+  #pf{display:block!important;margin-top:18px;font-size:8pt;color:#555;border-top:1px solid #ccc;padding-top:8px;text-align:center;font-style:italic;}
+
+  /* Table */
+  table{width:100%;border-collapse:collapse;}
+  th{padding:7px 9px;text-align:left;font-size:8.5pt;font-weight:700;background:#E8EDF5!important;color:#000!important;border:1px solid #999;}
+  td{padding:7px 9px;border:1px solid #ccc;font-size:9pt;color:#000;vertical-align:top;}
+  tbody tr:nth-child(even){background:#F7F9FC!important;}
+  tbody tr.sp-override td{background:#FFF7ED!important;}
+  tbody tr.sp-holiday td{background:#FFF5F5!important;}
+  tbody tr.noclass td{color:#999!important;}
+  .sname{color:#1E3A5F!important;font-weight:700;}
+  .sstaff{color:#7B1D2E!important;}
+  .scode{font-size:9pt!important;}
+  .htime{font-size:8pt!important;}
+  .spbadge{font-size:7pt!important;padding:1px 5px!important;}
+  .exam-box,.hol-box{border:1px solid #ccc!important;background:#F8F9FA!important;}
+}
+</style>
+</head>
+<body>
+
+<div class="toast" id="toast"></div>
+
+<!-- PRINT HEADER -->
+<div id="ph">
+  <img src="https://loyolazoology.github.io/about-us/azbt-logo.png" alt="AZ-BT Logo">
+  <h1>PG &amp; Research Department of Advanced Zoology and Biotechnology</h1>
+  <h2>Loyola College (Autonomous), Chennai – 34</h2>
+  <div class="pmeta" id="pmeta"></div>
+</div>
+
+<!-- PORTAL -->
+<div class="wrap">
+
+  <!-- HEADER -->
+  <div class="hdr">
+    <div class="hdr-inner">
+      <div class="hdr-logo">
+        <img src="https://loyolazoology.github.io/about-us/azbt-logo.png" alt="AZ-BT Logo"
+          onerror="this.parentElement.innerHTML='<i class=\'fas fa-dna\' style=\'color:var(--gold);font-size:24px\'></i>'">
+      </div>
+      <div class="hdr-text">
+        <div class="hdr-title">Student Timetable Portal</div>
+        <div class="hdr-sub">Dept. of Advanced Zoology &amp; Biotechnology</div>
+      </div>
+      <div class="hdr-clock">
+        <div class="clock-time" id="ct">--:--:--</div>
+        <div class="clock-date" id="cd">--</div>
+      </div>
+    </div>
+    <div class="hdr-bar"></div>
+  </div>
+
+  <!-- NAV -->
+  <nav class="nav" id="nav">
+    <button class="nav-btn active" data-tab="dayinfo">
+      <i class="fas fa-calendar-day"></i><span class="nl">Day Info</span>
+    </button>
+    <button class="nav-btn" data-tab="timetable">
+      <i class="fas fa-table-cells"></i><span class="nl">Timetable</span>
+    </button>
+    <button class="nav-btn" data-tab="search">
+      <i class="fas fa-magnifying-glass"></i><span class="nl">Search</span>
+    </button>
+  </nav>
+
+  <!-- DAY INFO -->
+  <div id="dayinfo" class="tab active">
+    <div class="date-card">
+      <div class="dicon"><i class="fas fa-calendar-alt"></i></div>
+      <div class="dfield">
+        <label class="flabel" for="dp">Select Date<span class="today-badge" id="todayBadge">Today</span></label>
+        <div class="dnav">
+          <button type="button" class="dnbtn" id="prevDay" title="Previous day (←)" aria-label="Previous day"><i class="fas fa-chevron-left"></i></button>
+          <input type="date" id="dp" class="form-ctrl">
+          <button type="button" class="dnbtn" id="nextDay" title="Next day (→)" aria-label="Next day"><i class="fas fa-chevron-right"></i></button>
+          <button type="button" class="tbtn" id="todayBtn" title="Jump to today (T)" aria-label="Jump to today"><i class="fas fa-calendar-day"></i> Today</button>
+        </div>
+      </div>
+    </div>
+    <div id="dayMeta">
+      <div class="lstate"><div class="ldot"></div>Fetching schedule…</div>
+    </div>
+  </div>
+
+  <!-- TIMETABLE -->
+  <div id="timetable" class="tab">
+    <div class="ytabs" id="ytabs">
+      <button class="ybtn active" data-year="1st UG">1st UG</button>
+      <button class="ybtn" data-year="2nd UG">2nd UG</button>
+      <button class="ybtn" data-year="3rd UG">3rd UG</button>
+      <button class="ybtn" data-year="1st PG">1st PG</button>
+      <button class="ybtn" data-year="2nd PG">2nd PG</button>
+    </div>
+    <div id="ttBox">
+      <div class="lstate"><div class="ldot"></div>Loading timetable…</div>
+    </div>
+    <div class="tt-note" id="ttNote"></div>
+    <div class="abar">
+      <button class="abtn prnt" id="printBtn"><i class="fas fa-print"></i> Print</button>
+      <button class="abtn pdl" id="pdfBtn">
+        <div class="bspinner" id="pdfSpin"></div>
+        <i class="fas fa-file-pdf" id="pdfIco"></i>
+        <span id="pdfTxt"> Download PDF</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- SEARCH -->
+  <div id="search" class="tab">
+    <div class="sfcard">
+      <div class="fgrid">
+        <div>
+          <label class="flabel">Class</label>
+          <select id="sYear" class="form-ctrl">
+            <option value="">All Classes</option>
+            <option>1st UG</option><option>2nd UG</option>
+            <option>3rd UG</option><option>1st PG</option><option>2nd PG</option>
+          </select>
+        </div>
+        <div>
+          <label class="flabel">Subject</label>
+          <select id="sSub" class="form-ctrl"><option value="">All Subjects</option></select>
+        </div>
+        <div class="full">
+          <label class="flabel">Staff Name</label>
+          <div class="sinwrap">
+            <i class="fas fa-search si"></i>
+            <input type="text" id="sStaff" class="form-ctrl" placeholder="Type staff name to search…">
+          </div>
+        </div>
+      </div>
+    </div>
+    <div id="srOut">
+      <div class="empty"><div class="ei"><i class="fas fa-search"></i></div>Use the filters above to find classes.</div>
+    </div>
+  </div>
+
+  <footer class="foot">© 2026 AZ–BT | Student Timetable Portal | Loyola College (Autonomous), Chennai - 34</footer>
+</div>
+
+<!-- PRINT FOOTER -->
+<div id="pf">
+  <p>Generated from AZ-BT Student Timetable Portal · Loyola College (Autonomous), Chennai</p>
+  <p id="pfdet"></p>
+</div>
+
+<script>
+/* ============================
+   CONFIG
+   ============================ */
+const CSV = {
+  dayInfo:    "https://docs.google.com/spreadsheets/d/e/2PACX-1vTgt5H7LNGG1CB06ocZIe15CiIYT5DALF5UuTDwGXHXg2zkb13-p8lv5cnPSuIA_e2qfYnjaKuE8SaX/pub?gid=1169802535&single=true&output=csv",
+  generalTT:  "https://docs.google.com/spreadsheets/d/e/2PACX-1vTgt5H7LNGG1CB06ocZIe15CiIYT5DALF5UuTDwGXHXg2zkb13-p8lv5cnPSuIA_e2qfYnjaKuE8SaX/pub?gid=267021428&single=true&output=csv",
+  timePeriod: "https://docs.google.com/spreadsheets/d/e/2PACX-1vTgt5H7LNGG1CB06ocZIe15CiIYT5DALF5UuTDwGXHXg2zkb13-p8lv5cnPSuIA_e2qfYnjaKuE8SaX/pub?gid=628527526&single=true&output=csv",
+  special:    "https://docs.google.com/spreadsheets/d/e/2PACX-1vTgt5H7LNGG1CB06ocZIe15CiIYT5DALF5UuTDwGXHXg2zkb13-p8lv5cnPSuIA_e2qfYnjaKuE8SaX/pub?gid=1572624085&single=true&output=csv",
+};
+const EXAM_LINK = "https://loyolazoology.wixsite.com/az-bt/exam-timetable";
+const HOURS = ["1st Hour","2nd Hour","3rd Hour","4th Hour","5th Hour"];
+const YEARS = ["1st UG","2nd UG","3rd UG","1st PG","2nd PG"];
+const TABS  = ["dayinfo","timetable","search"];
+
+/* STATE */
+let DI=[], TT={}, TS={}, SP={}, SUBJ={};
+let todayUTC, selDate="", curYear="1st UG", curTab="dayinfo";
+let dataReady=false;
+
+/* ============================
+   HELPERS
+   ============================ */
+const $=id=>document.getElementById(id);
+
+function toIST(){
+  return new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Kolkata',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date());
+}
+function ymd2dmy(s){ if(!s)return""; const[y,m,d]=s.split('-'); return `${d}-${m}-${y}`; }
+function dmy2date(s){
+  if(!s||s.length!==10)return null;
+  const[d,m,y]=s.split('-');
+  return new Date(Date.UTC(+y,+m-1,+d));
+}
+function nowUTC(){
+  const n=new Date();
+  return new Date(Date.UTC(n.getFullYear(),n.getMonth(),n.getDate()));
+}
+
+function csv(url){
+  return new Promise(ok=>{
+    Papa.parse(url,{
+      download:true, header:true, skipEmptyLines:true,
+      complete:r=>ok(r.data.filter(row=>Object.values(row).some(v=>v&&String(v).trim()!==""))),
+      error:()=>ok([])
+    });
+  });
+}
+
+/*
+ * Parse cell text: "CODE - Subject Name - Staff1, Staff2"
+ * Handles: missing code, multiple dashes in subject name, multiple staff
+ */
+function parseCell(txt){
+  if(!txt||!txt.trim())return{code:"-",name:"-",staff:[]};
+  const t=txt.trim();
+  // Split on " - " (space-dash-space) to preserve dashes inside names
+  const parts=t.split(' - ');
+  if(parts.length===1)return{code:"-",name:t,staff:[]};
+  if(parts.length===2)return{code:parts[0].trim(),name:parts[1].trim(),staff:[]};
+  // parts[0]=code, parts[1]=name, parts[2+]=staff (rejoin in case staff has " - ")
+  const code=parts[0].trim();
+  const name=parts[1].trim();
+  const staffRaw=parts.slice(2).join(' - ').trim();
+  const staff=staffRaw?staffRaw.split(',').map(s=>s.trim()).filter(Boolean):[];
+  return{code,name,staff};
+}
+
+/* Normalize Day Order: "Day 3"->"3", "3rd"->"3", "3"->"3" */
+function normOrd(s){
+  if(!s) return "";
+  var t = s.toString().trim();
+  // plain number already
+  if(/^[0-9]+$/.test(t)) return t;
+  // "Day 3", "Day-3", "Day - 3" style
+  var m = t.match(/^Day[\s\-]*([0-9]+)/i);
+  if(m) return m[1];
+  // leading digits: "3rd", "4th" etc
+  var m2 = t.match(/^([0-9]+)/);
+  if(m2) return m2[1];
+  return t;
+}
+
+function isExam(row){
+  if(!row)return false;
+  return (row.Event||"").trim().startsWith('*')||(row.Reason||"").trim().startsWith('*');
+}
+
+/* Active hour number: "1st Hour"→"1", "2nd Hour"→"2", etc. */
+function hourNum(h){
+  const m=h.match(/(\d+)/);
+  return m?m[1]:"";
+}
+
+/* CLOCK */
+function tickClock(){
+  const n=new Date();
+  $('ct').textContent=n.toLocaleTimeString('en-IN',{hour12:true});
+  $('cd').textContent=n.toLocaleDateString('en-IN',{weekday:'short',day:'2-digit',month:'short',year:'numeric'});
+}
+
+/* TOAST */
+function toast(msg,type='',dur=3000){
+  const el=$('toast');
+  const icons={ok:'<i class="fas fa-check-circle"></i>',err:'<i class="fas fa-times-circle"></i>','':'<i class="fas fa-info-circle"></i>'};
+  el.className=`toast ${type}`;
+  el.innerHTML=`${icons[type]||icons['']} ${msg}`;
+  el.classList.add('show');
+  clearTimeout(el._t);
+  el._t=setTimeout(()=>el.classList.remove('show'),dur);
+}
+
+/* ============================
+   URL PARAMETERS (date / class / tab)
+   Keeps the same view after refresh or when the link is shared
+   ============================ */
+function updateURL(){
+  try{
+    const p=new URLSearchParams();
+    const dv=$('dp').value;
+    if(dv) p.set('date',dv);
+    p.set('class',curYear);
+    p.set('tab',curTab);
+    history.replaceState(null,'',location.pathname+'?'+p.toString()+location.hash);
+  }catch(e){ /* ignore (e.g. sandboxed frames) */ }
+}
+
+function validYMD(s){
+  if(!s||!/^\d{4}-\d{2}-\d{2}$/.test(s))return false;
+  const[y,m,d]=s.split('-').map(Number);
+  const dt=new Date(Date.UTC(y,m-1,d));
+  return dt.getUTCFullYear()===y&&dt.getUTCMonth()===m-1&&dt.getUTCDate()===d;
+}
+
+function setTab(name){
+  if(!TABS.includes(name))name="dayinfo";
+  curTab=name;
+  document.querySelectorAll('#nav .nav-btn').forEach(x=>x.classList.toggle('active',x.dataset.tab===name));
+  document.querySelectorAll('.tab').forEach(x=>x.classList.toggle('active',x.id===name));
+  if(name==='search')runSearch();
+  updateURL();
+}
+
+function setYear(yr){
+  if(!YEARS.includes(yr))yr="1st UG";
+  curYear=yr;
+  document.querySelectorAll('#ytabs .ybtn').forEach(x=>x.classList.toggle('active',x.dataset.year===yr));
+}
+
+/* ============================
+   DATE NAV (previous / next day)
+   ============================ */
+function shiftDate(n){
+  const dp=$('dp');
+  const base=validYMD(dp.value)?dp.value:toIST();
+  const[y,m,d]=base.split('-').map(Number);
+  const dt=new Date(Date.UTC(y,m-1,d+n));
+  const ny=dt.getUTCFullYear();
+  const nm=String(dt.getUTCMonth()+1).padStart(2,'0');
+  const nd=String(dt.getUTCDate()).padStart(2,'0');
+  dp.value=`${ny}-${nm}-${nd}`;
+  selDate=ymd2dmy(dp.value);
+  updateURL();
+  updateTodayUI();
+  if(dataReady){ renderDayInfo(); }
+}
+
+/* Jump back to today's date (IST) */
+function goToday(){
+  const dp=$('dp');
+  dp.value=toIST();
+  selDate=ymd2dmy(dp.value);
+  updateURL();
+  updateTodayUI();
+  if(dataReady){ renderDayInfo(); }
+}
+
+/* Show the Today button only when viewing another date; show badge when on today */
+function updateTodayUI(){
+  const isToday=$('dp').value===toIST();
+  $('todayBtn').classList.toggle('show',!isToday);
+  $('todayBadge').classList.toggle('show',isToday);
+}
+
+/* ============================
+   INIT
+   ============================ */
+async function init(){
+  todayUTC=nowUTC();
+  setInterval(tickClock,1000);
+  tickClock();
+
+  /* Read URL parameters */
+  const qp=new URLSearchParams(location.search);
+  const pDate=qp.get('date');
+  const pClass=qp.get('class');
+  const pTab=qp.get('tab');
+
+  /* Tab switching */
+  document.querySelectorAll('#nav .nav-btn').forEach(b=>{
+    b.addEventListener('click',()=>setTab(b.dataset.tab));
+  });
+
+  /* Year tabs */
+  document.querySelectorAll('#ytabs .ybtn').forEach(b=>{
+    b.addEventListener('click',()=>{
+      setYear(b.dataset.year);
+      updateURL();
+      renderTT();
+    });
+  });
+
+  /* Date picker — from URL if valid, otherwise today */
+  const dp=$('dp');
+  dp.value=validYMD(pDate)?pDate:toIST();
+  selDate=ymd2dmy(dp.value);
+  dp.addEventListener('change',e=>{
+    if(!validYMD(e.target.value))return;
+    selDate=ymd2dmy(e.target.value);
+    updateURL();
+    updateTodayUI();
+    if(dataReady){ renderDayInfo(); }
+  });
+
+  /* Previous / Next day / Today buttons */
+  $('prevDay').addEventListener('click',()=>shiftDate(-1));
+  $('nextDay').addEventListener('click',()=>shiftDate(1));
+  $('todayBtn').addEventListener('click',goToday);
+  updateTodayUI();
+
+  /* Keyboard shortcuts: ← previous day, → next day, T today
+     (ignored while typing in a field, with modifier keys, or on the Search tab) */
+  document.addEventListener('keydown',e=>{
+    if(e.ctrlKey||e.metaKey||e.altKey)return;
+    const t=e.target;
+    const tag=t&&t.tagName?t.tagName.toLowerCase():'';
+    if(tag==='input'||tag==='select'||tag==='textarea'||(t&&t.isContentEditable))return;
+    if(curTab==='search')return;
+    if(e.key==='ArrowLeft'){ e.preventDefault(); shiftDate(-1); }
+    else if(e.key==='ArrowRight'){ e.preventDefault(); shiftDate(1); }
+    else if(e.key==='t'||e.key==='T'){ e.preventDefault(); goToday(); }
+  });
+
+  /* Restore class + tab from URL (search tab is rendered after data loads) */
+  if(pClass) setYear(pClass);
+  if(pTab && TABS.includes(pTab)){
+    curTab=pTab;
+    document.querySelectorAll('#nav .nav-btn').forEach(x=>x.classList.toggle('active',x.dataset.tab===curTab));
+    document.querySelectorAll('.tab').forEach(x=>x.classList.toggle('active',x.id===curTab));
+  }
+
+  /* Action buttons */
+  $('printBtn').addEventListener('click',doPrint);
+  $('pdfBtn').addEventListener('click',doPDF);
+
+  /* Search listeners */
+  $('sYear').addEventListener('change',()=>{ fillSubDrop($('sYear').value); runSearch(); });
+  $('sSub').addEventListener('change',runSearch);
+  $('sStaff').addEventListener('input',runSearch);
+
+  toast('Loading data…','',6000);
+
+  /* Load all CSV sources in parallel */
+  const [di,gt,tp,sp]=await Promise.all([
+    csv(CSV.dayInfo),
+    csv(CSV.generalTT),
+    csv(CSV.timePeriod),
+    csv(CSV.special)
+  ]);
+
+  DI=di;
+
+  /* Time periods: Hour → Time string */
+  tp.forEach(r=>{
+    const h=(r.Hour||r.hour||"").trim();
+    if(h) TS[h]=(r.Time||r.time||"").trim();
+  });
+
+  /* General timetable: "DayOrder|Year" → row */
+  gt.forEach(r=>{
+    const ord=normOrd(r["Day Order"]||r["day order"]||r["DayOrder"]||"").trim();
+    const yr=(r["Year"]||r["year"]||"").trim();
+    if(ord&&yr) TT[`${ord}|${yr}`]=r;
+    // DEBUG remove after confirming
+    if(ord&&yr) console.log("TT key built:", `${ord}|${yr}`);
+  });
+
+  /* Special overrides: "Date|Year|Hour" → row */
+  sp.forEach(r=>{
+    const d=(r.Date||"").trim();
+    const yr=(r.Class||r.class||r.Year||"").trim();
+    const hr=(r.Hour||r.hour||"").trim();
+    if(d&&yr&&hr) SP[`${d}|${yr}|${hr}`]=r;
+  });
+
+  buildSubjectIndex();
+  fillSubDrop("");
+  dataReady=true;
+
+  renderDayInfo();
+  if(curTab==='search') runSearch();
+  toast('Portal loaded!','ok',2500);
+}
+
+/* ============================
+   SUBJECT INDEX (for search dropdown)
+   ============================ */
+function buildSubjectIndex(){
+  SUBJ={};
+  YEARS.forEach(y=>SUBJ[y]=new Set());
+  Object.entries(TT).forEach(([k,row])=>{ // keys are already normalized
+    const yr=k.split('|')[1];
+    if(!SUBJ[yr])return;
+    HOURS.forEach(h=>{
+      const c=(row[h]||"").trim();
+      if(c&&c!=="No Class"){
+        const{name}=parseCell(c);
+        if(name&&name!=="-")SUBJ[yr].add(name);
+      }
+    });
+  });
+  YEARS.forEach(y=>{ SUBJ[y]=Array.from(SUBJ[y]).sort(); });
+}
+
+function fillSubDrop(yr){
+  const sel=$('sSub');
+  sel.innerHTML='<option value="">All Subjects</option>';
+  const list=yr
+    ?SUBJ[yr]||[]
+    :YEARS.flatMap(y=>SUBJ[y]||[]).filter((v,i,a)=>a.indexOf(v)===i).sort();
+  list.forEach(s=>{
+    const o=document.createElement('option');
+    o.value=s.toLowerCase();
+    o.textContent=s;
+    sel.appendChild(o);
+  });
+}
+
+function findDay(dmy){ return DI.find(r=>r.Date===dmy)||null; }
+
+/* ============================
+   DAY INFO TAB
+   ============================ */
+function renderDayInfo(){
+  const row=findDay(selDate);
+  const el=$('dayMeta');
+
+  if(!row){
+    el.innerHTML=`<div class="igrid"><div class="icard c-red"><div class="ilabel">Status</div><div class="ival red">No data for ${selDate||"selected date"}</div></div></div>`;
+    renderTT();
+    return;
+  }
+
+  const working=(row.Working||"").toLowerCase()==="yes";
+  const exam=isExam(row);
+  const event=(row.Event||"").trim();
+  const reason=(row.Reason||"").trim();
+  const order=(row["Day Order"]||"").trim();
+  const hours=(row.Hours||"").trim();
+
+  let cards=`<div class="icard"><div class="ilabel">Date</div><div class="ival">${row.Day||""}, ${selDate}</div></div>`;
+
+  if(exam){
+    const detail=((event.startsWith('*')?event.slice(1):reason.startsWith('*')?reason.slice(1):"")).trim();
+    cards+=`<div class="icard c-blue"><div class="ilabel">Status</div><div class="ival">Examination Day</div></div>`;
+    if(detail) cards+=`<div class="icard c-blue full"><div class="ilabel">Exam Details</div><div class="ival" style="font-size:12px;">${detail}</div></div>`;
+  } else if(!working){
+    cards+=`<div class="icard c-red"><div class="ilabel">Status</div><div class="ival red">Holiday</div></div>`;
+    if(event) cards+=`<div class="icard c-orange full"><div class="ilabel">Event</div><div class="ival" style="font-size:12px;">${event}</div></div>`;
+    if(reason) cards+=`<div class="icard c-red full"><div class="ilabel">Reason</div><div class="ival" style="font-size:12px;color:var(--maroon);">${reason}</div></div>`;
+  } else {
+    let hNote="";
+    if(hours==="-") hNote=` <span style="font-size:10.5px;color:var(--maroon);font-weight:600;">(No classes today)</span>`;
+    else if(hours) hNote=` <span style="font-size:10.5px;color:var(--slate);">(Hours active: ${hours})</span>`;
+    cards+=`<div class="icard"><div class="ilabel">Day Order</div><div class="ival">${order||"—"}${hNote}</div></div>`;
+    if(event) cards+=`<div class="icard c-teal full"><div class="ilabel">Event / Notes</div><div class="ival" style="font-size:12px;">${event}</div></div>`;
+    if(reason&&reason!==event) cards+=`<div class="icard c-orange full"><div class="ilabel">Notes</div><div class="ival" style="font-size:12px;">${reason}</div></div>`;
+  }
+
+  el.innerHTML=`<div class="igrid">${cards}</div>`;
+  renderTT();
+}
+
+/* ============================
+   TIMETABLE TAB
+   ============================ */
+function renderTT(){
+  const row=findDay(selDate);
+  const box=$('ttBox');
+  const note=$('ttNote');
+  box.innerHTML="";
+  note.textContent="";
+
+  if(!row){
+    box.innerHTML='<div class="empty"><div class="ei"><i class="fas fa-calendar-xmark"></i></div>No data for this date.</div>';
+    return;
+  }
+
+  /* Exam day */
+  if(isExam(row)){
+    box.innerHTML=`<div class="exam-box">
+      <div class="ei"><i class="fas fa-file-pen"></i></div>
+      <h3>Examination Day</h3>
+      <p>Regular classes are suspended. Check the Exam portal for your schedule.</p>
+      <a href="${EXAM_LINK}" target="_blank" rel="noopener" class="exam-btn">
+        <i class="fas fa-external-link-alt"></i> View Exam Timetable
+      </a></div>`;
+    note.textContent=`${curYear} · Examination Day · ${selDate}`;
+    return;
+  }
+
+  /* Holiday */
+  if((row.Working||"").toLowerCase()!=="yes"){
+    const r=(row.Reason||row.Event||"No classes scheduled").trim();
+    box.innerHTML=`<div class="hol-box"><i class="fas fa-umbrella-beach" style="margin-right:8px;"></i><strong>Holiday:</strong> ${r}</div>`;
+    return;
+  }
+
+  const order=normOrd(row["Day Order"]||"");
+  const hoursVal=(row.Hours||"").trim();
+  const noClassDay=hoursVal==="-";
+  console.log("Looking up TT key:", `${order}|${curYear}`, "Found:", !!TT[`${order}|${curYear}`]);
+
+  /* Build allowed hours set: e.g. "1,2,4" → Set{"1","2","4"} */
+  let allowedSet=new Set();
+  if(!noClassDay&&hoursVal!==""){
+    hoursVal.split(',').forEach(h=>allowedSet.add(h.trim()));
+  }
+
+  const entry=TT[`${order}|${curYear}`];
+  if(!entry){
+    box.innerHTML=`<div class="empty"><div class="ei"><i class="fas fa-circle-question"></i></div>No timetable found for Day ${order||"—"}, ${curYear}.</div>`;
+    return;
+  }
+
+  let trs="";
+  HOURS.forEach((h,idx)=>{
+    const hNum=String(idx+1);
+    /* Hour is active if: not a no-class day AND (no restriction OR this hour number is in allowed set) */
+    const isActive=!noClassDay&&(hoursVal===""||allowedSet.has(hNum));
+    const spKey=`${selDate}|${curYear}|${h}`;
+    const sp=SP[spKey];
+    const timeStr=TS[h]||"";
+
+    /* Special override row */
+    if(sp){
+      const st=(sp.Status||"").toLowerCase();
+      const cor=(sp.Correction||"").trim();
+      const rea=(sp.Reason||"").trim();
+      if(st.includes("holiday")){
+        trs+=`<tr class="sp-holiday">
+          <td><strong>${h}</strong></td>
+          <td><span class="scode">—</span></td>
+          <td><span style="font-weight:600;">No Class</span>
+            <span class="spbadge hol"><i class="fas fa-triangle-exclamation"></i> Special Holiday</span>
+            ${rea?`<br><span style="font-size:10px;color:var(--maroon);display:block;margin-top:2px;">${rea}</span>`:""}
+          </td>
+          <td>—</td>
+          <td class="htime">${timeStr}</td></tr>`;
+      } else {
+        trs+=`<tr class="sp-override">
+          <td><strong>${h}</strong></td>
+          <td><span class="scode">—</span></td>
+          <td><span class="sname">${cor||"See Notes"}</span>
+            <span class="spbadge"><i class="fas fa-rotate"></i> Override</span>
+            ${rea?`<br><span style="font-size:10px;color:#92400E;display:block;margin-top:2px;">${rea}</span>`:""}
+          </td>
+          <td>${sp.Staff||"—"}</td>
+          <td class="htime">${timeStr}</td></tr>`;
+      }
+      return;
+    }
+
+    /* Inactive hour */
+    if(!isActive){
+      trs+=`<tr class="noclass">
+        <td>${h}</td><td>—</td><td>No Class</td><td>—</td>
+        <td class="htime">${timeStr}</td></tr>`;
+      return;
+    }
+
+    /* Normal class hour */
+    const cell=(entry[h]||"").trim();
+    if(!cell||cell==="No Class"){
+      trs+=`<tr class="noclass">
+        <td>${h}</td><td>—</td><td>No Class</td><td>—</td>
+        <td class="htime">${timeStr}</td></tr>`;
+      return;
+    }
+    const{code,name,staff}=parseCell(cell);
+    const shtml=staff.length>0
+      ?staff.map(s=>`<span class="sstaff">${s}</span>`).join('')
+      :`<span style="color:#94A3B8;font-size:11px;">—</span>`;
+    trs+=`<tr>
+      <td><strong>${h}</strong></td>
+      <td><span class="scode">${code}</span></td>
+      <td><span class="sname">${name}</span></td>
+      <td>${shtml}</td>
+      <td class="htime">${timeStr}</td></tr>`;
+  });
+
+  box.innerHTML=`<div class="twrap"><table>
+    <thead><tr>
+      <th>Hour</th><th>Code</th><th>Subject</th><th>Staff</th><th>Time</th>
+    </tr></thead>
+    <tbody>${trs}</tbody>
+  </table></div>`;
+  note.textContent=`${curYear} · Day ${order} · ${selDate}`;
+}
+
+/* ============================
+   SEARCH TAB
+   ============================ */
+function runSearch(){
+  const out=$('srOut');
+  if(!dataReady)return; /* wait until data is loaded; init() re-runs search */
+
+  const q=$('sStaff').value.trim().toLowerCase();
+  const sy=$('sYear').value;
+  const ss=$('sSub').value.toLowerCase();
+
+  /* No filter guard: with "All Classes" and no other filter, the full list is shown */
+
+  const results=[];
+
+  DI.forEach(row=>{
+    const ord=normOrd(row["Day Order"]||"");
+    const hv=(row.Hours||"").trim();
+    /* Skip non-working, no-class days, and exam days */
+    if(!ord||(row.Working||"").toLowerCase()!=="yes"||hv==="-"||isExam(row))return;
+
+    const allowedHrs=hv===""
+      ?new Set(["1","2","3","4","5"])
+      :new Set(hv.split(',').map(x=>x.trim()));
+
+    const years=sy?[sy]:YEARS;
+
+    years.forEach(yr=>{
+      const entry=TT[`${ord}|${yr}`];
+      if(!entry)return;
+
+      HOURS.forEach((h,idx)=>{
+        const hn=String(idx+1);
+        if(hv!==""&&!allowedHrs.has(hn))return;
+
+        const cell=(entry[h]||"").trim();
+        if(!cell||cell==="No Class")return;
+
+        const{code,name,staff}=parseCell(cell);
+        const staffStr=staff.join(', ');
+
+        /* Apply filters */
+        const matchName=!ss||name.toLowerCase().includes(ss);
+        const matchStaff=q.length<2||staffStr.toLowerCase().includes(q)||name.toLowerCase().includes(q);
+        if(!matchName||!matchStaff)return;
+
+        /* Find every actual date that uses this day order and has this hour active */
+        DI.filter(d=>{
+          if(normOrd(d["Day Order"]||"")!==ord)return false;
+          if((d.Working||"").toLowerCase()!=="yes")return false;
+          if(isExam(d))return false;
+          const dh=(d.Hours||"").trim();
+          if(dh==="-")return false;
+          const da=dh===""?new Set(["1","2","3","4","5"]):new Set(dh.split(',').map(x=>x.trim()));
+          return da.has(hn);
+        }).forEach(d=>{
+          results.push({
+            date:d.Date,
+            dobj:dmy2date(d.Date),
+            hour:h,
+            code,
+            name,
+            staff:staffStr,
+            yr,
+            ord
+          });
+        });
+      });
+    });
+  });
+
+  /* Deduplicate: same date + hour + year + subject */
+  const seen=new Set();
+  const uniq=results.filter(r=>{
+    const k=`${r.date}|${r.hour}|${r.yr}|${r.name}`;
+    if(seen.has(k))return false;
+    seen.add(k);
+    return true;
+  });
+
+  uniq.sort((a,b)=>{
+    if(!a.dobj||!b.dobj)return 0;
+    return a.dobj-b.dobj;
+  });
+
+  const tod=[],up=[],past=[];
+  uniq.forEach(r=>{
+    if(!r.dobj)return;
+    const t=r.dobj.getTime();
+    const n=todayUTC.getTime();
+    if(t===n)tod.push(r);
+    else if(t>n)up.push(r);
+    else past.push(r);
+  });
+  past.reverse(); /* Most recent past first */
+
+  let html="";
+  const sec=(label,icon,col,arr,tag)=>arr.length
+    ?`<div class="sec-title"><i class="${icon}" style="color:${col}"></i> ${label} <span class="cbadge">${arr.length}</span></div>`+arr.map(r=>rcard(r,tag)).join('')
+    :"";
+
+  html+=sec("Today's Classes","fas fa-circle-dot","#10B981",tod,"tod");
+  html+=sec("Upcoming","fas fa-arrow-right","#3B82F6",up,"up");
+  html+=sec("Past","fas fa-clock-rotate-left","var(--slate)",past,"past");
+
+  out.innerHTML=html||'<div class="empty"><div class="ei"><i class="fas fa-face-meh"></i></div>No matching classes found.</div>';
+}
+
+function rcard(r,type){
+  const tcls=type==='tod'?'t-today':type==='up'?'t-up':'t-past';
+  const tlbl=type==='tod'?'Today':type==='up'?'Upcoming':'Past';
+  return `<div class="rcard">
+    <div>
+      <div class="rsub">${r.name} <span class="rcode">(${r.code})</span></div>
+      <div class="rmeta">
+        <strong>${r.date}</strong> · ${r.hour}<br>
+        <strong>Class:</strong> ${r.yr} · Day ${r.ord}<br>
+        <strong>Staff:</strong> <span class="rstaff">${r.staff||"—"}</span>
+      </div>
+    </div>
+    <span class="stag ${tcls}">${tlbl}</span>
+  </div>`;
+}
+
+/* ============================
+   PRINT
+   ============================ */
+async function doPrint(){
+  const row=findDay(selDate);
+  let meta=`<strong>Date:</strong> ${selDate} &nbsp;|&nbsp; <strong>Class:</strong> ${curYear}`;
+  if(row){
+    if(isExam(row)) meta+=` &nbsp;|&nbsp; <strong>Status:</strong> Examination Day`;
+    else if((row.Working||"").toLowerCase()==="yes") meta+=` &nbsp;|&nbsp; <strong>Day Order:</strong> ${row["Day Order"]||"—"}`;
+    else meta+=` &nbsp;|&nbsp; <strong>Status:</strong> Holiday`;
+  }
+  $('pmeta').innerHTML=meta;
+  $('pfdet').textContent=`Printed on: ${new Date().toLocaleString('en-IN')}`;
+  window.print();
+}
+
+/* ============================
+   PDF DOWNLOAD
+   ============================ */
+async function doPDF(){
+  const btn=$('pdfBtn'),spin=$('pdfSpin'),ico=$('pdfIco'),txt=$('pdfTxt');
+  btn.disabled=true;
+  spin.style.display='inline-block';
+  ico.style.display='none';
+  txt.textContent=' Generating…';
+  toast('Generating PDF…','',6000);
+
+  try{
+    const row=findDay(selDate);
+    const el=document.createElement('div');
+    el.style.cssText='font-family:Arial,sans-serif;padding:24px 28px;max-width:780px;color:#1E293B;background:white;';
+
+    /* Status note for exam/holiday */
+    let statusNote="";
+    if(row){
+      if(isExam(row))
+        statusNote=`<p style="color:#7B1D2E;font-weight:700;text-align:center;margin-bottom:10px;font-size:10pt;">EXAMINATION DAY — Regular classes suspended</p>`;
+      else if((row.Working||"").toLowerCase()!=="yes")
+        statusNote=`<p style="color:#7B1D2E;font-weight:700;text-align:center;margin-bottom:10px;font-size:10pt;">HOLIDAY: ${row.Reason||row.Event||""}</p>`;
+    }
+
+    let metaLine=`Date: ${selDate}  |  Class: ${curYear}`;
+    if(row&&(row.Working||"").toLowerCase()==="yes"&&!isExam(row))
+      metaLine+=`  |  Day Order: ${row["Day Order"]||"—"}`;
+
+    /* Clone the rendered timetable HTML */
+    const ttHTML=$('ttBox').innerHTML;
+
+    el.innerHTML=`
+      <div style="text-align:center;border-bottom:2px solid #1E3A5F;padding-bottom:14px;margin-bottom:16px;">
+        <img src="https://loyolazoology.github.io/about-us/azbt-logo.png"
+          style="height:54px;margin-bottom:8px;display:block;margin-left:auto;margin-right:auto;" crossorigin="anonymous">
+        <h2 style="font-family:Georgia,serif;font-size:13pt;color:#1E3A5F;margin:0 0 4px;">
+          PG &amp; Research Department of Advanced Zoology and Biotechnology
+        </h2>
+        <p style="font-size:9.5pt;color:#555;margin:0;">Loyola College (Autonomous), Chennai – 34 · AZ-BT</p>
+        <p style="font-size:8.5pt;color:#777;margin:5px 0 0;font-style:italic;">Student Timetable</p>
+      </div>
+      <div style="background:#EBF1FA;border-radius:6px;padding:10px 14px;margin-bottom:14px;font-size:10pt;font-weight:600;color:#1E293B;">
+        ${metaLine}
+      </div>
+      ${statusNote}
+      ${ttHTML}
+      <p style="margin-top:18px;font-size:7.5pt;color:#888;border-top:1px solid #ddd;padding-top:8px;text-align:center;font-style:italic;">
+        Generated on ${new Date().toLocaleString('en-IN')} · AZ-BT Student Timetable Portal · Loyola College, Chennai
+      </p>`;
+
+    /* ---- Inline styles so html2pdf renders them correctly ---- */
+
+    /* Table wrapper */
+    const tw=el.querySelector('.twrap');
+    if(tw) tw.style.cssText='overflow:visible;border:none;box-shadow:none;margin-top:4px;';
+
+    /* Table itself */
+    const tbl=el.querySelector('table');
+    if(tbl){
+      tbl.style.cssText='width:100%;border-collapse:collapse;font-size:9.5pt;';
+      tbl.querySelectorAll('th').forEach(t=>
+        t.style.cssText='padding:7px 9px;text-align:left;font-size:8.5pt;font-weight:700;background:#1E3A5F;color:white;border:1px solid #1E3A5F;');
+      tbl.querySelectorAll('td').forEach(t=>
+        t.style.cssText='padding:7px 9px;border:1px solid #E2E8F0;vertical-align:top;font-size:9.5pt;');
+      /* Even rows */
+      tbl.querySelectorAll('tbody tr:nth-child(even)').forEach(tr=>
+        tr.style.background='#FAFBFC');
+    }
+
+    /* Special rows */
+    el.querySelectorAll('tr.sp-override').forEach(tr=>tr.style.background='#FFF7ED');
+    el.querySelectorAll('tr.sp-holiday').forEach(tr=>tr.style.background='#FFF5F5');
+    el.querySelectorAll('tr.noclass').forEach(tr=>tr.style.background='#FCFCFD');
+    el.querySelectorAll('tr.noclass td').forEach(td=>{
+      td.style.color='#94A3B8';
+      td.style.fontStyle='italic';
+    });
+
+    /* Cell elements */
+    el.querySelectorAll('.scode').forEach(e=>
+      e.style.cssText='font-family:monospace;font-size:9pt;color:#64748B;');
+    el.querySelectorAll('.sname').forEach(e=>
+      e.style.cssText='font-weight:700;color:#1E3A5F;font-size:9.5pt;display:block;');
+    el.querySelectorAll('.sstaff').forEach(e=>
+      e.style.cssText='font-size:9pt;color:#7B1D2E;font-weight:600;display:block;margin-top:1px;');
+    el.querySelectorAll('.htime').forEach(e=>
+      e.style.cssText='font-size:8.5pt;color:#64748B;font-family:monospace;white-space:nowrap;');
+    el.querySelectorAll('.spbadge').forEach(e=>
+      e.style.cssText='display:inline-flex;align-items:center;gap:3px;background:#F97316;color:white;font-size:7.5pt;font-weight:700;padding:2px 7px;border-radius:20px;margin-left:4px;');
+    el.querySelectorAll('.spbadge.hol').forEach(e=>
+      e.style.background='#7B1D2E');
+
+    /* Exam / holiday boxes */
+    const examBox=el.querySelector('.exam-box');
+    if(examBox) examBox.style.cssText='text-align:center;padding:30px 20px;background:#EBF1FA;border-radius:8px;border:1px solid #C8D8F0;';
+    const holBox=el.querySelector('.hol-box');
+    if(holBox) holBox.style.cssText='text-align:center;padding:20px;background:#FDF0F2;border-radius:8px;border:1px solid #FCA5A5;color:#7B1D2E;font-weight:600;font-size:10pt;';
+
+    await html2pdf().from(el).set({
+      margin:[10,8,10,8],
+      filename:`AZ-BT-${curYear.replace(/\s+/g,'-')}-${selDate}.pdf`,
+      image:{type:'jpeg',quality:0.97},
+      html2canvas:{scale:2,useCORS:true,logging:false,allowTaint:true,backgroundColor:'#ffffff'},
+      jsPDF:{unit:'mm',format:'a4',orientation:'portrait'},
+      pagebreak:{mode:['avoid-all','css']}
+    }).save();
+
+    toast('PDF downloaded!','ok');
+  }catch(e){
+    console.error('PDF error:',e);
+    toast('PDF failed — try Print instead.','err',4000);
+  }finally{
+    btn.disabled=false;
+    spin.style.display='none';
+    ico.style.display='inline';
+    txt.textContent=' Download PDF';
+  }
+}
+
+init();
+</script>
+</body>
+</html>
